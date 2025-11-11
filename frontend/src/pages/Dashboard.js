@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchDeals } from '../api/dealsApi';
+import { dealsApi } from '../api/dealsApi'; // Import the module
 import './Dashboard.css';
 
 function Dashboard() {
@@ -11,11 +11,12 @@ function Dashboard() {
     const loadDeals = async () => {
       try {
         setLoading(true);
-        const data = await fetchDeals();
+        // Use the correct API function to fetch all deals
+        const data = await dealsApi.getAllDeals();
         setDeals(data);
         setError(null);
       } catch (err) {
-        setError('Failed to load deals. Please try again later.');
+        setError(`Failed to load deals: ${err.message}`);
         console.error('Dashboard fetch error:', err);
       } finally {
         setLoading(false);
@@ -27,7 +28,7 @@ function Dashboard() {
 
   const totalDeals = deals.length;
   // Example: Calculate total value of deals
-  const totalValue = deals.reduce((sum, deal) => sum + deal.value, 0);
+  const totalValue = deals.reduce((sum, deal) => sum + (deal.amount || 0), 0); // Use 'amount' and handle potential nulls
 
   if (loading) {
     return <div className="dashboard-container">Loading dashboard...</div>;
@@ -47,7 +48,8 @@ function Dashboard() {
         </div>
         <div className="stat-card">
           <h3>Total Deal Value</h3>
-          <p>${totalValue.toLocaleString()}</p>
+          {/* Format currency appropriately */}
+          <p>{totalValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</p>
         </div>
         {/* Add more stats here */}
       </div>
@@ -56,8 +58,9 @@ function Dashboard() {
       {deals.length > 0 ? (
         <ul className="recent-deals-list">
           {deals.slice(0, 5).map((deal) => ( // Show first 5 recent deals
-            <li key={deal._id}>
-              <a href={`/deals/${deal._id}`}>{deal.name}</a> - {deal.stage}
+            // Use Link for navigation to deal detail page
+            <li key={deal._id || deal.id}> {/* Use a unique key, assuming _id or id from backend */}
+              <Link to={`/deals/${deal._id || deal.id}`}>{deal.name || 'Untitled Deal'}</Link> - {deal.stage}
             </li>
           ))}
         </ul>

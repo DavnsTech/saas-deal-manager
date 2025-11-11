@@ -36,13 +36,15 @@ function App() {
               path="/deals/:id"
               element={isAuthenticated ? <DealDetail /> : <Navigate to="/login" replace />}
             />
+            {/* Changed route to match navigation and API expectations */}
             <Route
               path="/deals/new"
               element={isAuthenticated ? <CreateDeal /> : <Navigate to="/login" replace />}
             />
 
             {/* Fallback or Not Found */}
-            <Route path="*" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />} />
+            {/* Redirects to login if not authenticated, otherwise to Dashboard. Could be a 404 page. */}
+            <Route path="*" element={isAuthenticated ? <Navigate to="/" replace /> : <Navigate to="/login" replace />} />
           </Routes>
         </main>
       </div>
