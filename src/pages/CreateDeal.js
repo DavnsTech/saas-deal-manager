@@ -110,449 +110,297 @@ const FormTextarea = styled.textarea`
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 16px;
-  font-family: inherit;
-  min-height: 100px;
-  resize: vertical;
+  font-family: inherit; /* Ensures textarea uses the same font as other inputs */
+  resize: vertical; /* Allows vertical resizing */
+`;
+
+const SubmitButton = styled.button`
+  background: #4361ee;
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
   
-  &:focus {
-    outline: none;
-    border-color: #4361ee;
-    box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+  &:hover {
+    background: #3a56d4;
   }
 `;
 
-const FormActions = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 30px;
-`;
-
 const CreateDeal = () => {
-  const [dealData, setDealData] = useState({
-    name: '',
-    amount: '',
-    currency: 'EUR',
-    status: 'Ouvert',
-    stage: 'Prospection',
-    leadSource: '',
-    priority: 'Moyenne',
-    closeDate: '',
-    responsible: '',
-    company: '',
-    contact: '',
-    email: '',
-    phone: '',
-    industry: '',
-    companySize: '',
-    acquisitionChannel: '',
-    identifiedNeed: '',
-    proposedSolution: '',
-    contractType: '',
-    contractDuration: '',
-    paymentMethod: '',
-    internalNotes: '',
-    leadScore: '',
-    lifetimeValue: '',
-    region: '',
-  });
+  const [dealName, setDealName] = useState('');
+  const [amount, setAmount] = useState('');
+  const [currency, setCurrency] = useState('USD');
+  const [salesStage, setSalesStage] = useState('Prospection');
+  const [leadSource, setLeadSource] = useState('');
+  const [priority, setPriority] = useState('Medium');
+  const [probability, setProbability] = useState(50);
+  const [dueDate, setDueDate] = useState('');
+  const [salesRep, setSalesRep] = useState('');
+  const [clientCompany, setClientCompany] = useState('');
+  const [contactPerson, setContactPerson] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [industry, setIndustry] = useState('');
+  const [companySize, setCompanySize] = useState('');
+  const [acquisitionChannel, setAcquisitionChannel] = useState('');
+  const [identifiedNeed, setIdentifiedNeed] = useState('');
+  const [proposedSolution, setProposedSolution] = useState('');
+  const [contractType, setContractType] = useState('');
+  const [contractDuration, setContractDuration] = useState('');
+  const [paymentMode, setPaymentMode] = useState('');
+  const [internalComments, setInternalComments] = useState('');
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setDealData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  const salesStages = [
+    'Prospection', 'Qualification', 'Prise de contact', 'Découverte', 
+    'Proposition de valeur', 'Négociation', 'Closing', 'Livraison/Onboarding', 
+    'Fidélisation/Upsell/Cross-sell'
+  ];
+  const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD'];
+  const priorities = ['Low', 'Medium', 'High', 'Urgent'];
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Deal data:', dealData);
-    alert('Deal créé avec succès!');
-    // Here you would typically send the data to your backend
+    // In a real app, you would send this data to an API
+    console.log('Deal created:', {
+      dealName, amount, currency, salesStage, leadSource, priority, 
+      probability, dueDate, salesRep, clientCompany, contactPerson, 
+      email, phone, industry, companySize, acquisitionChannel, 
+      identifiedNeed, proposedSolution, contractType, contractDuration, 
+      paymentMode, internalComments
+    });
+    alert('Deal created successfully! (Check console)');
   };
 
   return (
     <CreateDealContainer>
       <BackLink to="/deals">
-        <FaArrowLeft /> Retour aux deals
+        <FaArrowLeft /> Retour à la liste des deals
       </BackLink>
-      
-      <PageTitle>Nouveau Deal</PageTitle>
-      
+      <PageTitle>Créer un nouveau deal</PageTitle>
       <Form onSubmit={handleSubmit}>
         <FormSection>
-          <SectionTitle>Informations du deal</SectionTitle>
+          <SectionTitle>Informations Générales</SectionTitle>
           <FormRow>
             <FormGroup>
-              <label htmlFor="name">Nom du deal *</label>
-              <FormInput
-                type="text"
-                id="name"
-                name="name"
-                value={dealData.name}
-                onChange={handleChange}
-                required
+              <label htmlFor="dealName">Nom du deal</label>
+              <FormInput 
+                id="dealName" 
+                type="text" 
+                value={dealName} 
+                onChange={(e) => setDealName(e.target.value)} 
+                required 
               />
             </FormGroup>
-            
             <FormGroup>
-              <label htmlFor="amount">Montant *</label>
-              <FormInput
-                type="number"
-                id="amount"
-                name="amount"
-                value={dealData.amount}
-                onChange={handleChange}
-                required
+              <label htmlFor="amount">Montant</label>
+              <FormInput 
+                id="amount" 
+                type="number" 
+                value={amount} 
+                onChange={(e) => setAmount(e.target.value)} 
+                required 
               />
             </FormGroup>
-          </FormRow>
-          
-          <FormRow>
             <FormGroup>
               <label htmlFor="currency">Devise</label>
-              <FormSelect
-                id="currency"
-                name="currency"
-                value={dealData.currency}
-                onChange={handleChange}
-              >
-                <option value="EUR">EUR (€)</option>
-                <option value="USD">USD ($)</option>
-                <option value="GBP">GBP (£)</option>
-              </FormSelect>
-            </FormGroup>
-            
-            <FormGroup>
-              <label htmlFor="status">Statut</label>
-              <FormSelect
-                id="status"
-                name="status"
-                value={dealData.status}
-                onChange={handleChange}
-              >
-                <option value="Ouvert">Ouvert</option>
-                <option value="Gagné">Gagné</option>
-                <option value="Perdu">Perdu</option>
-                <option value="Suspendu">Suspendu</option>
+              <FormSelect id="currency" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+                {currencies.map(c => <option key={c} value={c}>{c}</option>)}
               </FormSelect>
             </FormGroup>
           </FormRow>
-          
           <FormRow>
             <FormGroup>
-              <label htmlFor="stage">Étape de vente *</label>
-              <FormSelect
-                id="stage"
-                name="stage"
-                value={dealData.stage}
-                onChange={handleChange}
-                required
-              >
-                <option value="Prospection">Prospection</option>
-                <option value="Qualification">Qualification</option>
-                <option value="Prise de contact">Prise de contact</option>
-                <option value="Découverte">Découverte</option>
-                <option value="Proposition de valeur">Proposition de valeur</option>
-                <option value="Négociation">Négociation</option>
-                <option value="Closing">Closing</option>
-                <option value="Livraison/Onboarding">Livraison/Onboarding</option>
-                <option value="Fidélisation/Upsell/Cross-sell">Fidélisation/Upsell/Cross-sell</option>
+              <label htmlFor="salesStage">Étape de vente</label>
+              <FormSelect id="salesStage" value={salesStage} onChange={(e) => setSalesStage(e.target.value)}>
+                {salesStages.map(stage => <option key={stage} value={stage}>{stage}</option>)}
               </FormSelect>
             </FormGroup>
-            
-            <FormGroup>
-              <label htmlFor="priority">Priorité</label>
-              <FormSelect
-                id="priority"
-                name="priority"
-                value={dealData.priority}
-                onChange={handleChange}
-              >
-                <option value="Basse">Basse</option>
-                <option value="Moyenne">Moyenne</option>
-                <option value="Haute">Haute</option>
-              </FormSelect>
-            </FormGroup>
-          </FormRow>
-          
-          <FormRow>
             <FormGroup>
               <label htmlFor="leadSource">Source du lead</label>
-              <FormInput
-                type="text"
-                id="leadSource"
-                name="leadSource"
-                value={dealData.leadSource}
-                onChange={handleChange}
+              <FormInput 
+                id="leadSource" 
+                type="text" 
+                value={leadSource} 
+                onChange={(e) => setLeadSource(e.target.value)} 
               />
             </FormGroup>
-            
             <FormGroup>
-              <label htmlFor="closeDate">Date de clôture prévue</label>
-              <FormInput
-                type="date"
-                id="closeDate"
-                name="closeDate"
-                value={dealData.closeDate}
-                onChange={handleChange}
-              />
+              <label htmlFor="priority">Priorité</label>
+              <FormSelect id="priority" value={priority} onChange={(e) => setPriority(e.target.value)}>
+                {priorities.map(p => <option key={p} value={p}>{p}</option>)}
+              </FormSelect>
             </FormGroup>
           </FormRow>
-          
           <FormRow>
             <FormGroup>
-              <label htmlFor="responsible">Responsable commercial</label>
-              <FormInput
-                type="text"
-                id="responsible"
-                name="responsible"
-                value={dealData.responsible}
-                onChange={handleChange}
+              <label htmlFor="probability">Probabilité de closing (%)</label>
+              <FormInput 
+                id="probability" 
+                type="number" 
+                min="0" 
+                max="100" 
+                value={probability} 
+                onChange={(e) => setProbability(parseInt(e.target.value, 10))} 
+                required 
               />
             </FormGroup>
-            
             <FormGroup>
-              <label htmlFor="probability">Probabilité de closing (%)</label>
-              <FormInput
-                type="number"
-                id="probability"
-                name="probability"
-                value={dealData.probability}
-                onChange={handleChange}
-                min="0"
-                max="100"
+              <label htmlFor="dueDate">Date de clôture prévue</label>
+              <FormInput 
+                id="dueDate" 
+                type="date" 
+                value={dueDate} 
+                onChange={(e) => setDueDate(e.target.value)} 
               />
             </FormGroup>
           </FormRow>
         </FormSection>
-        
+
         <FormSection>
-          <SectionTitle>Informations client</SectionTitle>
+          <SectionTitle>Détails du Client/Entreprise</SectionTitle>
           <FormRow>
             <FormGroup>
-              <label htmlFor="company">Client/Entreprise *</label>
-              <FormInput
-                type="text"
-                id="company"
-                name="company"
-                value={dealData.company}
-                onChange={handleChange}
-                required
+              <label htmlFor="clientCompany">Client/Entreprise</label>
+              <FormInput 
+                id="clientCompany" 
+                type="text" 
+                value={clientCompany} 
+                onChange={(e) => setClientCompany(e.target.value)} 
+                required 
               />
             </FormGroup>
-            
             <FormGroup>
-              <label htmlFor="contact">Contact principal</label>
-              <FormInput
-                type="text"
-                id="contact"
-                name="contact"
-                value={dealData.contact}
-                onChange={handleChange}
+              <label htmlFor="contactPerson">Contact principal</label>
+              <FormInput 
+                id="contactPerson" 
+                type="text" 
+                value={contactPerson} 
+                onChange={(e) => setContactPerson(e.target.value)} 
               />
             </FormGroup>
           </FormRow>
-          
           <FormRow>
             <FormGroup>
               <label htmlFor="email">Email</label>
-              <FormInput
-                type="email"
-                id="email"
-                name="email"
-                value={dealData.email}
-                onChange={handleChange}
+              <FormInput 
+                id="email" 
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
               />
             </FormGroup>
-            
             <FormGroup>
               <label htmlFor="phone">Téléphone</label>
-              <FormInput
-                type="tel"
-                id="phone"
-                name="phone"
-                value={dealData.phone}
-                onChange={handleChange}
+              <FormInput 
+                id="phone" 
+                type="tel" 
+                value={phone} 
+                onChange={(e) => setPhone(e.target.value)} 
               />
             </FormGroup>
           </FormRow>
-          
           <FormRow>
             <FormGroup>
-              <label htmlFor="industry">Secteur d'activité</label>
-              <FormInput
-                type="text"
-                id="industry"
-                name="industry"
-                value={dealData.industry}
-                onChange={handleChange}
+              <label htmlFor="industry">Secteur d’activité</label>
+              <FormInput 
+                id="industry" 
+                type="text" 
+                value={industry} 
+                onChange={(e) => setIndustry(e.target.value)} 
               />
             </FormGroup>
-            
             <FormGroup>
-              <label htmlFor="companySize">Taille de l'entreprise</label>
-              <FormSelect
-                id="companySize"
-                name="companySize"
-                value={dealData.companySize}
-                onChange={handleChange}
-              >
-                <option value="">Sélectionner</option>
-                <option value="1-10 employés">1-10 employés</option>
-                <option value="11-50 employés">11-50 employés</option>
-                <option value="51-200 employés">51-200 employés</option>
-                <option value="201-500 employés">201-500 employés</option>
-                <option value="500-1000 employés">500-1000 employés</option>
-                <option value="1000+ employés">1000+ employés</option>
-              </FormSelect>
-            </FormGroup>
-          </FormRow>
-          
-          <FormRow>
-            <FormGroup>
-              <label htmlFor="acquisitionChannel">Canal d'acquisition</label>
-              <FormInput
-                type="text"
-                id="acquisitionChannel"
-                name="acquisitionChannel"
-                value={dealData.acquisitionChannel}
-                onChange={handleChange}
+              <label htmlFor="companySize">Taille de l’entreprise</label>
+              <FormInput 
+                id="companySize" 
+                type="text" 
+                value={companySize} 
+                onChange={(e) => setCompanySize(e.target.value)} 
               />
             </FormGroup>
-            
             <FormGroup>
-              <label htmlFor="region">Région/Pays</label>
-              <FormInput
-                type="text"
-                id="region"
-                name="region"
-                value={dealData.region}
-                onChange={handleChange}
+              <label htmlFor="acquisitionChannel">Canal d’acquisition</label>
+              <FormInput 
+                id="acquisitionChannel" 
+                type="text" 
+                value={acquisitionChannel} 
+                onChange={(e) => setAcquisitionChannel(e.target.value)} 
               />
             </FormGroup>
           </FormRow>
         </FormSection>
         
         <FormSection>
-          <SectionTitle>Détails de l'offre</SectionTitle>
+          <SectionTitle>Détails du Deal</SectionTitle>
           <FormRow>
             <FormGroup>
               <label htmlFor="identifiedNeed">Besoin identifié</label>
-              <FormTextarea
-                id="identifiedNeed"
-                name="identifiedNeed"
-                value={dealData.identifiedNeed}
-                onChange={handleChange}
+              <FormTextarea 
+                id="identifiedNeed" 
+                rows="3" 
+                value={identifiedNeed} 
+                onChange={(e) => setIdentifiedNeed(e.target.value)} 
               />
             </FormGroup>
-            
             <FormGroup>
               <label htmlFor="proposedSolution">Solution proposée</label>
-              <FormTextarea
-                id="proposedSolution"
-                name="proposedSolution"
-                value={dealData.proposedSolution}
-                onChange={handleChange}
+              <FormTextarea 
+                id="proposedSolution" 
+                rows="3" 
+                value={proposedSolution} 
+                onChange={(e) => setProposedSolution(e.target.value)} 
               />
             </FormGroup>
           </FormRow>
-          
           <FormRow>
             <FormGroup>
               <label htmlFor="contractType">Type de contrat</label>
-              <FormInput
-                type="text"
-                id="contractType"
-                name="contractType"
-                value={dealData.contractType}
-                onChange={handleChange}
+              <FormInput 
+                id="contractType" 
+                type="text" 
+                value={contractType} 
+                onChange={(e) => setContractType(e.target.value)} 
               />
             </FormGroup>
-            
             <FormGroup>
               <label htmlFor="contractDuration">Durée du contrat</label>
-              <FormInput
-                type="text"
-                id="contractDuration"
-                name="contractDuration"
-                value={dealData.contractDuration}
-                onChange={handleChange}
+              <FormInput 
+                id="contractDuration" 
+                type="text" 
+                value={contractDuration} 
+                onChange={(e) => setContractDuration(e.target.value)} 
               />
             </FormGroup>
-          </FormRow>
-          
-          <FormRow>
             <FormGroup>
-              <label htmlFor="paymentMethod">Mode de paiement</label>
-              <FormInput
-                type="text"
-                id="paymentMethod"
-                name="paymentMethod"
-                value={dealData.paymentMethod}
-                onChange={handleChange}
-              />
-            </FormGroup>
-            
-            <FormGroup>
-              <label htmlFor="lifetimeValue">Valeur à vie estimée</label>
-              <FormInput
-                type="number"
-                id="lifetimeValue"
-                name="lifetimeValue"
-                value={dealData.lifetimeValue}
-                onChange={handleChange}
+              <label htmlFor="paymentMode">Mode de paiement</label>
+              <FormInput 
+                id="paymentMode" 
+                type="text" 
+                value={paymentMode} 
+                onChange={(e) => setPaymentMode(e.target.value)} 
               />
             </FormGroup>
           </FormRow>
         </FormSection>
         
         <FormSection>
-          <SectionTitle>Informations complémentaires</SectionTitle>
-          <FormRow>
-            <FormGroup>
-              <label htmlFor="leadScore">Score du lead</label>
-              <FormInput
-                type="number"
-                id="leadScore"
-                name="leadScore"
-                value={dealData.leadScore}
-                onChange={handleChange}
-              />
-            </FormGroup>
-            
-            <FormGroup>
-              <label htmlFor="lastInteraction">Date de dernière interaction</label>
-              <FormInput
-                type="date"
-                id="lastInteraction"
-                name="lastInteraction"
-                value={dealData.lastInteraction}
-                onChange={handleChange}
-              />
-            </FormGroup>
-          </FormRow>
-          
+          <SectionTitle>Informations Internes</SectionTitle>
           <FormGroup>
-            <label htmlFor="internalNotes">Commentaires internes</label>
-            <FormTextarea
-              id="internalNotes"
-              name="internalNotes"
-              value={dealData.internalNotes}
-              onChange={handleChange}
+            <label htmlFor="internalComments">Commentaires internes</label>
+            <FormTextarea 
+              id="internalComments" 
+              rows="4" 
+              value={internalComments} 
+              onChange={(e) => setInternalComments(e.target.value)} 
             />
           </FormGroup>
         </FormSection>
-        
-        <FormActions>
-          <Link to="/deals" className="btn btn-secondary">
-            Annuler
-          </Link>
-          <button type="submit" className="btn btn-primary">
-            Créer le deal
-          </button>
-        </FormActions>
+
+        <SubmitButton type="submit">Créer le Deal</SubmitButton>
       </Form>
     </CreateDealContainer>
   );

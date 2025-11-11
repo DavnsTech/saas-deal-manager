@@ -8,7 +8,7 @@ const SidebarContainer = styled.aside`
   background: white;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   padding: 20px 0;
-  height: calc(100vh - 70px);
+  height: calc(100vh - 70px); /* Adjust height to account for header */
 `;
 
 const MenuItem = styled(Link)`
@@ -43,21 +43,24 @@ const MenuSection = styled.div`
 `;
 
 const Sidebar = () => {
+  // Get current path to determine active link
+  const currentPath = window.location.pathname;
+
   return (
     <SidebarContainer>
-      <MenuItem to="/" className="active">
+      <MenuItem to="/" className={currentPath === '/' ? 'active' : ''}>
         <FaHome /> Tableau de bord
       </MenuItem>
-      <MenuItem to="/deals">
+      <MenuItem to="/deals" className={currentPath.startsWith('/deals') ? 'active' : ''}>
         <FaHandshake /> Deals
       </MenuItem>
       
       <MenuSection>
-        <MenuItem to="/reports">
+        <MenuItem to="/reports" className={currentPath === '/reports' ? 'active' : ''}>
           <FaChartBar /> Rapports
         </MenuItem>
-        <MenuItem to="/settings">
-          <FaCog /> ParamÃ¨tres
+        <MenuItem to="/settings" className={currentPath === '/settings' ? 'active' : ''}>
+          <FaCog /> Paramètres
         </MenuItem>
       </MenuSection>
     </SidebarContainer>
