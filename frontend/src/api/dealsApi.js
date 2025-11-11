@@ -69,11 +69,8 @@ export const createDeal = async (dealData) => {
  * @throws {Error} If the API request fails.
  */
 export const updateDeal = async (id, dealData) => {
-  if (!id) {
-    throw new Error("Deal ID is required to update a deal.");
-  }
-  if (!dealData) {
-    throw new Error("Deal data is required to update a deal.");
+  if (!id || !dealData) {
+    throw new Error("Deal ID and data are required to update a deal.");
   }
   try {
     const response = await axios.put(`${API_BASE_URL}/deals/${id}`, dealData);
@@ -101,6 +98,3 @@ export const deleteDeal = async (id) => {
     throw new Error(error.response?.data?.message || `Failed to delete deal ${id}.`);
   }
 };
-
-// Note: You would typically have authentication tokens managed here as well,
-// perhaps using interceptors in axios to add them to every request.
