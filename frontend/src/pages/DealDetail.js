@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaEdit, FaTrash, FaPaperclip, FaComment, FaCalendarAlt, FaUser, FaEnvelope, FaPhone, FaIndustry, FaBuilding, FaTag } from 'react-icons/fa';
 import { useDeals } from '../contexts/DealContext';
+import { FaArrowLeft, FaEdit, FaTrash, FaPaperclip, FaComment, FaCalendarAlt, FaUser, FaEnvelope, FaPhone, FaIndustry, FaBuilding, FaTag } from 'react-icons/fa';
 
 const DealDetailContainer = styled.div`
   padding: 20px;
@@ -79,37 +79,36 @@ const StageBadge = styled.span`
     switch(props.stage) {
       case 'Prospection': return '#616161';
       case 'Qualification': return '#f57f17';
-      case 'Prise de contact': return '#e65100';
-      case 'Découverte': return '#bf360c';
-      case 'Proposition de valeur': return '#870000';
-      case 'Négociation': return '#4a148c';
-      case 'Closing': return '#1b5e20';
-      case 'Livraison/Onboarding': return '#0d47a1';
-      case 'Fidélisation/Upsell/Cross-sell': return '#00695c';
-      default: return '#424242';
+      case 'Prise de contact': return '#ef6c00';
+      case 'Découverte': return '#e65100';
+      case 'Proposition de valeur': return '#bf360c';
+      case 'Négociation': return '#bf360c';
+      case 'Closing': return '#ffffff';
+      case 'Livraison/Onboarding': return '#ffffff';
+      case 'Fidélisation/Upsell/Cross-sell': return '#ffffff';
+      default: return '#616161';
     }
   }};
 `;
 
-const DealActions = styled.div`
+const Actions = styled.div`
   display: flex;
   gap: 10px;
 `;
 
 const ActionButton = styled.button`
-  padding: 8px 16px;
+  background: ${props => props.primary ? '#4361ee' : '#6c757d'};
+  color: white;
+  padding: 10px 15px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 5px;
-  background: ${props => props.variant === 'edit' ? '#ffc107' : '#dc3545'};
-  color: white;
   
-  &:hover {
-    opacity: 0.9;
+  svg {
+    margin-right: 5px;
   }
 `;
 
@@ -123,29 +122,39 @@ const DealDetails = styled.div`
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 `;
 
+const DetailSection = styled.div`
+  h3 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+  }
+`;
+
 const DetailItem = styled.div`
-  margin-bottom: 15px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
   
-  label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 5px;
-    color: #555;
+  svg {
+    margin-right: 10px;
+    color: #4361ee;
   }
   
-  p {
-    margin: 0;
-    color: #333;
+  span {
+    font-weight: 500;
+    color: #666;
   }
 `;
 
 const DealDetail = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { getDealById, removeDeal } = useDeals();
   const [deal, setDeal] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchDeal = async () => {
@@ -167,7 +176,7 @@ const DealDetail = () => {
         await removeDeal(id);
         navigate('/deals');
       } catch (err) {
-        setError(err.message);
+        alert('Failed to delete deal');
       }
     }
   };
@@ -179,51 +188,73 @@ const DealDetail = () => {
   return (
     <DealDetailContainer>
       <BackLink to="/deals">
-        <FaArrowLeft /> Back to Deals
+        <FaArrowLeft />
+        Back to Deals
       </BackLink>
-
       <DealHeader>
         <DealTitleAndStatus>
           <DealTitle>{deal.name}</DealTitle>
-          <DealAmount>${deal.amount}</DealAmount>
+          <DealAmount>${deal.amount.toLocaleString()} {deal.currency}</DealAmount>
           <StageBadge stage={deal.stage}>{deal.stage}</StageBadge>
         </DealTitleAndStatus>
-        <DealActions>
-          <ActionButton variant="edit">
-            <FaEdit /> Edit
+        <Actions>
+          <ActionButton primary>
+            <FaEdit />
+            Edit
           </ActionButton>
           <ActionButton onClick={handleDelete}>
-            <FaTrash /> Delete
+            <FaTrash />
+            Delete
           </ActionButton>
-        </DealActions>
+        </Actions>
       </DealHeader>
-
       <DealDetails>
-        <DetailItem>
-          <label>Status</label>
-          <p>{deal.status}</p>
-        </DetailItem>
-        <DetailItem>
-          <label>Priority</label>
-          <p>{deal.priority}</p>
-        </DetailItem>
-        <DetailItem>
-          <label>Source</label>
-          <p>{deal.source}</p>
-        </DetailItem>
-        <DetailItem>
-          <label>Client</label>
-          <p>{deal.client}</p>
-        </DetailItem>
-        <DetailItem>
-          <label>Contact</label>
-          <p>{deal.contact}</p>
-        </DetailItem>
-        <DetailItem>
-          <label>Email</label>
-          <p>{deal.email}</p>
-        </DetailItem>
-        {/* Add more fields as needed */}
+        <DetailSection>
+          <h3>Client Information</h3>
+          <DetailItem>
+            <FaBuilding />
+            <span>Client: {deal.client}</span>
+          </DetailItem>
+          <DetailItem>
+            <FaUser />
+            <span>Contact: {deal.contact}</span>
+          </DetailItem>
+          <DetailItem>
+            <FaEnvelope />
+            <span>Email: {deal.email}</span>
+          </DetailItem>
+          <DetailItem>
+            <FaPhone />
+            <span>Phone: {deal.phone}</span>
+          </DetailItem>
+          <DetailItem>
+            <FaIndustry />
+            <span>Sector: {deal.sector}</span>
+          </DetailItem>
+          <DetailItem>
+            <FaBuilding />
+            <span>Company Size: {deal.companySize}</span>
+          </DetailItem>
+        </DetailSection>
+        <DetailSection>
+          <h3>Deal Details</h3>
+          <DetailItem>
+            <FaTag />
+            <span>Status: {deal.status}</span>
+          </DetailItem>
+          <DetailItem>
+            <FaCalendarAlt />
+            <span>Close Date: {new Date(deal.closeDate).toLocaleDateString()}</span>
+          </DetailItem>
+          <DetailItem>
+            <FaUser />
+            <span>Responsible: {deal.responsible}</span>
+          </DetailItem>
+          <DetailItem>
+            <FaComment />
+            <span>Internal Comments: {deal.internalComments}</span>
+          </DetailItem>
+        </DetailSection>
       </DealDetails>
     </DealDetailContainer>
   );
