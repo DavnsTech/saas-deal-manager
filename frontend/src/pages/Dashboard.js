@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom'; // Import Link for navigation
 import { dealsApi } from '../api/dealsApi'; // Import the module
 import './Dashboard.css';
 
@@ -59,8 +60,8 @@ function Dashboard() {
         <ul className="recent-deals-list">
           {deals.slice(0, 5).map((deal) => ( // Show first 5 recent deals
             // Use Link for navigation to deal detail page
-            <li key={deal._id || deal.id}> {/* Use a unique key, assuming _id or id from backend */}
-              <Link to={`/deals/${deal._id || deal.id}`}>{deal.name || 'Untitled Deal'}</Link> - {deal.stage}
+            <li key={deal._id || deal.id}> {/* Use a unique key, assuming _id or id */}
+              <Link to={`/deals/${deal._id || deal.id}`}>{deal.name}</Link> - {deal.amount.toLocaleString('en-US', { style: 'currency', currency: deal.currency || 'USD' })}
             </li>
           ))}
         </ul>

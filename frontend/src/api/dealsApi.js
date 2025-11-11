@@ -55,5 +55,4 @@ export const dealsApi = {
   // Placeholder for auth API calls, assuming similar structure
   login: (credentials) => request('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
   register: (userData) => request('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
-  getCurrentUser: () => request('/users/me'),
 };
