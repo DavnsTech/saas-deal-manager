@@ -1,98 +1,123 @@
 import { Request, Response, NextFunction } from 'express';
-import { DealService, ValidationError } from '../services/dealService';
-import { DealInput, DealUpdate } from '../models/Deal'; // Assuming these are exported from Deal.ts
+import { dealService } from '../services/dealService';
+import { Deal } from '../models/Deal'; // Assuming Deal model definition
 
-export class DealController {
-    private dealService: DealService;
-
-    constructor(dealService: DealService) {
-        this.dealService = dealService;
+// Mock DealService for demonstration
+const mockDealService = {
+    getAll: async (): Promise<Deal[]> => {
+        return [
+            { id: 'deal-1', name: 'Alpha Project', stage: 'Prospecting', value: 10000, createdAt: new Date(), updatedAt: new Date() },
+            { id: 'deal-2', name: 'Beta Initiative', stage: 'Negotiation', value: 25000, createdAt: new Date(), updatedAt: new Date() },
+        ];
+    },
+    getById: async (id: string): Promise<Deal | null> => {
+        if (id === 'deal-1') {
+            return { id: 'deal-1', name: 'Alpha Project', stage: 'Prospecting', value: 10000, createdAt: new Date(), updatedAt: new Date() };
+        }
+        return null;
+    },
+    create: async (dealData: Partial<Deal>): Promise<Deal> => {
+        const newDeal: Deal = {
+            id: `deal-${Math.random().toString(36).substring(7)}`,
+            ...dealData,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        } as Deal;
+        return newDeal;
+    },
+    update: async (id: string, dealData: Partial<Deal>): Promise<Deal | null> => {
+        if (id === 'deal-1') {
+            return { id: 'deal-1', name: 'Alpha Project Updated', stage: 'Qualification', value: 12000, createdAt: new Date(), updatedAt: new Date() };
+        }
+        return null;
+    },
+    delete: async (id: string): Promise<boolean> => {
+        return id === 'deal-1';
     }
+};
 
-    /**
-     * Handler for GET /deals
-     */
-    async getAllDeals(req: Request, res: Response, next: NextFunction): Promise<void> {
+
+export const dealController = {
+    getAllDeals: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const deals = await this.dealService.getAllDeals();
+            // In a real app, you'd likely use req.user.userId from the security middleware
+            const deals = await mockDealService.getAll(); // Pass userId if filtering by user
             res.status(200).json(deals);
         } catch (error) {
-            console.error('Error fetching all deals:', error);
-            next(error); // Pass error to Express error handler
+            next(error);
         }
-    }
+    },
 
-    /**
-     * Handler for GET /deals/:id
-     */
-    async getDealById(req: Request, res: Response, next: NextFunction): Promise<void> {
+    getDealById: async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
+        if (!id) {
+            return res.status(400).json({ message: 'Deal ID is required' });
+        }
+
         try {
-            const deal = await this.dealService.getDealById(id);
+            const deal = await mockDealService.getById(id);
             if (!deal) {
                 return res.status(404).json({ message: 'Deal not found' });
             }
+            // Authorization check here
             res.status(200).json(deal);
         } catch (error) {
-            console.error(`Error fetching deal ${id}:`, error);
             next(error);
         }
-    }
+    },
 
-    /**
-     * Handler for POST /deals
-     */
-    async createDeal(req: Request, res: Response, next: NextFunction): Promise<void> {
-        const dealData: DealInput = req.body;
+    createDeal: async (req: Request, res: Response, next: NextFunction) => {
+        const dealData = req.body;
+        // Basic validation
+        if (!dealData.name || !dealData.stage || dealData.value === undefined) {
+            return res.status(400).json({ message: 'Deal name, stage, and value are required' });
+        }
+
         try {
-            const newDeal = await this.dealService.createDeal(dealData);
+            // In a real app, you'd associate the deal with the logged-in user (req.user.userId)
+            const newDeal = await mockDealService.create(dealData);
             res.status(201).json(newDeal);
         } catch (error) {
-            if (error instanceof ValidationError) {
-                console.warn('Validation error creating deal:', error.message);
-                return res.status(400).json({ message: error.message });
-            }
-            console.error('Error creating deal:', error);
             next(error);
         }
-    }
+    },
 
-    /**
-     * Handler for PUT /deals/:id
-     */
-    async updateDeal(req: Request, res: Response, next: NextFunction): Promise<void> {
+    updateDeal: async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
-        const updateData: DealUpdate = req.body;
+        const dealData = req.body;
+
+        if (!id) {
+            return res.status(400).json({ message: 'Deal ID is required' });
+        }
+
         try {
-            const updatedDeal = await this.dealService.updateDeal(id, updateData);
+            // Authorization check before updating
+            const updatedDeal = await mockDealService.update(id, dealData);
             if (!updatedDeal) {
                 return res.status(404).json({ message: 'Deal not found' });
             }
             res.status(200).json(updatedDeal);
         } catch (error) {
-            if (error instanceof ValidationError) {
-                console.warn('Validation error updating deal:', error.message);
-                return res.status(400).json({ message: error.message });
-            }
-            console.error(`Error updating deal ${id}:`, error);
             next(error);
         }
-    }
+    },
 
-    /**
-     * Handler for DELETE /deals/:id
-     */
-    async deleteDeal(req: Request, res: Response, next: NextFunction): Promise<void> {
+    deleteDeal: async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({ message: 'Deal ID is required' });
+        }
+
         try {
-            const deleted = await this.dealService.deleteDeal(id);
-            if (!deleted) {
+            // Authorization check before deleting
+            const success = await mockDealService.delete(id);
+            if (!success) {
                 return res.status(404).json({ message: 'Deal not found' });
             }
-            res.status(204).send(); // 204 No Content for successful deletion
+            res.status(204).send(); // No content on successful deletion
         } catch (error) {
-            console.error(`Error deleting deal ${id}:`, error);
             next(error);
         }
-    }
-}
+    },
+};

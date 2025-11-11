@@ -1,47 +1,12 @@
-import jwt from 'jsonwebtoken';
-import { Request, Response, NextFunction } from 'express';
+import dotenv from 'dotenv';
 
-// Generate JWT token
-export const generateToken = (payload: object): string => {
-  return jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret_key', {
-    expiresIn: process.env.JWT_EXPIRES_IN || '1d',
-  });
+dotenv.config();
+
+export const jwtConfig = {
+    secret: process.env.JWT_SECRET || 'DEFAULT_SUPER_SECRET_KEY_CHANGE_ME', // !!! IMPORTANT: Use a strong, unique secret from .env !!!
+    expiresIn: process.env.JWT_EXPIRES_IN || '1h', // e.g., '1h', '7d'
 };
 
-// Verify JWT token
-export const verifyToken = (token: string): any => {
-  return jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_key');
-};
-
-// Authentication middleware
-export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-
-  if (!token) {
-    res.status(401).json({ message: 'Access token required' });
-    return;
-  }
-
-  try {
-    const decoded = verifyToken(token);
-    (req as any).user = decoded;
-    next();
-  } catch (error) {
-    res.status(403).json({ message: 'Invalid or expired token' });
-  }
-};
-
-// Role-based authorization middleware
-export const authorize = (...roles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    const user = (req as any).user;
-    
-    if (!user || !roles.includes(user.role)) {
-      res.status(403).json({ message: 'Insufficient permissions' });
-      return;
-    }
-    
-    next();
-  };
-};
+if (process.env.JWT_SECRET === undefined) {
+    console.warn('JWT_SECRET not set in environment variables. Using a default, insecure secret.');
+}
