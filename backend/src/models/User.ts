@@ -1,56 +1,49 @@
 import { DataTypes, Model } from 'sequelize';
-import { sequelize } from '../config/database';
+import { database } from '../config/database';
 
 interface UserAttributes {
   id: number;
   username: string;
   email: string;
   password: string;
-  role: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  role: 'admin' | 'user';
 }
 
-export class User extends Model<UserAttributes> implements UserAttributes {
+class User extends Model<UserAttributes> implements UserAttributes {
   public id!: number;
   public username!: string;
   public email!: string;
   public password!: string;
-  public role!: string;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  public role!: 'admin' | 'user';
 }
 
-User.init(
-  {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-    username: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-    },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    role: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: 'user',
-    },
+User.init({
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
   },
-  {
-    sequelize,
-    modelName: 'User',
-    tableName: 'users',
-  }
-);
+  username: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  role: {
+    type: DataTypes.ENUM('admin', 'user'),
+    defaultValue: 'user',
+  },
+}, {
+  sequelize: database,
+  tableName: 'users',
+});
+
+export { User };

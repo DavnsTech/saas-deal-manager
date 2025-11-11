@@ -1,7 +1,10 @@
+export interface UserPayload {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+}
+
 export interface AuthRequest extends Request {
-  user?: {
-    id: number;
-    username: string;
-    role: string;
-  };
+  user?: UserPayload;
 }
