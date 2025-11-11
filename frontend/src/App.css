@@ -1,0 +1,18 @@
+.main-container {
+  display: flex;
+  flex: 1;
+}
+
+.content {
+  flex: 1;
+  padding: 20px;
+  margin-top: 70px; /* Account for fixed header */
+  margin-left: 250px; /* Account for fixed sidebar */
+}
+
+@media (max-width: 768px) {
+  .content {
+    margin-left: 0;
+    padding: 10px;
+  }
+}
