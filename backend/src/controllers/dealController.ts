@@ -1,75 +1,98 @@
-import { Request, Response } from 'express';
-import { DealService } from '../services/dealService';
-import { IDeal } from '../models/Deal';
-
-const dealService = new DealService();
+import { Request, Response, NextFunction } from 'express';
+import { DealService, ValidationError } from '../services/dealService';
+import { DealInput, DealUpdate } from '../models/Deal'; // Assuming these are exported from Deal.ts
 
 export class DealController {
-  async getAllDeals(req: Request, res: Response): Promise<void> {
-    try {
-      const filters = {
-        stage: req.query.stage as string,
-        search: req.query.search as string
-      };
-      
-      const deals = await dealService.getAllDeals(filters);
-      res.status(200).json(deals);
-    } catch (error) {
-      res.status(500).json({ message: 'Error fetching deals', error });
-    }
-  }
+    private dealService: DealService;
 
-  async getDealById(req: Request, res: Response): Promise<void> {
-    try {
-      const deal = await dealService.getDealById(req.params.id);
-      if (!deal) {
-        res.status(404).json({ message: 'Deal not found' });
-        return;
-      }
-      res.status(200).json(deal);
-    } catch (error) {
-      res.status(500).json({ message: 'Error fetching deal', error });
+    constructor(dealService: DealService) {
+        this.dealService = dealService;
     }
-  }
 
-  async createDeal(req: Request, res: Response): Promise<void> {
-    try {
-      const dealData: Partial<IDeal> = req.body;
-      const deal = await dealService.createDeal(dealData);
-      res.status(201).json(deal);
-    } catch (error) {
-      res.status(500).json({ message: 'Error creating deal', error });
+    /**
+     * Handler for GET /deals
+     */
+    async getAllDeals(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const deals = await this.dealService.getAllDeals();
+            res.status(200).json(deals);
+        } catch (error) {
+            console.error('Error fetching all deals:', error);
+            next(error); // Pass error to Express error handler
+        }
     }
-  }
 
-  async updateDeal(req: Request, res: Response): Promise<void> {
-    try {
-      const dealData: Partial<IDeal> = req.body;
-      const deal = await dealService.updateDeal(req.params.id, dealData);
-      
-      if (!deal) {
-        res.status(404).json({ message: 'Deal not found' });
-        return;
-      }
-      
-      res.status(200).json(deal);
-    } catch (error) {
-      res.status(500).json({ message: 'Error updating deal', error });
+    /**
+     * Handler for GET /deals/:id
+     */
+    async getDealById(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const { id } = req.params;
+        try {
+            const deal = await this.dealService.getDealById(id);
+            if (!deal) {
+                return res.status(404).json({ message: 'Deal not found' });
+            }
+            res.status(200).json(deal);
+        } catch (error) {
+            console.error(`Error fetching deal ${id}:`, error);
+            next(error);
+        }
     }
-  }
 
-  async deleteDeal(req: Request, res: Response): Promise<void> {
-    try {
-      const success = await dealService.deleteDeal(req.params.id);
-      
-      if (!success) {
-        res.status(404).json({ message: 'Deal not found' });
-        return;
-      }
-      
-      res.status(200).json({ message: 'Deal deleted successfully' });
-    } catch (error) {
-      res.status(500).json({ message: 'Error deleting deal', error });
+    /**
+     * Handler for POST /deals
+     */
+    async createDeal(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const dealData: DealInput = req.body;
+        try {
+            const newDeal = await this.dealService.createDeal(dealData);
+            res.status(201).json(newDeal);
+        } catch (error) {
+            if (error instanceof ValidationError) {
+                console.warn('Validation error creating deal:', error.message);
+                return res.status(400).json({ message: error.message });
+            }
+            console.error('Error creating deal:', error);
+            next(error);
+        }
     }
-  }
+
+    /**
+     * Handler for PUT /deals/:id
+     */
+    async updateDeal(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const { id } = req.params;
+        const updateData: DealUpdate = req.body;
+        try {
+            const updatedDeal = await this.dealService.updateDeal(id, updateData);
+            if (!updatedDeal) {
+                return res.status(404).json({ message: 'Deal not found' });
+            }
+            res.status(200).json(updatedDeal);
+        } catch (error) {
+            if (error instanceof ValidationError) {
+                console.warn('Validation error updating deal:', error.message);
+                return res.status(400).json({ message: error.message });
+            }
+            console.error(`Error updating deal ${id}:`, error);
+            next(error);
+        }
+    }
+
+    /**
+     * Handler for DELETE /deals/:id
+     */
+    async deleteDeal(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const { id } = req.params;
+        try {
+            const deleted = await this.dealService.deleteDeal(id);
+            if (!deleted) {
+                return res.status(404).json({ message: 'Deal not found' });
+            }
+            res.status(204).send(); // 204 No Content for successful deletion
+        } catch (error) {
+            console.error(`Error deleting deal ${id}:`, error);
+            next(error);
+        }
+    }
 }
