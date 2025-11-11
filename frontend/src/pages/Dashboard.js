@@ -1,73 +1,48 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom'; // Import Link for navigation
-import { dealsApi } from '../api/dealsApi'; // Import the module
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { useDeals } from '../contexts/DealContext';
+import { FaPlus, FaChartLine, FaDollarSign, FaList } from 'react-icons/fa';
 import './Dashboard.css';
 
 function Dashboard() {
-  const [deals, setDeals] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { deals, loading, error } = useDeals();
 
-  useEffect(() => {
-    const loadDeals = async () => {
-      try {
-        setLoading(true);
-        // Use the correct API function to fetch all deals
-        const data = await dealsApi.getAllDeals();
-        setDeals(data);
-        setError(null);
-      } catch (err) {
-        setError(`Failed to load deals: ${err.message}`);
-        console.error('Dashboard fetch error:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadDeals();
-  }, []);
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   const totalDeals = deals.length;
-  // Example: Calculate total value of deals
-  const totalValue = deals.reduce((sum, deal) => sum + (deal.amount || 0), 0); // Use 'amount' and handle potential nulls
-
-  if (loading) {
-    return <div className="dashboard-container">Loading dashboard...</div>;
-  }
-
-  if (error) {
-    return <div className="dashboard-container error">{error}</div>;
-  }
+  const totalValue = deals.reduce((sum, deal) => sum + (deal.amount || 0), 0);
 
   return (
-    <div className="dashboard-container">
-      <h2>Dashboard Overview</h2>
-      <div className="dashboard-stats">
+    <div className="dashboard">
+      <h2>Dashboard</h2>
+      <div className="stats">
         <div className="stat-card">
-          <h3>Total Deals</h3>
-          <p>{totalDeals}</p>
+          <FaList />
+          <div>
+            <h3>{totalDeals}</h3>
+            <p>Total Deals</p>
+          </div>
         </div>
         <div className="stat-card">
-          <h3>Total Deal Value</h3>
-          {/* Format currency appropriately */}
-          <p>{totalValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</p>
+          <FaDollarSign />
+          <div>
+            <h3>${totalValue.toLocaleString()}</h3>
+            <p>Total Value</p>
+          </div>
         </div>
-        {/* Add more stats here */}
+        {/* Add more stats */}
       </div>
-
-      <h3>Recent Deals</h3>
-      {deals.length > 0 ? (
-        <ul className="recent-deals-list">
-          {deals.slice(0, 5).map((deal) => ( // Show first 5 recent deals
-            // Use Link for navigation to deal detail page
-            <li key={deal._id || deal.id}> {/* Use a unique key, assuming _id or id */}
-              <Link to={`/deals/${deal._id || deal.id}`}>{deal.name}</Link> - {deal.amount.toLocaleString('en-US', { style: 'currency', currency: deal.currency || 'USD' })}
+      <div className="recent-deals">
+        <h3>Recent Deals</h3>
+        <ul>
+          {deals.slice(-5).map(deal => (
+            <li key={deal.id}>
+              <Link to={`/deals/${deal.id}`}>{deal.name} - ${deal.amount}</Link>
             </li>
           ))}
         </ul>
-      ) : (
-        <p>No deals found.</p>
-      )}
+      </div>
     </div>
   );
 }

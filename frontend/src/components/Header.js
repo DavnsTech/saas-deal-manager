@@ -1,38 +1,45 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // Import Link and useNavigate
-import './Header.css'; // Import Header-specific styles
+import { Link, useNavigate } from 'react-router-dom';
+import { FaBell, FaUserCircle } from 'react-icons/fa';
+import './Header.css';
 
 function Header() {
-  const navigate = useNavigate(); // Hook for programmatic navigation
-
-  // Basic auth check for conditional rendering
+  const navigate = useNavigate();
   const isAuthenticated = localStorage.getItem('token') !== null;
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    // Use navigate for client-side routing
     navigate('/login');
   };
 
   return (
-    <header className="app-header">
-      <div className="logo">Deal Manager</div>
-      <nav>
-        <ul>
-          {isAuthenticated ? (
-            <>
-              <li><Link to="/">Dashboard</Link></li> {/* Use Link */}
-              <li><Link to="/deals">Deals</Link></li> {/* Use Link */}
-              <li onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</li>
-            </>
-          ) : (
-            <>
-              <li><Link to="/login">Login</Link></li> {/* Use Link */}
-              <li><Link to="/register">Register</Link></li> {/* Use Link */}
-            </>
-          )}
-        </ul>
+    <header className="header">
+      <div className="logo">
+        <Link to="/" className="logo-link">Deal Manager</Link>
+      </div>
+      <nav className="nav">
+        {isAuthenticated ? (
+          <>
+            <Link to="/">Tableau de bord</Link>
+            <Link to="/deals">Deals</Link>
+            <button onClick={handleLogout} className="logout-btn">Logout</button>
+          </>
+        ) : (
+          <>
+            <Link to="/login">Login</Link>
+            <Link to="/register">Register</Link>
+          </>
+        )}
       </nav>
+      {isAuthenticated && (
+        <div className="user-actions">
+          <div className="notification">
+            <FaBell size={20} />
+            <span className="badge">3</span>
+          </div>
+          <FaUserCircle size={24} />
+        </div>
+      )}
     </header>
   );
 }

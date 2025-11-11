@@ -1,19 +1,34 @@
 import React from 'react';
-import { Link } from 'react-router-dom'; // Import Link for navigation
-import './Sidebar.css'; // Import Sidebar-specific styles
+import { Link, useLocation } from 'react-router-dom';
+import { FaHome, FaHandshake, FaChartBar, FaCog } from 'react-icons/fa';
+import './Sidebar.css';
 
 function Sidebar() {
-  // Sidebar should ideally be conditionally rendered based on authentication status
-  // This is handled in App.js now.
+  const location = useLocation();
 
   return (
-    <aside className="app-sidebar">
-      <h3>Navigation</h3>
-      <ul>
-        <li><Link to="/">Dashboard</Link></li> {/* Use Link */}
-        <li><Link to="/deals">All Deals</Link></li> {/* Use Link */}
-        <li><Link to="/deals/new">Create New Deal</Link></li> {/* Use Link */}
-        {/* Add more navigation items as needed */}
+    <aside className="sidebar">
+      <ul className="menu">
+        <li className={location.pathname === '/' ? 'active' : ''}>
+          <Link to="/">
+            <FaHome /> Tableau de bord
+          </Link>
+        </li>
+        <li className={location.pathname.startsWith('/deals') ? 'active' : ''}>
+          <Link to="/deals">
+            <FaHandshake /> Deals
+          </Link>
+        </li>
+        <li className={location.pathname === '/reports' ? 'active' : ''}>
+          <Link to="/reports">
+            <FaChartBar /> Rapports
+          </Link>
+        </li>
+        <li className={location.pathname === '/settings' ? 'active' : ''}>
+          <Link to="/settings">
+            <FaCog /> Paramètres
+          </Link>
+        </li>
       </ul>
     </aside>
   );
