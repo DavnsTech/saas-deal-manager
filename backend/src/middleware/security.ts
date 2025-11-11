@@ -1,58 +1,44 @@
 import { Request, Response, NextFunction } from 'express';
-import rateLimit from 'express-rate-limit';
-import helmet from 'helmet';
-import cors from 'cors';
+import jwt from 'jsonwebtoken';
+import { jwtConfig } from '../config/jwt';
 
-// CORS configuration
-const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true,
-  optionsSuccessStatus: 200
+// Extend Request interface to include user property
+declare global {
+    namespace Express {
+        interface Request {
+            user?: { userId: string; email: string };
+        }
+    }
+}
+
+export const authenticateJWT = (req: Request, res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization;
+
+    if (authHeader) {
+        const token = authHeader.split(' ')[1]; // Expects "Bearer TOKEN"
+
+        jwt.verify(token, jwtConfig.secret, (err, user) => {
+            if (err) {
+                return res.sendStatus(403); // Forbidden
+            }
+            // Attach user info to the request object
+            req.user = user as { userId: string; email: string };
+            next();
+        });
+    } else {
+        res.sendStatus(401); // Unauthorized
+    }
 };
 
-// Rate limiting middleware
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
-});
+// Example of an authorization middleware (e.g., for admin roles)
+export const authorizeAdmin = (req: Request, res: Response, next: NextFunction) => {
+    // Assuming user roles are present in the JWT payload or fetched from DB
+    // For this example, let's assume a 'role' property exists in req.user
+    // In a real app, you'd likely fetch user from DB and check roles there.
+    const isAdmin = (req as any).user?.role === 'admin'; // Example, requires role in JWT
 
-// Security headers
-const securityHeaders = helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      scriptSrc: ["'self'"],
-      connectSrc: ["'self'", "https://*.mapbox.com"],
-      fontSrc: ["'self'", "https:", "data:"]
+    if (!isAdmin) {
+        return res.status(403).json({ message: 'Admin access required' });
     }
-  }
-});
-
-// Input sanitization middleware
-const sanitizeInput = (req: Request, res: Response, next: NextFunction): void => {
-  // Sanitize request body
-  if (req.body) {
-    for (const key in req.body) {
-      if (typeof req.body[key] === 'string') {
-        // Basic sanitization - remove HTML tags
-        req.body[key] = req.body[key].replace(/<[^>]*>?/gm, '');
-      }
-    }
-  }
-  
-  // Sanitize query parameters
-  if (req.query) {
-    for (const key in req.query) {
-      if (typeof req.query[key] === 'string') {
-        req.query[key] = (req.query[key] as string).replace(/<[^>]*>?/gm, '');
-      }
-    }
-  }
-  
-  next();
+    next();
 };
-
-export { corsOptions, limiter, securityHeaders, sanitizeInput };

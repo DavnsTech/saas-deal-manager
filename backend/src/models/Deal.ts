@@ -1,26 +1,16 @@
-// Interface for a Deal object
+// This is a TypeScript interface for data structure.
+// If using an ORM like Prisma, this would be generated.
+// If using Mongoose, this would be a Mongoose Schema.
+
 export interface Deal {
     id: string;
     name: string;
-    stage: string; // e.g., 'Prospecting', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'
+    stage: string; // e.g., 'Prospecting', 'Qualification', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'
     value: number;
+    description?: string;
+    company?: string;
+    contactPerson?: string;
     createdAt: Date;
     updatedAt: Date;
-    customFields?: { [key: string]: any }; // Flexible for custom fields
-}
-
-// Interface for creating a new deal (id, createdAt, updatedAt are generated)
-export interface DealInput {
-    name: string;
-    stage?: string;
-    value?: number;
-    customFields?: { [key: string]: any };
-}
-
-// Interface for updating a deal (all fields optional)
-export interface DealUpdate {
-    name?: string;
-    stage?: string;
-    value?: number;
-    customFields?: { [key: string]: any };
+    // ownerId?: string; // Foreign key to User model
 }

@@ -1,71 +1,71 @@
-import { Request, Response } from 'express';
-import User from '../models/User';
+import { Request, Response, NextFunction } from 'express';
+// Assuming userService exists and handles user data operations
+// import { userService } from '../services/userService';
 
-// Get all users (admin only)
-export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const users = await User.find().select('-password');
-    res.json(users);
-  } catch (error) {
-    console.error('Get users error:', error);
-    res.status(500).json({ message: 'Server error fetching users' });
-  }
+// Mock User model and service for demonstration
+interface UserProfile {
+    id: string;
+    email: string;
+    // other profile fields
+}
+
+const mockUserService = {
+    getProfile: async (userId: string): Promise<UserProfile | null> => {
+        if (userId === 'user-1') {
+            return { id: 'user-1', email: 'test@example.com' };
+        }
+        return null;
+    },
+    updateProfile: async (userId: string, updateData: Partial<UserProfile>): Promise<UserProfile | null> => {
+        if (userId === 'user-1') {
+            return { id: 'user-1', email: updateData.email || 'test@example.com' };
+        }
+        return null;
+    }
 };
 
-// Get user by ID (admin only)
-export const getUserById = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const user = await User.findById(req.params.id).select('-password');
-    if (!user) {
-      res.status(404).json({ message: 'User not found' });
-      return;
-    }
-    res.json(user);
-  } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({ message: 'Server error fetching user' });
-  }
-};
+export const userController = {
+    getProfile: async (req: Request, res: Response, next: NextFunction) => {
+        // Assuming user ID is attached to req by security middleware
+        const userId = (req as any).user.userId; // Type assertion for example
 
-// Update user (admin only)
-export const updateUser = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { name, email, role, isActive } = req.body;
-    
-    const updatedUser = await User.findByIdAndUpdate(
-      req.params.id,
-      { name, email, role, isActive },
-      { new: true, runValidators: true }
-    ).select('-password');
+        if (!userId) {
+            return res.status(401).json({ message: 'Authentication required' });
+        }
 
-    if (!updatedUser) {
-      res.status(404).json({ message: 'User not found' });
-      return;
-    }
+        try {
+            const userProfile = await mockUserService.getProfile(userId);
+            if (!userProfile) {
+                return res.status(404).json({ message: 'User profile not found' });
+            }
+            res.status(200).json(userProfile);
+        } catch (error) {
+            next(error);
+        }
+    },
 
-    res.json({
-      message: 'User updated successfully',
-      user: updatedUser
-    });
-  } catch (error) {
-    console.error('Update user error:', error);
-    res.status(500).json({ message: 'Server error updating user' });
-  }
-};
+    updateProfile: async (req: Request, res: Response, next: NextFunction) => {
+        const userId = (req as any).user.userId; // Type assertion for example
+        const updateData = req.body;
 
-// Delete user (admin only)
-export const deleteUser = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const user = await User.findByIdAndDelete(req.params.id);
-    
-    if (!user) {
-      res.status(404).json({ message: 'User not found' });
-      return;
-    }
+        if (!userId) {
+            return res.status(401).json({ message: 'Authentication required' });
+        }
 
-    res.json({ message: 'User deleted successfully' });
-  } catch (error) {
-    console.error('Delete user error:', error);
-    res.status(500).json({ message: 'Server error deleting user' });
-  }
+        // Basic validation for update data
+        if (updateData.email && !/\S+@\S+\.\S+/.test(updateData.email)) {
+            return res.status(400).json({ message: 'Invalid email format' });
+        }
+        // Add more validation as needed
+
+        try {
+            const updatedUserProfile = await mockUserService.updateProfile(userId, updateData);
+            if (!updatedUserProfile) {
+                return res.status(404).json({ message: 'User profile not found' });
+            }
+            res.status(200).json(updatedUserProfile);
+        } catch (error) {
+            next(error);
+        }
+    },
 };
