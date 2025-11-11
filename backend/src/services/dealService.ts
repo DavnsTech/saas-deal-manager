@@ -1,71 +1,70 @@
-import { Deal } from '../models/Deal';
-// Assume a database client or ORM is imported and configured here
-// import { dbClient } from '../db';
+import {
+  createDeal as dbCreateDeal,
+  getDealById as dbGetDealById,
+  getAllDeals as dbGetAllDeals,
+  updateDeal as dbUpdateDeal,
+  deleteDeal as dbDeleteDeal,
+  Deal,
+  DealStage,
+} from '../models/Deal';
+import { findUserById } from '../models/User'; // To validate owner existence
 
-// Mock data store for demonstration
-const mockDealDatabase: Deal[] = [
-    { id: 'deal-1', name: 'Alpha Project', stage: 'Prospecting', value: 10000, createdAt: new Date(), updatedAt: new Date() },
-    { id: 'deal-2', name: 'Beta Initiative', stage: 'Negotiation', value: 25000, createdAt: new Date(), updatedAt: new Date() },
-];
+export const createDeal = async (dealData: Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>): Promise<Deal> => {
+  // Basic validation: Ensure owner exists
+  const owner = await findUserById(dealData.ownerId);
+  if (!owner) {
+    throw new Error(`User with ID ${dealData.ownerId} not found.`);
+  }
 
-let nextId = 3;
+  // Add more business logic validation here if needed
+  if (dealData.value < 0) {
+    throw new Error('Deal value cannot be negative.');
+  }
 
-export const dealService = {
-    getAll: async (userId?: string): Promise<Deal[]> => {
-        // In a real app, filter by userId if applicable
-        console.log(`Fetching all deals (user: ${userId || 'all'})`);
-        return mockDealDatabase;
-    },
+  if (!Object.values(DealStage).includes(dealData.stage)) {
+    throw new Error(`Invalid deal stage. Allowed stages are: ${Object.values(DealStage).join(', ')}.`);
+  }
 
-    getById: async (id: string): Promise<Deal | null> => {
-        console.log(`Fetching deal by ID: ${id}`);
-        const deal = mockDealDatabase.find(d => d.id === id);
-        return deal || null;
-    },
+  return dbCreateDeal(dealData);
+};
 
-    create: async (dealData: Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>): Promise<Deal> => {
-        console.log('Creating new deal:', dealData);
-        // Basic validation, could be more robust
-        if (!dealData.name || !dealData.stage || dealData.value === undefined) {
-            throw new Error('Deal name, stage, and value are required.');
-        }
+export const getDealById = async (id: string): Promise<Deal | undefined> => {
+  return dbGetDealById(id);
+};
 
-        const newDeal: Deal = {
-            id: `deal-${nextId++}`,
-            ...dealData,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        };
-        mockDealDatabase.push(newDeal);
-        return newDeal;
-    },
+export const getAllDeals = async (ownerId?: string): Promise<Deal[]> => {
+  // You might add filtering or sorting logic here
+  return dbGetAllDeals(ownerId);
+};
 
-    update: async (id: string, dealData: Partial<Deal>): Promise<Deal | null> => {
-        console.log(`Updating deal ${id} with:`, dealData);
-        const dealIndex = mockDealDatabase.findIndex(d => d.id === id);
-        if (dealIndex === -1) {
-            return null;
-        }
+export const updateDeal = async (id: string, updateData: Partial<Deal>): Promise<Deal | undefined> => {
+  // Fetch the existing deal to ensure it exists before updating
+  const existingDeal = await dbGetDealById(id);
+  if (!existingDeal) {
+    return undefined; // Deal not found
+  }
 
-        // Merge existing deal with new data
-        mockDealDatabase[dealIndex] = {
-            ...mockDealDatabase[dealIndex],
-            ...dealData,
-            updatedAt: new Date(),
-        };
-        return mockDealDatabase[dealIndex];
-    },
+  // Validate potential owner change
+  if (updateData.ownerId && updateData.ownerId !== existingDeal.ownerId) {
+    const newOwner = await findUserById(updateData.ownerId);
+    if (!newOwner) {
+      throw new Error(`User with ID ${updateData.ownerId} not found.`);
+    }
+  }
 
-    delete: async (id: string): Promise<boolean> => {
-        console.log(`Deleting deal by ID: ${id}`);
-        const initialLength = mockDealDatabase.length;
-        const updatedDatabase = mockDealDatabase.filter(d => d.id !== id);
-        if (updatedDatabase.length < initialLength) {
-            // Update mockDatabase in place
-            mockDealDatabase.length = 0;
-            mockDealDatabase.push(...updatedDatabase);
-            return true;
-        }
-        return false;
-    },
+  // Validate new stage if provided
+  if (updateData.stage && !Object.values(DealStage).includes(updateData.stage)) {
+    throw new Error(`Invalid deal stage. Allowed stages are: ${Object.values(DealStage).join(', ')}.`);
+  }
+
+  if (updateData.value !== undefined && updateData.value < 0) {
+    throw new Error('Deal value cannot be negative.');
+  }
+
+  return dbUpdateDeal(id, updateData);
+};
+
+export const deleteDeal = async (id: string): Promise<boolean> => {
+  // You might add checks here, e.g., if a deal can be deleted if it's already closed.
+  return dbDeleteDeal(id);
 };
