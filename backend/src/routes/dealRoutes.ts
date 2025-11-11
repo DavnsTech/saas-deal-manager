@@ -1,25 +1,31 @@
 import { Router } from 'express';
-import { dealController } from '../controllers/dealController';
-import { authenticateJWT } from '../middleware/security';
+import {
+  createDeal,
+  getDeals,
+  getDealById,
+  updateDeal,
+  deleteDeal,
+} from '../controllers/dealController';
+import { authenticateToken } from '../middleware/security';
 
 const router = Router();
 
-// Apply authentication middleware to all routes in this file
-router.use(authenticateJWT);
+// All deal routes require authentication
+router.use(authenticateToken);
 
-// GET all deals
-router.get('/', dealController.getAllDeals);
+// POST /api/deals - Create a new deal
+router.post('/', createDeal);
 
-// GET a specific deal by ID
-router.get('/:id', dealController.getDealById);
+// GET /api/deals - Get all deals for the authenticated user
+router.get('/', getDeals);
 
-// POST create a new deal
-router.post('/', dealController.createDeal);
+// GET /api/deals/:id - Get a specific deal by ID
+router.get('/:id', getDealById);
 
-// PUT update an existing deal
-router.put('/:id', dealController.updateDeal);
+// PUT /api/deals/:id - Update a specific deal by ID
+router.put('/:id', updateDeal);
 
-// DELETE a deal
-router.delete('/:id', dealController.deleteDeal);
+// DELETE /api/deals/:id - Delete a specific deal by ID
+router.delete('/:id', deleteDeal);
 
 export default router;

@@ -1,88 +1,94 @@
-import { Request, Response, NextFunction } from 'express';
-import bcrypt from 'bcryptjs';
+import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { userService } from '../services/userService'; // Assuming userService exists
-import { jwtConfig } from '../config/jwt';
+import bcrypt from 'bcrypt'; // For password hashing
+import jwtConfig from '../config/jwt';
+import { createUser, findUserByEmail } from '../models/User';
 
-// Mock User model for demonstration
-// In a real app, this would come from models/User.ts and potentially a DB
-interface User {
-    id: string;
-    email: string;
-    passwordHash: string;
-}
+// Number of salt rounds for bcrypt
+const SALT_ROUNDS = 10;
 
-// Mock userService for demonstration
-const mockUserService = {
-    findByEmail: async (email: string): Promise<User | null> => {
-        // Simulate finding a user
-        if (email === 'test@example.com') {
-            const passwordHash = await bcrypt.hash('password123', 10);
-            return { id: 'user-1', email: 'test@example.com', passwordHash };
-        }
-        return null;
-    },
-    create: async (userData: { email: string; passwordHash: string }): Promise<User> => {
-        // Simulate creating a user
-        const passwordHash = await bcrypt.hash(userData.passwordHash, 10);
-        return { id: `user-${Math.random().toString(36).substring(7)}`, email: userData.email, passwordHash };
+export const register = async (req: Request, res: Response) => {
+  const { username, email, password } = req.body;
+
+  if (!username || !email || !password) {
+    return res.status(400).json({ message: 'Username, email, and password are required.' });
+  }
+
+  try {
+    const existingUser = await findUserByEmail(email);
+    if (existingUser) {
+      return res.status(409).json({ message: 'User with this email already exists.' });
     }
+
+    // Hash the password before storing it
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
+    const newUser = createUser({
+      username,
+      email,
+      passwordHash: hashedPassword,
+    });
+
+    // Generate JWT for the newly registered user
+    const token = jwt.sign(
+      { id: newUser.id, username: newUser.username, email: newUser.email },
+      jwtConfig.secret,
+      { expiresIn: jwtConfig.expiresIn }
+    );
+
+    res.status(201).json({
+      message: 'User registered successfully!',
+      token,
+      user: {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+      },
+    });
+  } catch (error) {
+    console.error('Registration Error:', error);
+    res.status(500).json({ message: 'An error occurred during registration.' });
+  }
 };
 
-export const authController = {
-    register: async (req: Request, res: Response, next: NextFunction) => {
-        const { email, password } = req.body;
+export const login = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
 
-        if (!email || !password) {
-            return res.status(400).json({ message: 'Email and password are required' });
-        }
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required.' });
+  }
 
-        try {
-            const existingUser = await mockUserService.findByEmail(email);
-            if (existingUser) {
-                return res.status(409).json({ message: 'User already exists' });
-            }
+  try {
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid email or password.' });
+    }
 
-            const passwordHash = await bcrypt.hash(password, 10);
-            const newUser = await mockUserService.create({ email, passwordHash });
+    // Compare the provided password with the hashed password
+    const passwordMatch = await bcrypt.compare(password, user.passwordHash);
 
-            // In a real app, you might return the user without the password hash
-            const userWithoutPassword = { id: newUser.id, email: newUser.email };
-            res.status(201).json({ message: 'User registered successfully', user: userWithoutPassword });
+    if (!passwordMatch) {
+      return res.status(401).json({ message: 'Invalid email or password.' });
+    }
 
-        } catch (error) {
-            next(error); // Pass to global error handler
-        }
-    },
+    // Generate JWT for the logged-in user
+    const token = jwt.sign(
+      { id: user.id, username: user.username, email: user.email },
+      jwtConfig.secret,
+      { expiresIn: jwtConfig.expiresIn }
+    );
 
-    login: async (req: Request, res: Response, next: NextFunction) => {
-        const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({ message: 'Email and password are required' });
-        }
-
-        try {
-            const user = await mockUserService.findByEmail(email);
-            if (!user) {
-                return res.status(401).json({ message: 'Invalid credentials' });
-            }
-
-            const isMatch = await bcrypt.compare(password, user.passwordHash);
-            if (!isMatch) {
-                return res.status(401).json({ message: 'Invalid credentials' });
-            }
-
-            const token = jwt.sign({ userId: user.id, email: user.email }, jwtConfig.secret, {
-                expiresIn: jwtConfig.expiresIn,
-            });
-
-            // In a real app, you might return the user without the password hash
-            const userWithoutPassword = { id: user.id, email: user.email };
-            res.status(200).json({ message: 'Login successful', token, user: userWithoutPassword });
-
-        } catch (error) {
-            next(error); // Pass to global error handler
-        }
-    },
+    res.status(200).json({
+      message: 'Login successful!',
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.error('Login Error:', error);
+    res.status(500).json({ message: 'An error occurred during login.' });
+  }
 };
