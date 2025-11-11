@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { fetchDeals, createDeal, updateDeal, deleteDeal } from '../api/dealsApi';
+import { fetchDeals, createDeal, updateDeal, deleteDeal, fetchDealById } from '../api/dealsApi';
 
 const DealContext = createContext();
 
@@ -29,12 +29,23 @@ function DealContextProvider({ children }) {
     }
   };
 
+  const getDealById = async (id) => {
+    try {
+      return await fetchDealById(id);
+    } catch (err) {
+      setError(err.message);
+      return null;
+    }
+  };
+
   const addDeal = async (dealData) => {
     try {
       const newDeal = await createDeal(dealData);
       setDeals([...deals, newDeal]);
+      return newDeal;
     } catch (err) {
       setError(err.message);
+      throw err;
     }
   };
 
@@ -42,8 +53,10 @@ function DealContextProvider({ children }) {
     try {
       const updatedDeal = await updateDeal(id, dealData);
       setDeals(deals.map(deal => deal.id === id ? updatedDeal : deal));
+      return updatedDeal;
     } catch (err) {
       setError(err.message);
+      throw err;
     }
   };
 
@@ -53,6 +66,7 @@ function DealContextProvider({ children }) {
       setDeals(deals.filter(deal => deal.id !== id));
     } catch (err) {
       setError(err.message);
+      throw err;
     }
   };
 
@@ -65,6 +79,7 @@ function DealContextProvider({ children }) {
     loading,
     error,
     loadDeals,
+    getDealById,
     addDeal,
     editDeal,
     removeDeal,
