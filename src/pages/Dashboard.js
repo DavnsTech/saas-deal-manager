@@ -101,38 +101,18 @@ const DealsTable = styled.table`
     border-bottom: none;
   }
   
-  tr:hover {
-    background: #f8f9ff;
-  }
-`;
-
-const CreateDealButton = styled(Link)`
-  background: #4361ee;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 4px;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  font-weight: 600;
-  transition: background 0.2s ease;
-  
-  &:hover {
-    background: #3a56d4;
-  }
-  
-  svg {
-    margin-right: 8px;
+  tbody tr:hover {
+    background: #f9f9f9;
   }
 `;
 
 const StageBadge = styled.span`
-  padding: 5px 12px;
-  border-radius: 16px;
+  padding: 5px 10px;
+  border-radius: 12px;
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
-  background-color: ${props => {
+  background: ${props => {
     switch(props.stage) {
       case 'Prospection': return '#e0e0e0';
       case 'Qualification': return '#fff9c4';
@@ -149,44 +129,48 @@ const StageBadge = styled.span`
   color: ${props => {
     switch(props.stage) {
       case 'Prospection': return '#616161';
-      case 'Qualification': return '#f57f17';
-      case 'Prise de contact': return '#f57f17';
-      case 'Découverte': return '#e65100';
-      case 'Proposition de valeur': return '#e65100';
-      case 'Négociation': return '#fff';
-      case 'Closing': return '#fff';
-      case 'Livraison/Onboarding': return '#fff';
-      case 'Fidélisation/Upsell/Cross-sell': return '#fff';
+      case 'Qualification': return '#664000';
+      case 'Prise de contact': return '#663c00';
+      case 'Découverte': return '#663300';
+      case 'Proposition de valeur': return '#662e00';
+      case 'Négociation': return '#654900';
+      case 'Closing': return '#212121';
+      case 'Livraison/Onboarding': return '#1b5e20';
+      case 'Fidélisation/Upsell/Cross-sell': return '#0d47a1';
       default: return '#424242';
     }
   }};
 `;
 
-const RecentDealsSection = styled.div`
-  margin-top: 30px;
+const SeeAllLink = styled(Link)`
+  color: #4361ee;
+  text-decoration: none;
+  font-weight: 500;
+  &:hover {
+    text-decoration: underline;
+  }
 `;
 
-// Mock data for dashboard stats and recent deals
-const dashboardStats = [
-  { title: 'Total Deals', value: '150', icon: FaList, color: '#4361ee' },
-  { title: 'Deals Ouverts', value: '75', icon: FaChartLine, color: '#008080' },
-  { title: 'Valeur Totale', value: '$1.2M', icon: FaDollarSign, color: '#28a745' },
-  { title: 'Nouveaux Clients', value: '15', icon: FaUsers, color: '#ffc107' },
-];
-
-const recentDealsData = [
-  { id: 1, name: 'Projet Alpha', amount: '$50,000', stage: 'Négociation', closeDate: '2024-08-15' },
-  { id: 2, name: 'Solution Beta', amount: '$75,000', stage: 'Proposition de valeur', closeDate: '2024-09-01' },
-  { id: 3, name: 'Partenariat Gamma', amount: '$120,000', stage: 'Closing', closeDate: '2024-07-30' },
-  { id: 4, name: 'Service Delta', amount: '$30,000', stage: 'Qualification', closeDate: '2024-10-10' },
-  { id: 5, name: 'Consulting Epsilon', amount: '$90,000', stage: 'Découverte', closeDate: '2024-09-20' },
-];
-
 const Dashboard = () => {
+  // Dummy data for demonstration
+  const stats = [
+    { title: 'Total Deals', value: 150, icon: FaList, color: '#4361ee' },
+    { title: 'Total Value', value: '$250,000', icon: FaDollarSign, color: '#198754' },
+    { title: 'Active Deals', value: 75, icon: FaChartLine, color: '#ffc107' },
+    { title: 'New Leads', value: 45, icon: FaUsers, color: '#0dcaf0' },
+  ];
+
+  const recentDeals = [
+    { id: 1, name: 'Project Alpha', company: 'TechCorp', stage: 'Proposition de valeur', amount: '$50,000' },
+    { id: 2, name: 'Software License Renewal', company: 'DataSolutions', stage: 'Négociation', amount: '$15,000' },
+    { id: 3, name: 'Cloud Migration Service', company: 'Cloudify Inc.', stage: 'Découverte', amount: '$80,000' },
+    { id: 4, name: 'Consulting Package', company: 'BizConsult', stage: 'Qualification', amount: '$25,000' },
+  ];
+
   return (
     <DashboardContainer>
       <StatsGrid>
-        {dashboardStats.map((stat, index) => (
+        {stats.map((stat, index) => (
           <StatCard key={index}>
             <StatIcon color={stat.color}>
               <stat.icon />
@@ -199,38 +183,34 @@ const Dashboard = () => {
         ))}
       </StatsGrid>
 
-      <RecentDealsSection>
-        <SectionHeader>
-          <h2>Deals Récents</h2>
-          <CreateDealButton to="/deals/create">
-            <FaPlus /> Nouveau Deal
-          </CreateDealButton>
-        </SectionHeader>
-        <DealsTable>
-          <thead>
-            <tr>
-              <th>Nom du Deal</th>
-              <th>Montant</th>
-              <th>Étape de vente</th>
-              <th>Date de clôture prévue</th>
+      <SectionHeader>
+        <h2>Deals Récents</h2>
+        <SeeAllLink to="/deals">Voir tous les deals</SeeAllLink>
+      </SectionHeader>
+      <DealsTable>
+        <thead>
+          <tr>
+            <th>Nom du Deal</th>
+            <th>Entreprise</th>
+            <th>Étape</th>
+            <th>Montant</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {recentDeals.map(deal => (
+            <tr key={deal.id}>
+              <td>{deal.name}</td>
+              <td>{deal.company}</td>
+              <td><StageBadge stage={deal.stage}>{deal.stage}</StageBadge></td>
+              <td>{deal.amount}</td>
+              <td>
+                <SeeAllLink to={`/deals/${deal.id}`}>Détails</SeeAllLink>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {recentDealsData.map(deal => (
-              <tr key={deal.id}>
-                <td>
-                  <Link to={`/deals/${deal.id}`} style={{ textDecoration: 'none', color: '#4361ee' }}>
-                    {deal.name}
-                  </Link>
-                </td>
-                <td>{deal.amount}</td>
-                <td><StageBadge stage={deal.stage}>{deal.stage}</StageBadge></td>
-                <td>{deal.closeDate}</td>
-              </tr>
-            ))}
-          </tbody>
-        </DealsTable>
-      </RecentDealsSection>
+          ))}
+        </tbody>
+      </DealsTable>
     </DashboardContainer>
   );
 };

@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { FaHome, FaHandshake, FaChartBar, FaCog } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom'; // Import useLocation
 
 const SidebarContainer = styled.aside`
   width: 250px;
@@ -43,23 +43,22 @@ const MenuSection = styled.div`
 `;
 
 const Sidebar = () => {
-  // Get current path to determine active link
-  const currentPath = window.location.pathname;
+  const location = useLocation(); // Get current location object
 
   return (
     <SidebarContainer>
-      <MenuItem to="/" className={currentPath === '/' ? 'active' : ''}>
+      <MenuItem to="/" className={location.pathname === '/' ? 'active' : ''}>
         <FaHome /> Tableau de bord
       </MenuItem>
-      <MenuItem to="/deals" className={currentPath.startsWith('/deals') ? 'active' : ''}>
+      <MenuItem to="/deals" className={location.pathname.startsWith('/deals') ? 'active' : ''}>
         <FaHandshake /> Deals
       </MenuItem>
       
       <MenuSection>
-        <MenuItem to="/reports" className={currentPath === '/reports' ? 'active' : ''}>
+        <MenuItem to="/reports" className={location.pathname === '/reports' ? 'active' : ''}>
           <FaChartBar /> Rapports
         </MenuItem>
-        <MenuItem to="/settings" className={currentPath === '/settings' ? 'active' : ''}>
+        <MenuItem to="/settings" className={location.pathname === '/settings' ? 'active' : ''}>
           <FaCog /> Paramètres
         </MenuItem>
       </MenuSection>

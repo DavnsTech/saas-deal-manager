@@ -77,82 +77,72 @@ const StageBadge = styled.span`
   color: ${props => {
     switch(props.stage) {
       case 'Prospection': return '#616161';
-      case 'Qualification': return '#f57f17';
-      case 'Prise de contact': return '#f57f17';
-      case 'Découverte': return '#e65100';
-      case 'Proposition de valeur': return '#e65100';
-      case 'Négociation': return '#fff';
-      case 'Closing': return '#fff';
-      case 'Livraison/Onboarding': return '#fff';
-      case 'Fidélisation/Upsell/Cross-sell': return '#fff';
+      case 'Qualification': return '#664000';
+      case 'Prise de contact': return '#663c00';
+      case 'Découverte': return '#663300';
+      case 'Proposition de valeur': return '#662e00';
+      case 'Négociation': return '#654900';
+      case 'Closing': return '#212121';
+      case 'Livraison/Onboarding': return '#1b5e20';
+      case 'Fidélisation/Upsell/Cross-sell': return '#0d47a1';
       default: return '#424242';
     }
   }};
 `;
 
-const Actions = styled.div`
+const ActionsContainer = styled.div`
   display: flex;
   gap: 10px;
 `;
 
-const ActionButton = styled(Link)`
+const IconButton = styled(Link)`
   background: #f0f4f8;
   color: #4361ee;
-  padding: 10px 15px;
-  border-radius: 4px;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  font-weight: 600;
-  transition: background 0.2s ease, color 0.2s ease;
+  padding: 8px 12px;
   border: none;
+  border-radius: 4px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  transition: background 0.2s ease;
 
   &:hover {
     background: #e0e7ee;
     color: #3a56d4;
   }
-
-  svg {
-    margin-right: 8px;
-  }
 `;
 
-const EditButton = styled(ActionButton)`
-  background: #ffc107;
-  color: #333;
-  &:hover {
-    background: #e0a800;
-  }
-`;
-
-const DeleteButton = styled(ActionButton)`
+const DeleteButton = styled.button`
   background: #dc3545;
   color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s ease;
+
   &:hover {
     background: #c82333;
   }
 `;
 
-const DetailsSection = styled.div`
+const DetailsGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30px;
-  margin-top: 30px;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
 `;
 
-const Section = styled.div`
+const InfoCard = styled.div`
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   padding: 25px;
 `;
 
-const SectionTitle = styled.h2`
+const CardTitle = styled.h3`
   font-size: 20px;
   margin-bottom: 20px;
   padding-bottom: 10px;
@@ -160,15 +150,14 @@ const SectionTitle = styled.h2`
   color: #333;
 `;
 
-const DetailItem = styled.div`
+const DetailRow = styled.div`
   display: flex;
   align-items: center;
   margin-bottom: 15px;
-  color: #555;
   
   svg {
-    margin-right: 12px;
     color: #4361ee;
+    margin-right: 10px;
     font-size: 18px;
   }
   
@@ -176,90 +165,11 @@ const DetailItem = styled.div`
     font-weight: 500;
     color: #333;
   }
-`;
-
-const DetailLabel = styled.div`
-  font-weight: 600;
-  color: #666;
-  min-width: 180px; /* Adjust as needed */
-  margin-right: 10px;
-  display: flex;
-  align-items: center;
-`;
-
-const DetailValue = styled.div`
-  flex-grow: 1;
-`;
-
-const NotesSection = styled(Section)`
-  grid-column: 1 / -1; /* Span across both columns */
-`;
-
-const NoteItem = styled.div`
-  margin-bottom: 15px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #eee;
-
-  &:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
-  }
-`;
-
-const NoteHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-`;
-
-const NoteAuthor = styled.span`
-  font-weight: 600;
-  color: #4361ee;
-`;
-
-const NoteTimestamp = styled.span`
-  font-size: 12px;
-  color: #999;
-`;
-
-const NoteContent = styled.p`
-  margin: 0;
-  color: #444;
-  line-height: 1.5;
-`;
-
-const AddNoteForm = styled.div`
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
-  textarea {
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    font-family: inherit;
-    resize: vertical;
-  }
-
-  button {
-    background: #4361ee;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s ease;
-    align-self: flex-start;
-
-    &:hover {
-      background: #3a56d4;
-    }
+  
+  p {
+    margin: 0;
+    color: #555;
+    flex: 1; /* Allow description to take available space */
   }
 `;
 
@@ -267,80 +177,55 @@ const DealDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [deal, setDeal] = useState(null);
-  const [newNote, setNewNote] = useState('');
 
-  // Mock fetch for deal data
   useEffect(() => {
-    const fetchDeal = async () => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500)); 
-      const mockDealData = {
-        id: id,
-        name: `Deal ${id}`,
-        amount: 50000,
-        currency: 'USD',
-        stage: 'Négociation',
-        status: 'Open',
-        leadSource: 'Website',
-        priority: 'High',
-        probability: 75,
-        creationDate: '2024-07-20',
-        expectedCloseDate: '2024-08-15',
-        salesRep: 'Alice Smith',
-        clientCompany: 'Tech Solutions Inc.',
-        contactPerson: 'Bob Johnson',
-        email: 'bob.johnson@techsolutions.com',
-        phone: '123-456-7890',
+    // Fetch deal details based on id
+    // In a real app, this would be an API call
+    console.log(`Fetching details for deal ID: ${id}`);
+    const mockDealData = {
+      id: id,
+      name: 'Project Alpha',
+      amount: 50000,
+      currency: 'USD',
+      stage: 'Proposition de valeur',
+      source: 'Inbound Marketing',
+      priority: 'High',
+      probability: 75,
+      creationDate: '2023-10-26',
+      expectedCloseDate: '2023-12-15',
+      salesRep: 'Jane Doe',
+      client: {
+        company: 'TechCorp',
+        contact: 'John Smith',
+        email: 'john.smith@techcorp.com',
+        phone: '+1 123 456 7890',
         industry: 'Technology',
-        companySize: '50-100 employees',
-        acquisitionChannel: 'Organic Search',
-        identifiedNeed: 'Scalable cloud infrastructure',
-        proposedSolution: 'Custom cloud migration and management service',
-        contractType: 'Service Agreement',
-        contractDuration: '12 months',
-        paymentMode: 'Monthly Invoice',
-        lastInteraction: '2024-07-28',
-        internalComments: 'Client is very interested in long-term partnership.',
-        documents: ['proposal.pdf', 'contract_draft.docx'],
-        followUp: 'Scheduled for next week',
-        leadScore: 85,
-        estimatedLifetimeValue: '$250,000',
-        region: 'North America',
-        notes: [
-          { id: 1, author: 'Alice Smith', timestamp: '2024-07-25 10:30 AM', content: 'Initial call went well. Client has clear requirements.' },
-          { id: 2, author: 'Bob Johnson (Client)', timestamp: '2024-07-27 02:15 PM', content: 'Received proposal. Reviewing internally. Expect feedback by Friday.' },
-        ]
-      };
-      setDeal(mockDealData);
+        companySize: '51-200',
+      },
+      acquisitionChannel: 'Website Inquiry',
+      identifiedNeed: 'Need for scalable cloud solutions.',
+      proposedSolution: 'Custom cloud migration and management package.',
+      contractType: 'Project-based',
+      contractDuration: '6 months',
+      paymentMode: 'Invoice',
+      lastInteractionDate: '2023-11-10',
+      internalComments: 'Client is very interested in the scalability aspect. Follow up next week.',
+      documents: ['proposal.pdf', 'contract_template.docx'],
     };
-    fetchDeal();
+    setDeal(mockDealData);
   }, [id]);
 
   const handleDelete = () => {
-    if (window.confirm(`Are you sure you want to delete deal "${deal?.name}"?`)) {
-      // Simulate API call for deletion
-      console.log(`Deleting deal ${id}`);
-      alert('Deal deleted successfully! (Check console)');
+    if (window.confirm('Are you sure you want to delete this deal?')) {
+      console.log(`Deleting deal ID: ${id}`);
+      // In a real app, make an API call to delete the deal
+      alert('Deal deleted successfully!');
       navigate('/deals');
     }
   };
 
-  const handleAddNote = () => {
-    if (newNote.trim() === '') return;
-    const newNoteData = {
-      id: Date.now(), // Simple ID generation
-      author: 'You', // Assuming current user
-      timestamp: new Date().toLocaleString(),
-      content: newNote,
-    };
-    setDeal({ ...deal, notes: [...deal.notes, newNoteData] });
-    setNewNote('');
-    // In a real app, send this to the API
-    console.log('Adding new note:', newNoteData);
-  };
-
   if (!deal) {
-    return <DealDetailContainer><p>Loading deal details...</p></DealDetailContainer>;
+    return <DealDetailContainer>Loading deal details...</DealDetailContainer>;
   }
 
   return (
@@ -351,171 +236,110 @@ const DealDetail = () => {
       <DealHeader>
         <DealTitleAndStatus>
           <DealTitle>{deal.name}</DealTitle>
-          <DealAmount>{deal.amount.toLocaleString('en-US', { style: 'currency', currency: deal.currency })}</DealAmount>
           <StageBadge stage={deal.stage}>{deal.stage}</StageBadge>
         </DealTitleAndStatus>
-        <Actions>
-          <EditButton to={`/deals/edit/${deal.id}`}>
+        <DealAmount>{deal.amount} {deal.currency}</DealAmount>
+        <ActionsContainer>
+          <IconButton to={`/deals/${deal.id}/edit`}>
             <FaEdit /> Modifier
-          </EditButton>
+          </IconButton>
           <DeleteButton onClick={handleDelete}>
             <FaTrash /> Supprimer
           </DeleteButton>
-        </Actions>
+        </ActionsContainer>
       </DealHeader>
 
-      <DetailsSection>
-        <Section>
-          <SectionTitle>Informations Générales</SectionTitle>
-          <DetailItem>
-            <DetailLabel><FaCalendarAlt /> Date de création</DetailLabel>
-            <DetailValue>{deal.creationDate}</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaCalendarAlt /> Date de clôture prévue</DetailLabel>
-            <DetailValue>{deal.expectedCloseDate}</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaTag /> Source du lead</DetailLabel>
-            <DetailValue>{deal.leadSource}</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaTag /> Priorité</DetailLabel>
-            <DetailValue>{deal.priority}</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaChartLine /> Probabilité de closing</DetailLabel>
-            <DetailValue>{deal.probability}%</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaChartLine /> Score du lead</DetailLabel>
-            <DetailValue>{deal.leadScore}</DetailValue>
-          </DetailItem>
-        </Section>
+      <DetailsGrid>
+        <InfoCard>
+          <CardTitle>Informations Générales</CardTitle>
+          <DetailRow>
+            <FaTag /> <span>Source du Lead:</span> <p>{deal.source}</p>
+          </DetailRow>
+          <DetailRow>
+            <FaTag /> <span>Priorité:</span> <p>{deal.priority}</p>
+          </DetailRow>
+          <DetailRow>
+            <FaTag /> <span>Probabilité de Closing:</span> <p>{deal.probability}%</p>
+          </DetailRow>
+          <DetailRow>
+            <FaCalendarAlt /> <span>Date de Création:</span> <p>{deal.creationDate}</p>
+          </DetailRow>
+          <DetailRow>
+            <FaCalendarAlt /> <span>Date de Clôture Prévue:</span> <p>{deal.expectedCloseDate}</p>
+          </DetailRow>
+           <DetailRow>
+            <FaCalendarAlt /> <span>Date de Dernière Interaction:</span> <p>{deal.lastInteractionDate}</p>
+          </DetailRow>
+        </InfoCard>
 
-        <Section>
-          <SectionTitle>Client & Contact</SectionTitle>
-          <DetailItem>
-            <DetailLabel><FaBuilding /> Client/Entreprise</DetailLabel>
-            <DetailValue>{deal.clientCompany}</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaUser /> Contact principal</DetailLabel>
-            <DetailValue>{deal.contactPerson}</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaEnvelope /> Email</DetailLabel>
-            <DetailValue>{deal.email}</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaPhone /> Téléphone</DetailLabel>
-            <DetailValue>{deal.phone}</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaIndustry /> Secteur d’activité</DetailLabel>
-            <DetailValue>{deal.industry}</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaBuilding /> Taille de l’entreprise</DetailLabel>
-            <DetailValue>{deal.companySize}</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaTag /> Canal d’acquisition</DetailLabel>
-            <DetailValue>{deal.acquisitionChannel}</DetailValue>
-          </DetailItem>
-        </Section>
+        <InfoCard>
+          <CardTitle>Client et Contact</CardTitle>
+          <DetailRow>
+            <FaBuilding /> <span>Entreprise:</span> <p>{deal.client.company}</p>
+          </DetailRow>
+          <DetailRow>
+            <FaUser /> <span>Contact Principal:</span> <p>{deal.client.contact}</p>
+          </DetailRow>
+          <DetailRow>
+            <FaEnvelope /> <span>Email:</span> <p>{deal.client.email}</p>
+          </DetailRow>
+          <DetailRow>
+            <FaPhone /> <span>Téléphone:</span> <p>{deal.client.phone}</p>
+          </DetailRow>
+          <DetailRow>
+            <FaIndustry /> <span>Secteur:</span> <p>{deal.client.industry}</p>
+          </DetailRow>
+          <DetailRow>
+            <FaTag /> <span>Taille Entreprise:</span> <p>{deal.client.companySize}</p>
+          </DetailRow>
+        </InfoCard>
 
-        <Section>
-          <SectionTitle>Détails du Deal</SectionTitle>
-          <DetailItem>
-            <DetailLabel><FaTag /> Besoin identifié</DetailLabel>
-            <DetailValue>{deal.identifiedNeed}</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaTag /> Solution proposée</DetailLabel>
-            <DetailValue>{deal.proposedSolution}</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaTag /> Type de contrat</DetailLabel>
-            <DetailValue>{deal.contractType}</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaTag /> Durée du contrat</DetailLabel>
-            <DetailValue>{deal.contractDuration}</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaTag /> Mode de paiement</DetailLabel>
-            <DetailValue>{deal.paymentMode}</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaChartLine /> Valeur à vie estimée</DetailLabel>
-            <DetailValue>{deal.estimatedLifetimeValue}</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaTag /> Région/Pays</DetailLabel>
-            <DetailValue>{deal.region}</DetailValue>
-          </DetailItem>
-        </Section>
+        <InfoCard>
+          <CardTitle>Détails du Deal</CardTitle>
+          <DetailRow>
+            <FaTag /> <span>Canal d’Acquisition:</span> <p>{deal.acquisitionChannel}</p>
+          </DetailRow>
+          <DetailRow>
+            <FaTag /> <span>Besoin Identifié:</span> <p>{deal.identifiedNeed}</p>
+          </DetailRow>
+          <DetailRow>
+            <FaTag /> <span>Solution Proposée:</span> <p>{deal.proposedSolution}</p>
+          </DetailRow>
+          <DetailRow>
+            <FaTag /> <span>Type de Contrat:</span> <p>{deal.contractType}</p>
+          </DetailRow>
+          <DetailRow>
+            <FaTag /> <span>Durée du Contrat:</span> <p>{deal.contractDuration}</p>
+          </DetailRow>
+          <DetailRow>
+            <FaTag /> <span>Mode de Paiement:</span> <p>{deal.paymentMode}</p>
+          </DetailRow>
+        </InfoCard>
 
-        <Section>
-          <SectionTitle>Responsable & Suivi</SectionTitle>
-          <DetailItem>
-            <DetailLabel><FaUser /> Responsable commercial</DetailLabel>
-            <DetailValue>{deal.salesRep}</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaCalendarAlt /> Dernière interaction</DetailLabel>
-            <DetailValue>{deal.lastInteraction}</DetailValue>
-          </DetailItem>
-          <DetailItem>
-            <DetailLabel><FaTag /> Suivi de relance</DetailLabel>
-            <DetailValue>{deal.followUp}</DetailValue>
-          </DetailItem>
-        </Section>
-
-        <Section>
-          <SectionTitle>Documents</SectionTitle>
-          {deal.documents.length > 0 ? (
-            deal.documents.map((doc, index) => (
-              <DetailItem key={index}>
-                <FaPaperclip />
-                <a href="#" onClick={(e) => e.preventDefault()} style={{ color: '#4361ee', textDecoration: 'none' }}>{doc}</a>
-              </DetailItem>
-            ))
-          ) : (
-            <p>Aucun document joint.</p>
-          )}
-        </Section>
-        
-        <Section>
-          <SectionTitle>Commentaires internes</SectionTitle>
-          <DetailItem>
-            <DetailValue>{deal.internalComments}</DetailValue>
-          </DetailItem>
-        </Section>
-
-        <NotesSection>
-          <SectionTitle>Notes & Activités <FaComment /></SectionTitle>
-          {deal.notes.map(note => (
-            <NoteItem key={note.id}>
-              <NoteHeader>
-                <NoteAuthor>{note.author}</NoteAuthor>
-                <NoteTimestamp>{note.timestamp}</NoteTimestamp>
-              </NoteHeader>
-              <NoteContent>{note.content}</NoteContent>
-            </NoteItem>
-          ))}
-          <AddNoteForm>
-            <textarea 
-              rows="3" 
-              placeholder="Ajouter une note..." 
-              value={newNote} 
-              onChange={(e) => setNewNote(e.target.value)}
-            />
-            <button onClick={handleAddNote}>Ajouter la Note</button>
-          </AddNoteForm>
-        </NotesSection>
-      </DetailsSection>
+        <InfoCard>
+          <CardTitle>Autres Informations</CardTitle>
+          <DetailRow>
+            <FaUser /> <span>Responsable Commercial:</span> <p>{deal.salesRep}</p>
+          </DetailRow>
+          <DetailRow>
+            <FaComment /> <span>Commentaires Internes:</span> <p>{deal.internalComments}</p>
+          </DetailRow>
+          <DetailRow>
+            <FaPaperclip /> <span>Documents:</span>
+            {deal.documents && deal.documents.length > 0 ? (
+              <ul>
+                {deal.documents.map((doc, index) => (
+                  <li key={index} style={{ marginLeft: '10px', color: '#555' }}>
+                    <a href="#!" onClick={(e) => e.preventDefault()}>{doc}</a> {/* Placeholder link */}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>Aucun document joint</p>
+            )}
+          </DetailRow>
+        </InfoCard>
+      </DetailsGrid>
     </DealDetailContainer>
   );
 };

@@ -102,69 +102,38 @@ const DealCard = styled.div`
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  cursor: pointer;
-  
+
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   }
 `;
 
-const DealHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 15px;
-`;
-
-const DealTitle = styled.h3`
-  font-size: 18px;
-  margin: 0;
-  font-weight: 600;
-  color: #333;
-  
-  a {
-    text-decoration: none;
-    color: inherit; /* Inherit color from parent */
-    
-    &:hover {
-      color: #4361ee;
-    }
-  }
-`;
-
-const DealAmount = styled.div`
+const DealCardTitle = styled.h3`
   font-size: 20px;
-  font-weight: bold;
-  color: #4361ee;
+  margin-bottom: 10px;
+  color: #333;
 `;
 
-const DealInfo = styled.div`
-  margin-bottom: 15px;
-  
-  p {
-    margin: 8px 0;
-    display: flex;
-    justify-content: space-between;
-    color: #555;
-    font-size: 14px;
-  }
-  
-  span:first-child {
-    font-weight: 500;
-    color: #666;
-    min-width: 140px; /* Align labels */
-  }
+const DealCardInfo = styled.p`
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
 `;
 
-const StageBadge = styled.span`
-  padding: 5px 12px;
-  border-radius: 16px;
+const DealCardStage = styled.span`
+  padding: 5px 10px;
+  border-radius: 12px;
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
-  background-color: ${props => {
+  margin-top: auto; /* Pushes the badge to the bottom */
+  align-self: flex-start; /* Aligns the badge to the left */
+  background: ${props => {
     switch(props.stage) {
       case 'Prospection': return '#e0e0e0';
       case 'Qualification': return '#fff9c4';
@@ -181,52 +150,59 @@ const StageBadge = styled.span`
   color: ${props => {
     switch(props.stage) {
       case 'Prospection': return '#616161';
-      case 'Qualification': return '#f57f17';
-      case 'Prise de contact': return '#f57f17';
-      case 'Découverte': return '#e65100';
-      case 'Proposition de valeur': return '#e65100';
-      case 'Négociation': return '#fff';
-      case 'Closing': return '#fff';
-      case 'Livraison/Onboarding': return '#fff';
-      case 'Fidélisation/Upsell/Cross-sell': return '#fff';
+      case 'Qualification': return '#664000';
+      case 'Prise de contact': return '#663c00';
+      case 'Découverte': return '#663300';
+      case 'Proposition de valeur': return '#662e00';
+      case 'Négociation': return '#654900';
+      case 'Closing': return '#212121';
+      case 'Livraison/Onboarding': return '#1b5e20';
+      case 'Fidélisation/Upsell/Cross-sell': return '#0d47a1';
       default: return '#424242';
     }
   }};
 `;
 
-// Mock data for deals
-const mockDeals = [
-  { id: 'deal-001', name: 'Projet Alpha', amount: 50000, currency: 'USD', stage: 'Négociation', closeDate: '2024-08-15', client: 'Tech Solutions Inc.' },
-  { id: 'deal-002', name: 'Solution Beta', amount: 75000, currency: 'USD', stage: 'Proposition de valeur', closeDate: '2024-09-01', client: 'Global Corp' },
-  { id: 'deal-003', name: 'Partenariat Gamma', amount: 120000, currency: 'EUR', stage: 'Closing', closeDate: '2024-07-30', client: 'Innovate Ltd.' },
-  { id: 'deal-004', name: 'Service Delta', amount: 30000, currency: 'USD', stage: 'Qualification', closeDate: '2024-10-10', client: 'Startup Hub' },
-  { id: 'deal-005', name: 'Consulting Epsilon', amount: 90000, currency: 'GBP', stage: 'Découverte', closeDate: '2024-09-20', client: 'Enterprise Solutions' },
-  { id: 'deal-006', name: 'Plateforme Zeta', amount: 200000, currency: 'USD', stage: 'Prospection', closeDate: '2024-11-01', client: 'MegaCorp' },
-  { id: 'deal-007', name: 'Support Omega', amount: 40000, currency: 'CAD', stage: 'Livraison/Onboarding', closeDate: '2024-07-15', client: 'Local Business' },
-];
-
 const Deals = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState({}); // e.g., { stage: 'Négociation' }
+  const [filters, setFilters] = useState({}); // e.g., { stage: 'Closing', priority: 'High' }
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
+  // Dummy data for demonstration
+  const dummyDeals = [
+    { id: 1, name: 'Project Alpha', company: 'TechCorp', stage: 'Proposition de valeur', amount: '$50,000', priority: 'High', salesRep: 'Jane Doe' },
+    { id: 2, name: 'Software License Renewal', company: 'DataSolutions', stage: 'Négociation', amount: '$15,000', priority: 'Medium', salesRep: 'John Smith' },
+    { id: 3, name: 'Cloud Migration Service', company: 'Cloudify Inc.', stage: 'Découverte', amount: '$80,000', priority: 'High', salesRep: 'Jane Doe' },
+    { id: 4, name: 'Consulting Package', company: 'BizConsult', stage: 'Qualification', amount: '$25,000', priority: 'Low', salesRep: 'Peter Jones' },
+    { id: 5, name: 'Enterprise Solution', company: 'Global Enterprises', stage: 'Closing', amount: '$120,000', priority: 'Urgent', salesRep: 'Jane Doe' },
+    { id: 6, name: 'New Product Launch Support', company: 'Innovate Ltd.', stage: 'Prospection', amount: '$30,000', priority: 'Medium', salesRep: 'Sarah Lee' },
+  ];
+
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
   };
 
   const handleFilterClick = () => {
-    // In a real app, this would open a modal or dropdown for filtering options
-    alert('Filter functionality not implemented yet.');
+    // In a real app, this would open a modal or dropdown for filtering
+    alert('Filter functionality is not yet implemented.');
+    // Example of how you might set filters programmatically:
+    // setFilters({ stage: 'Négociation', priority: 'High' });
   };
 
-  // Filter deals based on search term and applied filters
-  const filteredDeals = mockDeals.filter(deal => {
+  // Filter deals based on search term and filters
+  const filteredDeals = dummyDeals.filter(deal => {
     const matchesSearch = deal.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          deal.client.toLowerCase().includes(searchTerm.toLowerCase());
+                          deal.company.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Add logic for other filters here if needed
-    // Example: if (filters.stage && deal.stage !== filters.stage) return false;
+    // Apply other filters if they exist
+    // This is a basic example; actual filtering logic would be more complex
+    const matchesFilters = Object.keys(filters).every(key => {
+      if (filters[key]) {
+        return deal[key] === filters[key];
+      }
+      return true;
+    });
 
-    return matchesSearch;
+    return matchesSearch && matchesFilters;
   });
 
   return (
@@ -237,48 +213,33 @@ const Deals = () => {
           <FaPlus /> Nouveau Deal
         </CreateDealButton>
       </SectionHeader>
-      
       <ControlsContainer>
         <SearchBar>
-          <FaSearch />
-          <SearchInput 
-            type="text" 
-            placeholder="Rechercher par nom ou client..." 
-            value={searchTerm} 
-            onChange={handleSearchChange} 
+          <SearchInput
+            type="text"
+            placeholder="Rechercher par nom de deal ou entreprise..."
+            value={searchTerm}
+            onChange={handleSearchChange}
           />
+          <FaSearch color="#aaa" />
         </SearchBar>
         <FilterButton onClick={handleFilterClick}>
           <FaFilter /> Filtrer
         </FilterButton>
       </ControlsContainer>
-
+      
       <DealsGrid>
         {filteredDeals.length > 0 ? (
           filteredDeals.map(deal => (
             <DealCard key={deal.id}>
-              <DealHeader>
-                <DealTitle>
-                  <Link to={`/deals/${deal.id}`}>{deal.name}</Link>
-                </DealTitle>
-                <DealAmount>
-                  {deal.amount.toLocaleString('en-US', { style: 'currency', currency: deal.currency })}
-                </DealAmount>
-              </DealHeader>
-              <DealInfo>
-                <p>
-                  <span>Client</span>
-                  <span>{deal.client}</span>
-                </p>
-                <p>
-                  <span>Étape</span>
-                  <span><StageBadge stage={deal.stage}>{deal.stage}</StageBadge></span>
-                </p>
-                <p>
-                  <span>Clôture prévue</span>
-                  <span>{deal.closeDate}</span>
-                </p>
-              </DealInfo>
+              <DealCardTitle>{deal.name}</DealCardTitle>
+              <DealCardInfo><strong>Entreprise:</strong> {deal.company}</DealCardInfo>
+              <DealCardInfo><strong>Responsable:</strong> {deal.salesRep}</DealCardInfo>
+              <DealCardInfo><strong>Montant:</strong> {deal.amount}</DealCardInfo>
+              <DealCardStage stage={deal.stage}>{deal.stage}</DealCardStage>
+              <Link to={`/deals/${deal.id}`} style={{ marginTop: '10px', color: '#4361ee', textDecoration: 'none', fontWeight: '500' }}>
+                Voir les détails &rarr;
+              </Link>
             </DealCard>
           ))
         ) : (
