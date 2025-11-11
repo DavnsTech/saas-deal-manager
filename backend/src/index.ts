@@ -1,37 +1,46 @@
-import express, { Express, Request, Response, NextFunction } from 'express';
+import express from 'express';
+import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import connectDB from './config/database';
 import dealRoutes from './routes/dealRoutes';
+import authRoutes from './routes/authRoutes';
+import userRoutes from './routes/userRoutes';
+import { corsOptions, limiter, securityHeaders, sanitizeInput } from './middleware/security';
 
-dotenv.config(); // Load environment variables from .env file
+dotenv.config();
 
-const app: Express = express();
-const port = process.env.PORT || 3000;
+const app = express();
+const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(express.json()); // Parse JSON bodies (redundant if body-parser is used per route, but good for general use)
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+// Security middleware
+app.use(limiter);
+app.use(securityHeaders);
+app.use(cors(corsOptions));
+app.use(sanitizeInput);
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Connect to MongoDB
+connectDB();
 
 // Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/deals', dealRoutes);
 
-// Basic Health Check Route
-app.get('/', (req: Request, res: Response) => {
-    res.send('Deal Manager Backend is running!');
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Global Error Handler
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    console.error('Unhandled Error:', err.message);
-    // Check if it's a custom error with a specific status code, otherwise default to 500
-    const statusCode = (err as any).statusCode || 500;
-    res.status(statusCode).json({
-        message: err.message || 'Internal Server Error',
-        // In development, you might want to send more details
-        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-    });
+// Error handling middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Something went wrong!' });
 });
 
-// Start the server
-app.listen(port, () => {
-    console.log(`Server is running at http://localhost:${port}`);
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
