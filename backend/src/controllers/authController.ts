@@ -1,61 +1,63 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import User, { IUser } from '../models/User';
+import jwt from 'jsonwebtoken';
+import { UserModel } from '../models/User';
 import { JWT_SECRET, JWT_EXPIRES_IN } from '../config/jwt';
-import { UserPayload } from '../types';
+import { AuthPayload } from '../types';
 
-export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
+const saltRounds = 10; // Number of salt rounds for bcrypt
+
+export const register = async (req: Request, res: Response) => {
+  const { username, email, password } = req.body;
+
+  if (!username || !email || !password) {
+    return res.status(400).json({ message: 'Username, email, and password are required' });
+  }
+
   try {
-    const { email, password, firstName, lastName } = req.body;
-
-    if (!email || !password || !firstName || !lastName) {
-      return res.status(400).json({ message: 'All fields are required' });
-    }
-
-    const existingUser = await User.findOne({ email });
+    const existingUser = await UserModel.findByEmail(email);
     if (existingUser) {
-      return res.status(409).json({ message: 'User already exists' });
+      return res.status(409).json({ message: 'User with this email already exists' });
     }
 
-    const newUser = new User({ email, passwordHash: password, firstName, lastName, role: 'user' });
-    await newUser.save();
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+    const newUser = await UserModel.create({ username, email, passwordHash });
 
-    // Optionally, create a token upon registration
-    const payload: UserPayload = { userId: newUser._id.toString(), email: newUser.email, role: newUser.role };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-
-    res.status(201).json({ message: 'User registered successfully', token });
-
+    res.status(201).json({ message: 'User registered successfully', userId: newUser.id, username: newUser.username });
   } catch (error) {
-    next(error);
+    console.error('Registration error:', error);
+    res.status(500).json({ message: 'Internal server error during registration' });
   }
 };
 
-export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
+export const login = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required' });
+  }
+
   try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
-    }
-
-    const user = await User.findOne({ email }).select('+passwordHash'); // Ensure passwordHash is selected
+    const user = await UserModel.findByEmail(email);
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const isMatch = await (user as any).comparePassword(password);
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const payload: UserPayload = { userId: user._id.toString(), email: user.email, role: user.role };
+    const payload: AuthPayload = { userId: user.id, username: user.username };
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
-    res.status(200).json({ message: 'Login successful', token, user: { id: user._id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role } });
-
+    res.json({
+      message: 'Login successful',
+      token,
+      user: { userId: user.id, username: user.username } // Return user info without password
+    });
   } catch (error) {
-    next(error);
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Internal server error during login' });
   }
 };

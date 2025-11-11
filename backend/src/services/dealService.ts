@@ -1,27 +1,33 @@
-import Deal, { IDeal } from '../models/Deal';
 import { Deal as DealType } from '../types';
+import { DealModel } from '../models/Deal';
 
-export const getAllDeals = async (userId: string): Promise<IDeal[]> => {
-  // In a real app, you might filter by user role or assigned user
-  return Deal.find().populate('customerId').populate('assignedUserId').exec();
-};
+export const DealService = {
+  async getAllDeals(): Promise<DealType[]> {
+    return DealModel.findAll();
+  },
 
-export const getDealById = async (id: string): Promise<IDeal | null> => {
-  return Deal.findById(id).populate('customerId').populate('assignedUserId').exec();
-};
+  async getDealById(id: string): Promise<DealType | undefined> {
+    return DealModel.findById(id);
+  },
 
-export const createDeal = async (dealData: DealType): Promise<IDeal> => {
-  const newDeal = new Deal(dealData);
-  await newDeal.save();
-  return newDeal;
-};
+  async createDeal(dealData: Omit<DealType, 'id' | 'createdAt' | 'updatedAt'>): Promise<DealType> {
+    // Basic validation can be added here
+    if (!dealData.name || !dealData.stage || dealData.value === undefined || !dealData.ownerId) {
+      throw new Error('Missing required deal fields');
+    }
+    return DealModel.create(dealData);
+  },
 
-export const updateDeal = async (id: string, dealData: Partial<DealType>): Promise<IDeal | null> => {
-  const updatedDeal = await Deal.findByIdAndUpdate(id, dealData, { new: true, runValidators: true }).exec();
-  return updatedDeal;
-};
+  async updateDeal(id: string, updateData: Partial<DealType>): Promise<DealType | undefined> {
+    // More specific validation can be added here, e.g., checking if stage is valid
+    return DealModel.update(id, updateData);
+  },
 
-export const deleteDeal = async (id: string): Promise<IDeal | null> => {
-  const deletedDeal = await Deal.findByIdAndDelete(id).exec();
-  return deletedDeal;
+  async deleteDeal(id: string): Promise<boolean> {
+    return DealModel.delete(id);
+  },
+
+  async getDealsByOwner(ownerId: string): Promise<DealType[]> {
+    return DealModel.findByOwnerId(ownerId);
+  }
 };

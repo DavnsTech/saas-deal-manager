@@ -1,9 +1,11 @@
-import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { Request, Response, NextFunction } from 'express';
 import { JWT_SECRET } from '../config/jwt';
-import { UserPayload, AuthRequest } from '../types';
+import { DecodedToken } from '../types';
+import { UserModel } from '../models/User';
 
-export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
+// Middleware to verify JWT
+export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
@@ -11,26 +13,61 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
     return res.sendStatus(401); // If no token is provided
   }
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.sendStatus(403); // If token is invalid
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
+    // Optional: Check if user still exists in DB
+    const user = await UserModel.findById(decoded.userId);
+    if (!user) {
+      return res.sendStatus(403); // User not found
     }
-
-    // Attach user payload to the request
-    req.user = user as UserPayload;
+    // Attach user info to request for downstream use
+    req.user = { userId: decoded.userId, username: decoded.username };
     next();
-  });
+  } catch (error) {
+    console.error('JWT Verification Error:', error);
+    return res.sendStatus(403); // Invalid token
+  }
 };
 
-export const authorizeRole = (roles: ('admin' | 'user')[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (!req.user) {
+// Middleware to check if the authenticated user is the owner of the resource (e.g., a deal)
+export const isResourceOwner = (resourceType: 'deal') => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user?.userId;
+    if (!userId) {
       return res.sendStatus(401); // Should not happen if authenticateToken runs first
     }
 
-    if (!roles.includes(req.user.role)) {
-      return res.sendStatus(403); // Forbidden
+    try {
+      if (resourceType === 'deal') {
+        const dealId = req.params.dealId; // Assuming deal ID is in params
+        if (!dealId) {
+          return res.status(400).json({ message: 'Deal ID is required for ownership check' });
+        }
+        const deal = await DealModel.findById(dealId); // Need DealModel here
+
+        if (!deal) {
+          return res.sendStatus(404); // Deal not found
+        }
+
+        if (deal.ownerId !== userId) {
+          return res.sendStatus(403); // Forbidden: User is not the owner
+        }
+      } else {
+        // Handle other resource types if needed
+        return res.sendStatus(501); // Not Implemented
+      }
+
+      next();
+    } catch (error) {
+      console.error(`Ownership check error for ${resourceType}:`, error);
+      res.sendStatus(500);
     }
-    next();
   };
 };
+
+// Extend Request type to include user information
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: { userId: string; username: string };
+  }
+}

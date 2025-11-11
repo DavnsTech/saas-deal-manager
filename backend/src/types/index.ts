@@ -1,34 +1,31 @@
-import { Request } from 'express';
+// Define common types used across the backend
 
-export interface UserPayload {
-  userId: string;
+export interface User {
+  id: string;
+  username: string;
   email: string;
-  role: 'admin' | 'user'; // Example roles
-}
-
-export interface AuthRequest extends Request {
-  user?: UserPayload;
+  passwordHash: string; // Store hashed passwords
 }
 
 export interface Deal {
-  _id?: string;
+  id: string;
   name: string;
   description?: string;
-  value: number;
-  currency: string;
   stage: string; // e.g., 'Prospecting', 'Negotiation', 'Closed Won', 'Closed Lost'
-  customerId: string; // Assuming a customer ID for now, could be a separate model
-  assignedUserId: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  value: number;
+  createdAt: Date;
+  updatedAt: Date;
+  ownerId: string; // Foreign key to User
 }
 
-export interface Customer {
-  _id?: string;
-  name: string;
-  contactPerson?: string;
-  email: string;
-  phone?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+export interface AuthPayload {
+  userId: string;
+  username: string;
+}
+
+export interface DecodedToken {
+  userId: string;
+  username: string;
+  exp: number;
+  iat: number;
 }

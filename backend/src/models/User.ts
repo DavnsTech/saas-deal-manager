@@ -1,39 +1,29 @@
-import mongoose, { Schema, Document } from 'mongoose';
-import bcrypt from 'bcryptjs';
+import { User as UserType } from '../types';
+import { v4 as uuidv4 } from 'uuid';
 
-export interface IUser extends Document {
-  email: string;
-  passwordHash: string;
-  firstName: string;
-  lastName: string;
-  role: 'admin' | 'user';
-  createdAt: Date;
-  updatedAt: Date;
-}
+// In-memory database for demonstration purposes.
+// In a real application, this would interact with a database (e.g., PostgreSQL, MongoDB).
+const users: UserType[] = [];
 
-const userSchema: Schema = new Schema({
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  passwordHash: { type: String, required: true },
-  firstName: { type: String, required: true, trim: true },
-  lastName: { type: String, required: true, trim: true },
-  role: { type: String, enum: ['admin', 'user'], default: 'user' },
-}, {
-  timestamps: true
-});
+export const UserModel = {
+  async findByEmail(email: string): Promise<UserType | undefined> {
+    return users.find((user) => user.email === email);
+  },
 
-// Method to compare password
-userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
-  return bcrypt.compare(candidatePassword, this.passwordHash);
+  async findById(id: string): Promise<UserType | undefined> {
+    return users.find((user) => user.id === id);
+  },
+
+  async create(userData: Omit<UserType, 'id' | 'passwordHash'> & { passwordHash: string }): Promise<UserType> {
+    const newUser: UserType = {
+      id: uuidv4(),
+      ...userData,
+    };
+    users.push(newUser);
+    // Return a copy without the sensitive passwordHash for security
+    const { passwordHash, ...userWithoutPassword } = newUser;
+    return userWithoutPassword;
+  },
+
+  // In a real app, you'd have update, delete, etc.
 };
-
-// Hash password before saving
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('passwordHash')) {
-    return next();
-  }
-  const salt = await bcrypt.genSalt(10);
-  this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
-  next();
-});
-
-export default mongoose.model<IUser>('User', userSchema);
