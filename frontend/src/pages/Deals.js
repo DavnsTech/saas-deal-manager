@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import { FaPlus, FaSearch, FaFilter } from 'react-icons/fa';
+import { dealsApi } from '../api/dealsApi';
 
 const DealsContainer = styled.div`
   padding: 20px;
   background-color: #f4f7fc;
   min-height: calc(100vh - 70px);
+  margin-top: 70px;
+  margin-left: 250px;
+
+  @media (max-width: 768px) {
+    margin-left: 70px;
+  }
 `;
 
 const SectionHeader = styled.div`
@@ -120,7 +127,7 @@ const DealHeader = styled.div`
 
 const DealTitle = styled.h3`
   font-size: 18px;
-  margin: 0 0 10px 0;
+  margin: 0;
   color: #333;
   flex: 1;
 `;
@@ -129,25 +136,23 @@ const DealAmount = styled.div`
   font-size: 20px;
   font-weight: bold;
   color: #4361ee;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 `;
 
 const DealInfo = styled.div`
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
-  
-  div {
-    font-size: 14px;
-    color: #666;
-  }
+  margin-bottom: 15px;
+  font-size: 14px;
+  color: #666;
 `;
 
-const StatusBadge = styled.span`
+const StageBadge = styled.span`
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 12px;
   font-weight: 600;
+  text-transform: uppercase;
   background: ${props => {
     switch(props.stage) {
       case 'Prospection': return '#e0e0e0';
@@ -165,77 +170,72 @@ const StatusBadge = styled.span`
   color: ${props => {
     switch(props.stage) {
       case 'Prospection': return '#616161';
-      case 'Qualification': return '#947600';
-      case 'Prise de contact': return '#947600';
-      case 'Découverte': return '#947600';
-      case 'Proposition de valeur': return '#947600';
-      case 'Négociation': return '#947600';
-      case 'Closing': return '#947600';
+      case 'Qualification': return '#998000';
+      case 'Prise de contact': return '#996600';
+      case 'Découverte': return '#995200';
+      case 'Proposition de valeur': return '#993d00';
+      case 'Négociation': return '#992900';
+      case 'Closing': return '#7a3d00';
       case 'Livraison/Onboarding': return '#1b5e20';
-      case 'Fidélisation/Upsell/Cross-sell': return '#1b5e20';
+      case 'Fidélisation/Upsell/Cross-sell': return '#0d3c0d';
       default: return '#424242';
     }
   }};
 `;
 
+const DealDetails = styled.div`
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #888;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+`;
+
+const LoadingMessage = styled.div`
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #666;
+`;
+
+const ErrorMessage = styled.div`
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #e74c3c;
+`;
+
 const Deals = () => {
-  // Mock data for demonstration
-  const [deals] = useState([
-    { 
-      id: 1, 
-      name: 'Contrat ABC Corp', 
-      amount: 50000, 
-      stage: 'Négociation', 
-      company: 'ABC Corporation',
-      lastContact: '2023-07-15',
-      priority: 'Haute'
-    },
-    { 
-      id: 2, 
-      name: 'Solution XYZ', 
-      amount: 25000, 
-      stage: 'Proposition de valeur', 
-      company: 'XYZ Industries',
-      lastContact: '2023-07-10',
-      priority: 'Moyenne'
-    },
-    { 
-      id: 3, 
-      name: 'Partenariat DEF', 
-      amount: 75000, 
-      stage: 'Closing', 
-      company: 'DEF Solutions',
-      lastContact: '2023-07-18',
-      priority: 'Haute'
-    },
-    { 
-      id: 4, 
-      name: 'Projet GHI', 
-      amount: 35000, 
-      stage: 'Découverte', 
-      company: 'GHI Enterprises',
-      lastContact: '2023-07-12',
-      priority: 'Basse'
-    },
-    { 
-      id: 5, 
-      name: 'Accord JKL', 
-      amount: 60000, 
-      stage: 'Qualification', 
-      company: 'JKL Group',
-      lastContact: '2023-07-14',
-      priority: 'Moyenne'
-    },
-    { 
-      id: 6, 
-      name: 'Contrat MNO', 
-      amount: 45000, 
-      stage: 'Prise de contact', 
-      company: 'MNO Ltd',
-      lastContact: '2023-07-16',
-      priority: 'Haute'
-    },
-  ]);
+  const [deals, setDeals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const fetchDeals = async () => {
+      try {
+        setLoading(true);
+        const data = await dealsApi.getAllDeals();
+        setDeals(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDeals();
+  }, []);
+
+  const filteredDeals = deals.filter(deal => 
+    deal.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    deal.company.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) return <LoadingMessage>Chargement des deals...</LoadingMessage>;
+  if (error) return <ErrorMessage>Erreur: {error}</ErrorMessage>;
 
   return (
     <DealsContainer>
@@ -248,38 +248,36 @@ const Deals = () => {
       
       <ControlsContainer>
         <SearchBar>
-          <FaSearch style={{ color: '#999', marginRight: '10px' }} />
+          <FaSearch />
           <SearchInput 
             type="text" 
-            placeholder="Rechercher des deals..." 
+            placeholder="Rechercher un deal..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </SearchBar>
         <FilterButton>
-          <FaFilter /> Filtres
+          <FaFilter /> Filtrer
         </FilterButton>
       </ControlsContainer>
       
       <DealsGrid>
-        {deals.map(deal => (
-          <DealCard key={deal.id}>
+        {filteredDeals.map(deal => (
+          <DealCard key={deal.id} as={Link} to={`/deals/${deal.id}`}>
             <DealHeader>
-              <DealTitle>
-                <Link to={`/deals/${deal.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  {deal.name}
-                </Link>
-              </DealTitle>
+              <DealTitle>{deal.name}</DealTitle>
             </DealHeader>
-            <DealAmount>{deal.amount.toLocaleString('fr-FR')} €</DealAmount>
+            <DealAmount>{deal.amount} {deal.currency}</DealAmount>
             <DealInfo>
-              <div>Client: {deal.company}</div>
-              <div>Priorité: {deal.priority}</div>
-            </DealInfo>
-            <DealInfo>
-              <div>Dernier contact: {deal.lastContact}</div>
-              <StatusBadge stage={deal.stage}>
+              <div>{deal.company}</div>
+              <StageBadge stage={deal.stage}>
                 {deal.stage}
-              </StatusBadge>
+              </StageBadge>
             </DealInfo>
+            <DealDetails>
+              <div>Responsable: {deal.owner}</div>
+              <div>Date de création: {new Date(deal.createdAt).toLocaleDateString()}</div>
+            </DealDetails>
           </DealCard>
         ))}
       </DealsGrid>

@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
+import { dealsApi } from '../api/dealsApi';
 
 const CreateDealContainer = styled.div`
   padding: 20px;
   max-width: 1000px;
   margin: 0 auto;
+  background-color: #f4f7fc;
+  min-height: calc(100vh - 70px);
+  margin-top: 70px;
+  margin-left: 250px;
+
+  @media (max-width: 768px) {
+    margin-left: 70px;
+  }
 `;
 
 const BackLink = styled(Link)`
@@ -29,6 +38,7 @@ const PageTitle = styled.h1`
   font-size: 28px;
   margin-bottom: 30px;
   text-align: center;
+  color: #333;
 `;
 
 const Form = styled.form`
@@ -113,7 +123,6 @@ const FormTextarea = styled.textarea`
   font-size: 16px;
   font-family: inherit;
   min-height: 100px;
-  resize: vertical;
   
   &:focus {
     outline: none;
@@ -136,34 +145,36 @@ const FormButton = styled.button`
   &:hover {
     background: #3a56d4;
   }
-  
-  &.cancel {
-    background: #6c757d;
-    margin-right: 10px;
-    
-    &:hover {
-      background: #5a6268;
-    }
-  }
 `;
 
-const ButtonGroup = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 20px;
+const ErrorMessage = styled.div`
+  color: #e74c3c;
+  margin-bottom: 20px;
+  padding: 10px;
+  background: #ffeaea;
+  border-radius: 4px;
+`;
+
+const SuccessMessage = styled.div`
+  color: #27ae60;
+  margin-bottom: 20px;
+  padding: 10px;
+  background: #e8f5e9;
+  border-radius: 4px;
 `;
 
 const CreateDeal = () => {
-  const [dealData, setDealData] = useState({
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
     name: '',
     amount: '',
     currency: 'EUR',
     stage: 'Prospection',
-    source: '',
+    leadSource: '',
     priority: 'Moyenne',
-    probability: 20,
+    closingProbability: 0,
     expectedCloseDate: '',
-    salesRep: '',
+    owner: '',
     company: '',
     primaryContact: '',
     email: '',
@@ -173,29 +184,50 @@ const CreateDeal = () => {
     acquisitionChannel: '',
     identifiedNeed: '',
     proposedSolution: '',
-    contractType: 'Contrat annuel',
-    contractDuration: '12 mois',
-    paymentMethod: 'Facturation mensuelle',
-    followUpReminder: '',
-    leadScore: 50,
-    estimatedLifetimeValue: '',
+    contractType: '',
+    contractDuration: '',
+    paymentMethod: '',
+    comments: '',
+    documents: '',
+    followUp: '',
+    leadScore: 0,
+    lifetimeValue: '',
     region: ''
   });
+  
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setDealData(prev => ({
+    setFormData(prev => ({
       ...prev,
       [name]: value
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // In a real app, this would call an API to create the deal
-    console.log('Deal data:', dealData);
-    alert('Deal créé avec succès!');
-    // Reset form or redirect
+    setLoading(true);
+    setError('');
+    setSuccess(false);
+    
+    try {
+      const dealData = {
+        ...formData,
+        createdAt: new Date().toISOString(),
+        lastInteraction: new Date().toISOString()
+      };
+      
+      await dealsApi.createDeal(dealData);
+      setSuccess(true);
+      setTimeout(() => navigate('/deals'), 1500);
+    } catch (err) {
+      setError(err.message || 'Erreur lors de la création du deal');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -207,15 +239,18 @@ const CreateDeal = () => {
       <PageTitle>Créer un nouveau deal</PageTitle>
       
       <Form onSubmit={handleSubmit}>
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+        {success && <SuccessMessage>Deal créé avec succès ! Redirection...</SuccessMessage>}
+        
         <FormSection>
-          <SectionTitle>Informations du Deal</SectionTitle>
+          <SectionTitle>Informations de base</SectionTitle>
           <FormRow>
             <FormGroup>
               <label>Nom du deal *</label>
-              <FormInput 
-                type="text" 
-                name="name" 
-                value={dealData.name}
+              <FormInput
+                type="text"
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
                 required
               />
@@ -223,10 +258,10 @@ const CreateDeal = () => {
             
             <FormGroup>
               <label>Montant *</label>
-              <FormInput 
-                type="number" 
-                name="amount" 
-                value={dealData.amount}
+              <FormInput
+                type="number"
+                name="amount"
+                value={formData.amount}
                 onChange={handleChange}
                 required
               />
@@ -236,22 +271,22 @@ const CreateDeal = () => {
           <FormRow>
             <FormGroup>
               <label>Devise</label>
-              <FormSelect 
-                name="currency" 
-                value={dealData.currency}
+              <FormSelect
+                name="currency"
+                value={formData.currency}
                 onChange={handleChange}
               >
-                <option value="EUR">EUR</option>
-                <option value="USD">USD</option>
-                <option value="GBP">GBP</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="USD">USD ($)</option>
+                <option value="GBP">GBP (£)</option>
               </FormSelect>
             </FormGroup>
             
             <FormGroup>
               <label>Étape de vente</label>
-              <FormSelect 
-                name="stage" 
-                value={dealData.stage}
+              <FormSelect
+                name="stage"
+                value={formData.stage}
                 onChange={handleChange}
               >
                 <option value="Prospection">Prospection</option>
@@ -270,24 +305,25 @@ const CreateDeal = () => {
           <FormRow>
             <FormGroup>
               <label>Source du lead</label>
-              <FormInput 
-                type="text" 
-                name="source" 
-                value={dealData.source}
+              <FormInput
+                type="text"
+                name="leadSource"
+                value={formData.leadSource}
                 onChange={handleChange}
               />
             </FormGroup>
             
             <FormGroup>
               <label>Priorité</label>
-              <FormSelect 
-                name="priority" 
-                value={dealData.priority}
+              <FormSelect
+                name="priority"
+                value={formData.priority}
                 onChange={handleChange}
               >
                 <option value="Basse">Basse</option>
                 <option value="Moyenne">Moyenne</option>
                 <option value="Haute">Haute</option>
+                <option value="Urgente">Urgente</option>
               </FormSelect>
             </FormGroup>
           </FormRow>
@@ -295,10 +331,10 @@ const CreateDeal = () => {
           <FormRow>
             <FormGroup>
               <label>Probabilité de closing (%)</label>
-              <FormInput 
-                type="number" 
-                name="probability" 
-                value={dealData.probability}
+              <FormInput
+                type="number"
+                name="closingProbability"
+                value={formData.closingProbability}
                 onChange={handleChange}
                 min="0"
                 max="100"
@@ -307,10 +343,10 @@ const CreateDeal = () => {
             
             <FormGroup>
               <label>Date de clôture prévue</label>
-              <FormInput 
-                type="date" 
-                name="expectedCloseDate" 
-                value={dealData.expectedCloseDate}
+              <FormInput
+                type="date"
+                name="expectedCloseDate"
+                value={formData.expectedCloseDate}
                 onChange={handleChange}
               />
             </FormGroup>
@@ -318,14 +354,14 @@ const CreateDeal = () => {
         </FormSection>
         
         <FormSection>
-          <SectionTitle>Informations Client</SectionTitle>
+          <SectionTitle>Informations sur le client</SectionTitle>
           <FormRow>
             <FormGroup>
-              <label>Client/Entreprise *</label>
-              <FormInput 
-                type="text" 
-                name="company" 
-                value={dealData.company}
+              <label>Entreprise *</label>
+              <FormInput
+                type="text"
+                name="company"
+                value={formData.company}
                 onChange={handleChange}
                 required
               />
@@ -333,10 +369,10 @@ const CreateDeal = () => {
             
             <FormGroup>
               <label>Contact principal *</label>
-              <FormInput 
-                type="text" 
-                name="primaryContact" 
-                value={dealData.primaryContact}
+              <FormInput
+                type="text"
+                name="primaryContact"
+                value={formData.primaryContact}
                 onChange={handleChange}
                 required
               />
@@ -346,20 +382,20 @@ const CreateDeal = () => {
           <FormRow>
             <FormGroup>
               <label>Email</label>
-              <FormInput 
-                type="email" 
-                name="email" 
-                value={dealData.email}
+              <FormInput
+                type="email"
+                name="email"
+                value={formData.email}
                 onChange={handleChange}
               />
             </FormGroup>
             
             <FormGroup>
               <label>Téléphone</label>
-              <FormInput 
-                type="tel" 
-                name="phone" 
-                value={dealData.phone}
+              <FormInput
+                type="tel"
+                name="phone"
+                value={formData.phone}
                 onChange={handleChange}
               />
             </FormGroup>
@@ -368,72 +404,63 @@ const CreateDeal = () => {
           <FormRow>
             <FormGroup>
               <label>Secteur d'activité</label>
-              <FormInput 
-                type="text" 
-                name="industry" 
-                value={dealData.industry}
+              <FormInput
+                type="text"
+                name="industry"
+                value={formData.industry}
                 onChange={handleChange}
               />
             </FormGroup>
             
             <FormGroup>
               <label>Taille de l'entreprise</label>
-              <FormSelect 
-                name="companySize" 
-                value={dealData.companySize}
+              <FormSelect
+                name="companySize"
+                value={formData.companySize}
                 onChange={handleChange}
               >
                 <option value="">Sélectionner</option>
-                <option value="1-10 employés">1-10 employés</option>
-                <option value="11-50 employés">11-50 employés</option>
-                <option value="51-200 employés">51-200 employés</option>
-                <option value="201-500 employés">201-500 employés</option>
-                <option value="500-1000 employés">500-1000 employés</option>
-                <option value="1000+ employés">1000+ employés</option>
+                <option value="1-10">1-10 employés</option>
+                <option value="11-50">11-50 employés</option>
+                <option value="51-200">51-200 employés</option>
+                <option value="201-500">201-500 employés</option>
+                <option value="501-1000">501-1000 employés</option>
+                <option value="1000+">1000+ employés</option>
               </FormSelect>
-            </FormGroup>
-          </FormRow>
-          
-          <FormRow>
-            <FormGroup>
-              <label>Canal d'acquisition</label>
-              <FormInput 
-                type="text" 
-                name="acquisitionChannel" 
-                value={dealData.acquisitionChannel}
-                onChange={handleChange}
-              />
-            </FormGroup>
-            
-            <FormGroup>
-              <label>Région/Pays</label>
-              <FormInput 
-                type="text" 
-                name="region" 
-                value={dealData.region}
-                onChange={handleChange}
-              />
             </FormGroup>
           </FormRow>
         </FormSection>
         
         <FormSection>
-          <SectionTitle>Détails de l'Offre</SectionTitle>
+          <SectionTitle>Détails du deal</SectionTitle>
           <FormRow>
             <FormGroup>
-              <label>Besoin identifié</label>
-              <FormTextarea 
-                name="identifiedNeed" 
-                value={dealData.identifiedNeed}
+              <label>Canal d'acquisition</label>
+              <FormInput
+                type="text"
+                name="acquisitionChannel"
+                value={formData.acquisitionChannel}
                 onChange={handleChange}
               />
             </FormGroup>
             
             <FormGroup>
+              <label>Besoin identifié</label>
+              <FormInput
+                type="text"
+                name="identifiedNeed"
+                value={formData.identifiedNeed}
+                onChange={handleChange}
+              />
+            </FormGroup>
+          </FormRow>
+          
+          <FormRow>
+            <FormGroup>
               <label>Solution proposée</label>
-              <FormTextarea 
-                name="proposedSolution" 
-                value={dealData.proposedSolution}
+              <FormTextarea
+                name="proposedSolution"
+                value={formData.proposedSolution}
                 onChange={handleChange}
               />
             </FormGroup>
@@ -442,24 +469,20 @@ const CreateDeal = () => {
           <FormRow>
             <FormGroup>
               <label>Type de contrat</label>
-              <FormSelect 
-                name="contractType" 
-                value={dealData.contractType}
+              <FormInput
+                type="text"
+                name="contractType"
+                value={formData.contractType}
                 onChange={handleChange}
-              >
-                <option value="Contrat annuel">Contrat annuel</option>
-                <option value="Contrat mensuel">Contrat mensuel</option>
-                <option value="Contrat ponctuel">Contrat ponctuel</option>
-                <option value="Contrat de service">Contrat de service</option>
-              </FormSelect>
+              />
             </FormGroup>
             
             <FormGroup>
               <label>Durée du contrat</label>
-              <FormInput 
-                type="text" 
-                name="contractDuration" 
-                value={dealData.contractDuration}
+              <FormInput
+                type="text"
+                name="contractDuration"
+                value={formData.contractDuration}
                 onChange={handleChange}
               />
             </FormGroup>
@@ -468,49 +491,20 @@ const CreateDeal = () => {
           <FormRow>
             <FormGroup>
               <label>Mode de paiement</label>
-              <FormSelect 
-                name="paymentMethod" 
-                value={dealData.paymentMethod}
-                onChange={handleChange}
-              >
-                <option value="Facturation mensuelle">Facturation mensuelle</option>
-                <option value="Facturation trimestrielle">Facturation trimestrielle</option>
-                <option value="Facturation annuelle">Facturation annuelle</option>
-                <option value="Paiement unique">Paiement unique</option>
-              </FormSelect>
-            </FormGroup>
-            
-            <FormGroup>
-              <label>Valeur à vie estimée</label>
-              <FormInput 
-                type="number" 
-                name="estimatedLifetimeValue" 
-                value={dealData.estimatedLifetimeValue}
-                onChange={handleChange}
-              />
-            </FormGroup>
-          </FormRow>
-        </FormSection>
-        
-        <FormSection>
-          <SectionTitle>Suivi</SectionTitle>
-          <FormRow>
-            <FormGroup>
-              <label>Suivi de relance</label>
-              <FormInput 
-                type="date" 
-                name="followUpReminder" 
-                value={dealData.followUpReminder}
+              <FormInput
+                type="text"
+                name="paymentMethod"
+                value={formData.paymentMethod}
                 onChange={handleChange}
               />
             </FormGroup>
             
             <FormGroup>
               <label>Score du lead</label>
-              <FormInput 
-                type="number" 
-                name="leadScore" 
-                value={dealData.leadScore}
+              <FormInput
+                type="number"
+                name="leadScore"
+                value={formData.leadScore}
                 onChange={handleChange}
                 min="0"
                 max="100"
@@ -518,24 +512,82 @@ const CreateDeal = () => {
             </FormGroup>
           </FormRow>
           
-          <FormGroup>
-            <label>Commentaires internes</label>
-            <FormTextarea 
-              name="internalComments" 
-              value={dealData.internalComments || ''}
-              onChange={(e) => setDealData({...dealData, internalComments: e.target.value})}
-            />
-          </FormGroup>
+          <FormRow>
+            <FormGroup>
+              <label>Valeur à vie estimée</label>
+              <FormInput
+                type="text"
+                name="lifetimeValue"
+                value={formData.lifetimeValue}
+                onChange={handleChange}
+              />
+            </FormGroup>
+            
+            <FormGroup>
+              <label>Région/Pays</label>
+              <FormInput
+                type="text"
+                name="region"
+                value={formData.region}
+                onChange={handleChange}
+              />
+            </FormGroup>
+          </FormRow>
         </FormSection>
         
-        <ButtonGroup>
-          <FormButton className="cancel" type="button">
-            Annuler
-          </FormButton>
-          <FormButton type="submit">
-            Créer le deal
-          </FormButton>
-        </ButtonGroup>
+        <FormSection>
+          <SectionTitle>Informations supplémentaires</SectionTitle>
+          <FormRow>
+            <FormGroup>
+              <label>Responsable commercial</label>
+              <FormInput
+                type="text"
+                name="owner"
+                value={formData.owner}
+                onChange={handleChange}
+              />
+            </FormGroup>
+          </FormRow>
+          
+          <FormRow>
+            <FormGroup>
+              <label>Suivi de relance</label>
+              <FormInput
+                type="text"
+                name="followUp"
+                value={formData.followUp}
+                onChange={handleChange}
+              />
+            </FormGroup>
+          </FormRow>
+          
+          <FormRow>
+            <FormGroup>
+              <label>Documents joints</label>
+              <FormInput
+                type="text"
+                name="documents"
+                value={formData.documents}
+                onChange={handleChange}
+              />
+            </FormGroup>
+          </FormRow>
+          
+          <FormRow>
+            <FormGroup>
+              <label>Commentaires internes</label>
+              <FormTextarea
+                name="comments"
+                value={formData.comments}
+                onChange={handleChange}
+              />
+            </FormGroup>
+          </FormRow>
+        </FormSection>
+        
+        <FormButton type="submit" disabled={loading}>
+          {loading ? 'Création en cours...' : 'Créer le deal'}
+        </FormButton>
       </Form>
     </CreateDealContainer>
   );
