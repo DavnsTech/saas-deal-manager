@@ -1,37 +1,40 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { FaHome, FaHandshake, FaChartBar, FaCog } from 'react-icons/fa';
-import './Sidebar.css';
+import { NavLink } from 'react-router-dom'; // Assuming React Router is used for navigation
+import './Sidebar.css'; // Assuming CSS is imported
 
-function Sidebar() {
-  const location = useLocation();
+interface SidebarProps {
+  // Add any props if needed, e.g., user roles to conditionally render links
+}
+
+const Sidebar: React.FC<SidebarProps> = () => {
+  // Define navigation links, potentially dynamically based on user roles or permissions
+  const navLinks = [
+    { to: '/dashboard', label: 'Dashboard' },
+    { to: '/deals', label: 'Deals' },
+    { to: '/create-deal', label: 'Create Deal' },
+    // Add other navigation items
+    // { to: '/users', label: 'Users' },
+  ];
 
   return (
-    <aside className="sidebar">
-      <ul className="menu">
-        <li className={location.pathname === '/' ? 'active' : ''}>
-          <Link to="/">
-            <FaHome /> Tableau de bord
-          </Link>
-        </li>
-        <li className={location.pathname.startsWith('/deals') ? 'active' : ''}>
-          <Link to="/deals">
-            <FaHandshake /> Deals
-          </Link>
-        </li>
-        <li className={location.pathname === '/reports' ? 'active' : ''}>
-          <Link to="/reports">
-            <FaChartBar /> Rapports
-          </Link>
-        </li>
-        <li className={location.pathname === '/settings' ? 'active' : ''}>
-          <Link to="/settings">
-            <FaCog /> Paramètres
-          </Link>
-        </li>
-      </ul>
+    <aside className="app-sidebar">
+      <nav>
+        <ul>
+          {navLinks.map(link => (
+            <li key={link.to}>
+              <NavLink
+                to={link.to}
+                className={({ isActive }) => isActive ? 'active' : ''}
+                aria-current={({ isActive }) => isActive ? 'page' : undefined}
+              >
+                {link.label}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </aside>
   );
-}
+};
 
 export default Sidebar;

@@ -1,47 +1,23 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FaBell, FaUserCircle } from 'react-icons/fa';
-import './Header.css';
+import './Header.css'; // Assuming CSS is imported
 
-function Header() {
-  const navigate = useNavigate();
-  const isAuthenticated = localStorage.getItem('token') !== null;
+interface HeaderProps {
+  title: string;
+  // Add other props as needed, e.g., user info, logout function
+}
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
-
+const Header: React.FC<HeaderProps> = ({ title }) => {
   return (
-    <header className="header">
-      <div className="logo">
-        <Link to="/" className="logo-link">Deal Manager</Link>
+    <header className="app-header">
+      <div className="header-title">
+        <h1>{title}</h1>
       </div>
-      <nav className="nav">
-        {isAuthenticated ? (
-          <>
-            <Link to="/">Tableau de bord</Link>
-            <Link to="/deals">Deals</Link>
-            <button onClick={handleLogout} className="logout-btn">Logout</button>
-          </>
-        ) : (
-          <>
-            <Link to="/login">Login</Link>
-            <Link to="/register">Register</Link>
-          </>
-        )}
-      </nav>
-      {isAuthenticated && (
-        <div className="user-actions">
-          <div className="notification">
-            <FaBell size={20} />
-            <span className="badge">3</span>
-          </div>
-          <FaUserCircle size={24} />
-        </div>
-      )}
+      {/* Add user profile or logout button here if applicable */}
+      <div className="header-actions">
+        {/* For example: <button>Logout</button> */}
+      </div>
     </header>
   );
-}
+};
 
 export default Header;
