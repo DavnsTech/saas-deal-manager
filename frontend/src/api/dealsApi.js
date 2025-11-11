@@ -1,65 +1,73 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api'; // Use env variable
+import axios from 'axios';
 
-const getToken = () => {
-    // Retrieve token from localStorage or wherever it's stored
-    return localStorage.getItem('jwtToken');
-};
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api'; // Use environment variable
 
-const makeRequest = async (url, options = {}) => {
-    const token = getToken();
-    const headers = {
-        'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` }), // Add token if exists
-        ...options.headers,
-    };
+const getAuthToken = () => localStorage.getItem('token');
 
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-        ...options,
-        headers,
-    });
+const dealsApi = axios.create({
+  baseURL: `${API_URL}/deals`,
+});
 
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
-        const error = new Error(errorData.message || `HTTP error! status: ${response.status}`);
-        error.status = response.status;
-        error.data = errorData;
-        throw error;
+// Add a request interceptor to include the token
+dealsApi.interceptors.request.use(
+  (config) => {
+    const token = getAuthToken();
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
     }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
-    return response.json();
+export const fetchDeals = async () => {
+  try {
+    const response = await dealsApi.get('/');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching deals:', error);
+    throw error; // Re-throw to be handled by the component
+  }
 };
 
-export const dealsApi = {
-    getAllDeals: async () => {
-        return makeRequest('/deals');
-    },
+export const fetchDealById = async (id) => {
+  try {
+    const response = await dealsApi.get(`/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching deal with ID ${id}:`, error);
+    throw error;
+  }
+};
 
-    getDealById: async (id) => {
-        if (!id) throw new Error('Deal ID is required');
-        return makeRequest(`/deals/${id}`);
-    },
+export const createDeal = async (dealData) => {
+  try {
+    const response = await dealsApi.post('/', dealData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating deal:', error);
+    throw error;
+  }
+};
 
-    createDeal: async (dealData) => {
-        if (!dealData) throw new Error('Deal data is required');
-        return makeRequest('/deals', {
-            method: 'POST',
-            body: JSON.stringify(dealData),
-        });
-    },
+export const updateDeal = async (id, dealData) => {
+  try {
+    const response = await dealsApi.put(`/${id}`, dealData);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating deal with ID ${id}:`, error);
+    throw error;
+  }
+};
 
-    updateDeal: async (id, dealData) => {
-        if (!id) throw new Error('Deal ID is required');
-        if (!dealData) throw new Error('Deal data is required');
-        return makeRequest(`/deals/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(dealData),
-        });
-    },
-
-    deleteDeal: async (id) => {
-        if (!id) throw new Error('Deal ID is required');
-        return makeRequest(`/deals/${id}`, {
-            method: 'DELETE',
-        });
-    },
+export const deleteDeal = async (id) => {
+  try {
+    const response = await dealsApi.delete(`/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error deleting deal with ID ${id}:`, error);
+    throw error;
+  }
 };

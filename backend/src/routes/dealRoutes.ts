@@ -1,31 +1,22 @@
 import { Router } from 'express';
 import {
-  createDeal,
-  getDeals,
-  getDealById,
-  updateDeal,
-  deleteDeal,
+  handleGetAllDeals,
+  handleGetDealById,
+  handleCreateDeal,
+  handleUpdateDeal,
+  handleDeleteDeal
 } from '../controllers/dealController';
-import { authenticateToken } from '../middleware/security';
+import { authenticateToken, authorizeRole } from '../middleware/security';
 
 const router = Router();
 
-// All deal routes require authentication
-router.use(authenticateToken);
+// Publicly accessible or needs authentication depending on requirements
+router.get('/', authenticateToken, handleGetAllDeals);
+router.post('/', authenticateToken, handleCreateDeal); // Only authenticated users can create
 
-// POST /api/deals - Create a new deal
-router.post('/', createDeal);
-
-// GET /api/deals - Get all deals for the authenticated user
-router.get('/', getDeals);
-
-// GET /api/deals/:id - Get a specific deal by ID
-router.get('/:id', getDealById);
-
-// PUT /api/deals/:id - Update a specific deal by ID
-router.put('/:id', updateDeal);
-
-// DELETE /api/deals/:id - Delete a specific deal by ID
-router.delete('/:id', deleteDeal);
+// Routes requiring specific roles or ownership checks would be more complex
+router.get('/:id', authenticateToken, handleGetDealById);
+router.put('/:id', authenticateToken, authorizeRole(['admin']), handleUpdateDeal); // Example: Only admin can update
+router.delete('/:id', authenticateToken, authorizeRole(['admin']), handleDeleteDeal); // Example: Only admin can delete
 
 export default router;

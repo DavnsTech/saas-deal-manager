@@ -1,87 +1,37 @@
 import React from 'react';
-import styled from 'styled-components';
-import { FaBell, FaUserCircle } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import './Header.css'; // Import Header-specific styles
 
-const HeaderContainer = styled.header`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  padding: 15px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 100;
-  height: 70px;
-`;
+function Header() {
+  // Basic auth check for conditional rendering
+  const isAuthenticated = localStorage.getItem('token') !== null;
 
-const Logo = styled.h1`
-  color: #4361ee;
-  font-size: 24px;
-  margin: 0;
-`;
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    // Redirect to login page (using window.location for simplicity, ideally use useNavigate)
+    window.location.href = '/login';
+  };
 
-const Nav = styled.nav`
-  display: flex;
-  gap: 20px;
-`;
-
-const NavLink = styled(Link)`
-  text-decoration: none;
-  color: #333;
-  font-weight: 500;
-  &:hover {
-    color: #4361ee;
-  }
-`;
-
-const UserActions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 20px;
-`;
-
-const IconWrapper = styled.div`
-  position: relative;
-  cursor: pointer;
-`;
-
-const NotificationBadge = styled.span`
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: #dc3545;
-  color: white;
-  border-radius: 50%;
-  width: 18px;
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: bold;
-`;
-
-const Header = () => {
   return (
-    <HeaderContainer>
-      <Logo>Deal Manager</Logo>
-      <Nav>
-        <NavLink to="/">Tableau de bord</NavLink>
-        <NavLink to="/deals">Deals</NavLink>
-      </Nav>
-      <UserActions>
-        <IconWrapper>
-          <FaBell size={20} />
-          <NotificationBadge>3</NotificationBadge>
-        </IconWrapper>
-        <FaUserCircle size={24} />
-      </UserActions>
-    </HeaderContainer>
+    <header className="app-header">
+      <div className="logo">Deal Manager</div>
+      <nav>
+        <ul>
+          {isAuthenticated ? (
+            <>
+              <li><a href="/">Dashboard</a></li>
+              <li><a href="/deals">Deals</a></li>
+              <li onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</li>
+            </>
+          ) : (
+            <>
+              <li><a href="/login">Login</a></li>
+              <li><a href="/register">Register</a></li>
+            </>
+          )}
+        </ul>
+      </nav>
+    </header>
   );
-};
+}
 
 export default Header;

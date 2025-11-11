@@ -1,13 +1,10 @@
-import express from 'express';
-import { getAllUsers, getUserById, updateUser, deleteUser } from '../controllers/userController';
-import { authenticate, authorize } from '../config/jwt';
+import { Router } from 'express';
+import { getCurrentUser, getAllUsers } from '../controllers/userController';
+import { authenticateToken, authorizeRole } from '../middleware/security';
 
-const router = express.Router();
+const router = Router();
 
-// Admin only routes
-router.get('/', authenticate, authorize('admin'), getAllUsers);
-router.get('/:id', authenticate, authorize('admin'), getUserById);
-router.put('/:id', authenticate, authorize('admin'), updateUser);
-router.delete('/:id', authenticate, authorize('admin'), deleteUser);
+router.get('/me', authenticateToken, getCurrentUser);
+router.get('/', authenticateToken, authorizeRole(['admin']), getAllUsers); // Only admins can see all users
 
 export default router;
