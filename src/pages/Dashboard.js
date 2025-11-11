@@ -1,10 +1,12 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-import { FaPlus, FaChartLine, FaDollarSign, FaList } from 'react-icons/fa';
+import { FaPlus, FaChartLine, FaDollarSign, FaList, FaUsers, FaCalendarAlt } from 'react-icons/fa';
 
 const DashboardContainer = styled.div`
   padding: 20px;
+  background-color: #f4f7fc;
+  min-height: calc(100vh - 70px); /* Ensure content fills remaining height */
 `;
 
 const StatsGrid = styled.div`
@@ -21,6 +23,13 @@ const StatCard = styled.div`
   padding: 20px;
   display: flex;
   align-items: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  }
 `;
 
 const StatIcon = styled.div`
@@ -32,6 +41,7 @@ const StatIcon = styled.div`
   align-items: center;
   justify-content: center;
   margin-right: 15px;
+  flex-shrink: 0; /* Prevent icon from shrinking */
   
   svg {
     color: white;
@@ -43,11 +53,14 @@ const StatInfo = styled.div`
   h3 {
     font-size: 24px;
     margin-bottom: 5px;
+    font-weight: 700;
+    color: #333;
   }
   
   p {
     color: #666;
     font-size: 14px;
+    margin: 0;
   }
 `;
 
@@ -59,6 +72,8 @@ const SectionHeader = styled.div`
   
   h2 {
     font-size: 22px;
+    color: #333;
+    font-weight: 600;
   }
 `;
 
@@ -79,6 +94,7 @@ const DealsTable = styled.table`
   th {
     background: #f8f9fa;
     font-weight: 600;
+    color: #555;
   }
   
   tr:last-child td {
@@ -111,69 +127,69 @@ const CreateDealButton = styled(Link)`
 `;
 
 const StageBadge = styled.span`
-  padding: 4px 10px;
-  border-radius: 12px;
+  padding: 5px 12px;
+  border-radius: 16px;
   font-size: 12px;
   font-weight: 600;
-  background: ${props => {
+  text-transform: uppercase;
+  background-color: ${props => {
     switch(props.stage) {
       case 'Prospection': return '#e0e0e0';
-      case 'Qualification': return '#ffecb3';
-      case 'Prise de contact': return '#ffe082';
-      case 'Découverte': return '#ffcc80';
-      case 'Proposition de valeur': return '#ffb74d';
-      case 'Négociation': return '#ff9800';
+      case 'Qualification': return '#fff9c4';
+      case 'Prise de contact': return '#ffecb3';
+      case 'Découverte': return '#ffe0b2';
+      case 'Proposition de valeur': return '#ffcc80';
+      case 'Négociation': return '#ffb74d';
       case 'Closing': return '#f57c00';
-      case 'Livraison/Onboarding': return '#4caf50';
-      case 'Fidélisation/Upsell/Cross-sell': return '#2e7d32';
-      default: return '#e0e0e0';
+      case 'Livraison/Onboarding': return '#81c784';
+      case 'Fidélisation/Upsell/Cross-sell': return '#388e3c';
+      default: return '#bdbdbd';
     }
   }};
   color: ${props => {
     switch(props.stage) {
-      case 'Prospection': return '#666';
-      case 'Qualification': return '#ff8f00';
-      case 'Prise de contact': return '#ff6f00';
-      case 'Découverte': return '#ef6c00';
+      case 'Prospection': return '#616161';
+      case 'Qualification': return '#f57f17';
+      case 'Prise de contact': return '#f57f17';
+      case 'Découverte': return '#e65100';
       case 'Proposition de valeur': return '#e65100';
       case 'Négociation': return '#fff';
       case 'Closing': return '#fff';
       case 'Livraison/Onboarding': return '#fff';
       case 'Fidélisation/Upsell/Cross-sell': return '#fff';
-      default: return '#666';
+      default: return '#424242';
     }
   }};
 `;
 
-const Dashboard = () => {
-  // Mock data
-  const stats = [
-    { title: "Total Deals", value: "24", icon: <FaList />, color: "#4361ee" },
-    { title: "Valeur Totale", value: "€124,500", icon: <FaDollarSign />, color: "#28a745" },
-    { title: "Taux de Conversion", value: "68%", icon: <FaChartLine />, color: "#ffc107" },
-  ];
-  
-  const recentDeals = [
-    { id: 1, name: "Contrat avec ABC Corp", amount: "€25,000", stage: "Négociation", company: "ABC Corp" },
-    { id: 2, name: "Partenariat XYZ", amount: "€15,000", stage: "Proposition de valeur", company: "XYZ Ltd" },
-    { id: 3, name: "Contrat Logiciel", amount: "€8,500", stage: "Closing", company: "Tech Solutions" },
-    { id: 4, name: "Service Maintenance", amount: "€42,000", stage: "Livraison/Onboarding", company: "Global Services" },
-  ];
+const RecentDealsSection = styled.div`
+  margin-top: 30px;
+`;
 
+// Mock data for dashboard stats and recent deals
+const dashboardStats = [
+  { title: 'Total Deals', value: '150', icon: FaList, color: '#4361ee' },
+  { title: 'Deals Ouverts', value: '75', icon: FaChartLine, color: '#008080' },
+  { title: 'Valeur Totale', value: '$1.2M', icon: FaDollarSign, color: '#28a745' },
+  { title: 'Nouveaux Clients', value: '15', icon: FaUsers, color: '#ffc107' },
+];
+
+const recentDealsData = [
+  { id: 1, name: 'Projet Alpha', amount: '$50,000', stage: 'Négociation', closeDate: '2024-08-15' },
+  { id: 2, name: 'Solution Beta', amount: '$75,000', stage: 'Proposition de valeur', closeDate: '2024-09-01' },
+  { id: 3, name: 'Partenariat Gamma', amount: '$120,000', stage: 'Closing', closeDate: '2024-07-30' },
+  { id: 4, name: 'Service Delta', amount: '$30,000', stage: 'Qualification', closeDate: '2024-10-10' },
+  { id: 5, name: 'Consulting Epsilon', amount: '$90,000', stage: 'Découverte', closeDate: '2024-09-20' },
+];
+
+const Dashboard = () => {
   return (
     <DashboardContainer>
-      <SectionHeader>
-        <h2>Tableau de bord</h2>
-        <CreateDealButton to="/deals/create">
-          <FaPlus /> Nouveau Deal
-        </CreateDealButton>
-      </SectionHeader>
-      
       <StatsGrid>
-        {stats.map((stat, index) => (
+        {dashboardStats.map((stat, index) => (
           <StatCard key={index}>
             <StatIcon color={stat.color}>
-              {stat.icon}
+              <stat.icon />
             </StatIcon>
             <StatInfo>
               <h3>{stat.value}</h3>
@@ -182,39 +198,39 @@ const Dashboard = () => {
           </StatCard>
         ))}
       </StatsGrid>
-      
-      <SectionHeader>
-        <h2>Deals Récents</h2>
-      </SectionHeader>
-      
-      <DealsTable>
-        <thead>
-          <tr>
-            <th>Nom du Deal</th>
-            <th>Entreprise</th>
-            <th>Montant</th>
-            <th>Étape</th>
-          </tr>
-        </thead>
-        <tbody>
-          {recentDeals.map(deal => (
-            <tr key={deal.id}>
-              <td>
-                <Link to={`/deals/${deal.id}`} style={{ textDecoration: 'none', color: '#4361ee' }}>
-                  {deal.name}
-                </Link>
-              </td>
-              <td>{deal.company}</td>
-              <td>{deal.amount}</td>
-              <td>
-                <StageBadge stage={deal.stage}>
-                  {deal.stage}
-                </StageBadge>
-              </td>
+
+      <RecentDealsSection>
+        <SectionHeader>
+          <h2>Deals Récents</h2>
+          <CreateDealButton to="/deals/create">
+            <FaPlus /> Nouveau Deal
+          </CreateDealButton>
+        </SectionHeader>
+        <DealsTable>
+          <thead>
+            <tr>
+              <th>Nom du Deal</th>
+              <th>Montant</th>
+              <th>Étape de vente</th>
+              <th>Date de clôture prévue</th>
             </tr>
-          ))}
-        </tbody>
-      </DealsTable>
+          </thead>
+          <tbody>
+            {recentDealsData.map(deal => (
+              <tr key={deal.id}>
+                <td>
+                  <Link to={`/deals/${deal.id}`} style={{ textDecoration: 'none', color: '#4361ee' }}>
+                    {deal.name}
+                  </Link>
+                </td>
+                <td>{deal.amount}</td>
+                <td><StageBadge stage={deal.stage}>{deal.stage}</StageBadge></td>
+                <td>{deal.closeDate}</td>
+              </tr>
+            ))}
+          </tbody>
+        </DealsTable>
+      </RecentDealsSection>
     </DashboardContainer>
   );
 };

@@ -1,3 +1,10 @@
+body {
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  background-color: #f4f7fc;
+  color: #333;
+}
+
 .app {
   display: flex;
   flex-direction: column;
@@ -6,10 +13,20 @@
 
 .main-container {
   display: flex;
-  flex: 1;
+  flex-grow: 1; /* Allow main container to take remaining height */
 }
 
 .content {
-  flex: 1;
-  padding: 20px;
+  flex-grow: 1; /* Content area takes remaining width */
+  padding-left: 250px; /* Matches sidebar width */
+  box-sizing: border-box;
+  overflow-y: auto; /* Enable scrolling for content if it exceeds viewport height */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .content {
+    padding-left: 0; /* Remove padding on smaller screens */
+  }
+  /* Potentially hide sidebar or make it collapsible on small screens */
 }
