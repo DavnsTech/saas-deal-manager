@@ -1,33 +1,37 @@
-import { Deal as DealType } from '../types';
-import { DealModel } from '../models/Deal';
+import { Deal } from '../models/Deal';
+import { User } from '../models/User';
 
-export const DealService = {
-  async getAllDeals(): Promise<DealType[]> {
-    return DealModel.findAll();
+export const dealService = {
+  async getDealsByUser(userId: number) {
+    return await Deal.findAll({
+      where: { assignedUserId: userId },
+      include: [{ model: User, as: 'assignedUser', attributes: ['username'] }],
+    });
   },
 
-  async getDealById(id: string): Promise<DealType | undefined> {
-    return DealModel.findById(id);
+  async getDealById(id: number, userId: number) {
+    return await Deal.findOne({
+      where: { id, assignedUserId: userId },
+      include: [{ model: User, as: 'assignedUser', attributes: ['username'] }],
+    });
   },
 
-  async createDeal(dealData: Omit<DealType, 'id' | 'createdAt' | 'updatedAt'>): Promise<DealType> {
-    // Basic validation can be added here
-    if (!dealData.name || !dealData.stage || dealData.value === undefined || !dealData.ownerId) {
-      throw new Error('Missing required deal fields');
-    }
-    return DealModel.create(dealData);
+  async createDeal(dealData: any) {
+    return await Deal.create(dealData);
   },
 
-  async updateDeal(id: string, updateData: Partial<DealType>): Promise<DealType | undefined> {
-    // More specific validation can be added here, e.g., checking if stage is valid
-    return DealModel.update(id, updateData);
+  async updateDeal(id: number, updateData: any, userId: number) {
+    const [affectedCount] = await Deal.update(updateData, {
+      where: { id, assignedUserId: userId },
+    });
+    if (affectedCount === 0) return null;
+    return await Deal.findByPk(id);
   },
 
-  async deleteDeal(id: string): Promise<boolean> {
-    return DealModel.delete(id);
+  async deleteDeal(id: number, userId: number) {
+    const affectedCount = await Deal.destroy({
+      where: { id, assignedUserId: userId },
+    });
+    return affectedCount > 0;
   },
-
-  async getDealsByOwner(ownerId: string): Promise<DealType[]> {
-    return DealModel.findByOwnerId(ownerId);
-  }
 };

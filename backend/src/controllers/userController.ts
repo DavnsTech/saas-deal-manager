@@ -1,39 +1,24 @@
 import { Request, Response } from 'express';
-import { UserModel } from '../models/User';
-import { DealService } from '../services/dealService';
+import { User } from '../models/User';
 
-export const getCurrentUser = async (req: Request, res: Response) => {
-  // `req.user` is populated by the `authenticateToken` middleware
-  if (!req.user) {
-    return res.sendStatus(401); // Should not happen if middleware is used correctly
-  }
-
+export const getUsers = async (req: Request, res: Response) => {
   try {
-    // Fetch user details (excluding password hash)
-    const user = await UserModel.findById(req.user.userId);
-    if (!user) {
-      return res.sendStatus(404);
-    }
-    // Return public user info
-    res.json({ userId: user.id, username: user.username, email: user.email });
+    const users = await User.findAll({ attributes: ['id', 'username', 'email', 'role'] });
+    res.json(users);
   } catch (error) {
-    console.error('Get current user error:', error);
-    res.status(500).json({ message: 'Internal server error fetching user details' });
+    res.status(500).json({ error: 'Failed to fetch users' });
   }
 };
 
-export const getUserDeals = async (req: Request, res: Response) => {
-  const userId = req.user?.userId; // Get current authenticated user ID
-
-  if (!userId) {
-    return res.sendStatus(401);
-  }
-
+export const getUser = async (req: Request, res: Response) => {
   try {
-    const deals = await DealService.getDealsByOwner(userId);
-    res.json(deals);
+    const { id } = req.params;
+    const user = await User.findByPk(id, { attributes: ['id', 'username', 'email', 'role'] });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json(user);
   } catch (error) {
-    console.error('Get user deals error:', error);
-    res.status(500).json({ message: 'Internal server error fetching user deals' });
+    res.status(500).json({ error: 'Failed to fetch user' });
   }
 };
