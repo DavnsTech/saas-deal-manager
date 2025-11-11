@@ -1,0 +1,33 @@
+export interface Deal {
+  _id: string;
+  name: string;
+  amount: number;
+  currency: string;
+  status: string;
+  stage: string;
+  priority: string;
+  probability: number;
+  createdAt: string;
+  expectedCloseDate: string;
+  salesRep: string;
+  company: string;
+  contact: string;
+  email: string;
+  phone: string;
+  industry: string;
+  companySize: string;
+  acquisitionChannel: string;
+  identifiedNeed: string;
+  proposedSolution: string;
+  contractType: string;
+  contractDuration: string;
+  paymentMethod: string;
+  lastInteraction: string;
+  comments: string;
+  documents: string[];
+  followUp: string;
+  leadScore: number;
+  estimatedLifetimeValue: number;
+  region: string;
+  source: string;
+}
