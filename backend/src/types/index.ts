@@ -1,31 +1,45 @@
-// Define common types used across the backend
-
 export interface User {
   id: string;
-  username: string;
+  name: string;
   email: string;
-  passwordHash: string; // Store hashed passwords
+  password: string;
+  role: 'admin' | 'sales' | 'manager';
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Deal {
   id: string;
   name: string;
-  description?: string;
-  stage: string; // e.g., 'Prospecting', 'Negotiation', 'Closed Won', 'Closed Lost'
-  value: number;
-  createdAt: Date;
-  updatedAt: Date;
-  ownerId: string; // Foreign key to User
-}
-
-export interface AuthPayload {
-  userId: string;
-  username: string;
-}
-
-export interface DecodedToken {
-  userId: string;
-  username: string;
-  exp: number;
-  iat: number;
+  amount: number;
+  currency: string;
+  status: string;
+  salesStage: string;
+  sourceLead: string;
+  priority: 'Low' | 'Medium' | 'High';
+  probabilityClosing: number;
+  createdDate: Date;
+  expectedClosingDate?: Date;
+  assignedUserId: string;
+  company: string;
+  contactPrincipal: string;
+  email: string;
+  phone?: string;
+  activitySector?: string;
+  companySize?: string;
+  acquisitionChannel?: string;
+  identifiedNeed?: string;
+  proposedSolution?: string;
+  contractType?: string;
+  contractDuration?: string;
+  paymentMode?: string;
+  lastInteractionDate?: Date;
+  internalComments?: string;
+  attachedDocuments?: string;
+  followupTracking?: string;
+  leadScore?: number;
+  estimatedLifetimeValue?: number;
+  regionCountry?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
