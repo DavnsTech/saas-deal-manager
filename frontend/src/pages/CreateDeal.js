@@ -61,254 +61,161 @@ function CreateDeal() {
     };
 
     try {
-      await dealsApi.createDeal(payload); // Use the correct API function
-      navigate('/deals'); // Redirect to deals list after successful creation
+      await dealsApi.createDeal(payload);
+      navigate('/deals'); // Navigate to deals list on success
     } catch (err) {
       setError(`Failed to create deal: ${err.message}`);
-      console.error('Create deal error:', err);
+      console.error('CreateDeal submission error:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Placeholder for Sales Stages, Currencies, Priorities, etc.
-  const salesStages = ["Prospection", "Qualification", "Prise de contact", "Découverte", "Proposition de valeur", "Négociation", "Closing", "Livraison/Onboarding", "Fidélisation/Upsell/Cross-sell"];
-  const currencies = ["USD", "EUR", "GBP"];
-  const priorities = ["Low", "Medium", "High", "Urgent"];
+  // Placeholder options - these should ideally be fetched from backend APIs
+  const salesStages = ['Prospection', 'Qualification', 'Prise de contact', 'Découverte', 'Proposition de valeur', 'Négociation', 'Closing', 'Livraison/Onboarding', 'Fidélisation/Upsell/Cross-sell'];
+  const currencies = ['USD', 'EUR', 'GBP'];
+  const priorities = ['Low', 'Medium', 'High', 'Urgent'];
+  const companySizes = ['1-10', '11-50', '51-200', '201-1000', '1000+'];
+  const contractTypes = ['One-time', 'Subscription', 'Retainer'];
+  const paymentModes = ['Credit Card', 'Bank Transfer', 'Invoice'];
 
   return (
     <div className="create-deal-container">
+      <button className="back-button" onClick={() => navigate('/deals')}>&larr; Back to Deals</button>
       <h2>Create New Deal</h2>
       {error && <p className="error-message">{error}</p>}
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="deal-form">
         <div className="form-section">
           <h3>Deal Information</h3>
-          <div className="form-group">
-            <label htmlFor="name">Deal Name:</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={dealData.name}
-              onChange={handleInputChange}
-              required
-            />
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="name">Deal Name *</label>
+              <input type="text" id="name" name="name" value={dealData.name} onChange={handleInputChange} required />
+            </div>
+            <div className="form-group">
+              <label htmlFor="amount">Amount *</label>
+              <input type="number" id="amount" name="amount" value={dealData.amount} onChange={handleInputChange} required />
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="currency">Currency</label>
+              <select id="currency" name="currency" value={dealData.currency} onChange={handleInputChange}>
+                {currencies.map(curr => <option key={curr} value={curr}>{curr}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="stage">Stage *</label>
+              <select id="stage" name="stage" value={dealData.stage} onChange={handleInputChange} required>
+                {salesStages.map(stage => <option key={stage} value={stage}>{stage}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="probabilityClosing">Probability (%)</label>
+              <input type="number" id="probabilityClosing" name="probabilityClosing" value={dealData.probabilityClosing} onChange={handleInputChange} min="0" max="100" />
+            </div>
+            <div className="form-group">
+              <label htmlFor="priority">Priority</label>
+              <select id="priority" name="priority" value={dealData.priority} onChange={handleInputChange}>
+                {priorities.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
           </div>
           <div className="form-group">
-            <label htmlFor="amount">Amount:</label>
-            <input
-              type="number"
-              id="amount"
-              name="amount"
-              value={dealData.amount}
-              onChange={handleInputChange}
-              required
-              min="0"
-            />
+            <label htmlFor="description">Description</label>
+            <textarea id="description" name="description" value={dealData.description} onChange={handleInputChange} rows="3"></textarea>
+          </div>
+        </div>
+
+        <div className="form-section">
+          <h3>Client & Contact Information</h3>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="customerId">Customer *</label>
+              {/* In a real app, this would be a dropdown populated from customer API */}
+              <input type="text" id="customerId" name="customerId" value={dealData.customerId} onChange={handleInputChange} placeholder="Enter Customer ID or Name" required />
+            </div>
+            <div className="form-group">
+              <label htmlFor="assignedUserId">Sales Rep *</label>
+              {/* In a real app, this would be a dropdown populated from user API */}
+              <input type="text" id="assignedUserId" name="assignedUserId" value={dealData.assignedUserId} onChange={handleInputChange} placeholder="Enter User ID or Name" required />
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="contactPrincipal">Primary Contact</label>
+              <input type="text" id="contactPrincipal" name="contactPrincipal" value={dealData.contactPrincipal} onChange={handleInputChange} />
+            </div>
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <input type="email" id="email" name="email" value={dealData.email} onChange={handleInputChange} />
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="phone">Phone</label>
+              <input type="tel" id="phone" name="phone" value={dealData.phone} onChange={handleInputChange} />
+            </div>
+            <div className="form-group">
+              <label htmlFor="activitySector">Activity Sector</label>
+              <input type="text" id="activitySector" name="activitySector" value={dealData.activitySector} onChange={handleInputChange} />
+            </div>
           </div>
           <div className="form-group">
-            <label htmlFor="currency">Currency:</label>
-            <select
-              id="currency"
-              name="currency"
-              value={dealData.currency}
-              onChange={handleInputChange}
-              required
-            >
-              {currencies.map(currency => <option key={currency} value={currency}>{currency}</option>)}
-            </select>
-          </div>
-          <div className="form-group">
-            <label htmlFor="stage">Sales Stage:</label>
-            <select
-              id="stage"
-              name="stage"
-              value={dealData.stage}
-              onChange={handleInputChange}
-              required
-            >
-              {salesStages.map(stage => <option key={stage} value={stage}>{stage}</option>)}
-            </select>
-          </div>
-          <div className="form-group">
-            <label htmlFor="probabilityClosing">Probability of Closing (%):</label>
-            <input
-              type="number"
-              id="probabilityClosing"
-              name="probabilityClosing"
-              value={dealData.probabilityClosing}
-              onChange={handleInputChange}
-              min="0"
-              max="100"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="priority">Priority:</label>
-            <select
-              id="priority"
-              name="priority"
-              value={dealData.priority}
-              onChange={handleInputChange}
-            >
-              {priorities.map(p => <option key={p} value={p}>{p}</option>)}
+            <label htmlFor="companySize">Company Size</label>
+            <select id="companySize" name="companySize" value={dealData.companySize} onChange={handleInputChange}>
+              <option value="">Select Size</option>
+              {companySizes.map(size => <option key={size} value={size}>{size}</option>)}
             </select>
           </div>
         </div>
 
         <div className="form-section">
-          <h3>Customer/Company Information</h3>
-          <div className="form-group">
-            <label htmlFor="customerId">Customer/Company ID:</label>
-            {/* In a real app, this would be a dropdown populated from customer API */}
-            <input
-              type="text"
-              id="customerId"
-              name="customerId"
-              value={dealData.customerId}
-              onChange={handleInputChange}
-              required
-              placeholder="Enter Customer ID"
-            />
+          <h3>Deal Specifics</h3>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="sourceLead">Lead Source</label>
+              <input type="text" id="sourceLead" name="sourceLead" value={dealData.sourceLead} onChange={handleInputChange} />
+            </div>
+            <div className="form-group">
+              <label htmlFor="acquisitionChannel">Acquisition Channel</label>
+              <input type="text" id="acquisitionChannel" name="acquisitionChannel" value={dealData.acquisitionChannel} onChange={handleInputChange} />
+            </div>
           </div>
           <div className="form-group">
-            <label htmlFor="contactPrincipal">Contact Person:</label>
-            <input
-              type="text"
-              id="contactPrincipal"
-              name="contactPrincipal"
-              value={dealData.contactPrincipal}
-              onChange={handleInputChange}
-            />
+            <label htmlFor="identifiedNeed">Identified Need</label>
+            <textarea id="identifiedNeed" name="identifiedNeed" value={dealData.identifiedNeed} onChange={handleInputChange} rows="2"></textarea>
           </div>
           <div className="form-group">
-            <label htmlFor="email">Email:</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={dealData.email}
-              onChange={handleInputChange}
-            />
+            <label htmlFor="proposedSolution">Proposed Solution</label>
+            <textarea id="proposedSolution" name="proposedSolution" value={dealData.proposedSolution} onChange={handleInputChange} rows="2"></textarea>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="contractType">Contract Type</label>
+              <select id="contractType" name="contractType" value={dealData.contractType} onChange={handleInputChange}>
+                <option value="">Select Type</option>
+                {contractTypes.map(type => <option key={type} value={type}>{type}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="contractDuration">Contract Duration (Months)</label>
+              <input type="number" id="contractDuration" name="contractDuration" value={dealData.contractDuration} onChange={handleInputChange} min="1" />
+            </div>
           </div>
           <div className="form-group">
-            <label htmlFor="phone">Phone:</label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={dealData.phone}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="activitySector">Activity Sector:</label>
-            <input
-              type="text"
-              id="activitySector"
-              name="activitySector"
-              value={dealData.activitySector}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="companySize">Company Size:</label>
-            <input
-              type="text"
-              id="companySize"
-              name="companySize"
-              value={dealData.companySize}
-              onChange={handleInputChange}
-            />
+            <label htmlFor="paymentMode">Payment Mode</label>
+            <select id="paymentMode" name="paymentMode" value={dealData.paymentMode} onChange={handleInputChange}>
+              <option value="">Select Mode</option>
+              {paymentModes.map(mode => <option key={mode} value={mode}>{mode}</option>)}
+            </select>
           </div>
         </div>
 
-        <div className="form-section">
-          <h3>Deal Details</h3>
-          <div className="form-group">
-            <label htmlFor="sourceLead">Source of Lead:</label>
-            <input
-              type="text"
-              id="sourceLead"
-              name="sourceLead"
-              value={dealData.sourceLead}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="acquisitionChannel">Acquisition Channel:</label>
-            <input
-              type="text"
-              id="acquisitionChannel"
-              name="acquisitionChannel"
-              value={dealData.acquisitionChannel}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="identifiedNeed">Identified Need:</label>
-            <textarea
-              id="identifiedNeed"
-              name="identifiedNeed"
-              value={dealData.identifiedNeed}
-              onChange={handleInputChange}
-              rows="3"
-            ></textarea>
-          </div>
-          <div className="form-group">
-            <label htmlFor="proposedSolution">Proposed Solution:</label>
-            <textarea
-              id="proposedSolution"
-              name="proposedSolution"
-              value={dealData.proposedSolution}
-              onChange={handleInputChange}
-              rows="3"
-            ></textarea>
-          </div>
-          <div className="form-group">
-            <label htmlFor="contractType">Contract Type:</label>
-            <input
-              type="text"
-              id="contractType"
-              name="contractType"
-              value={dealData.contractType}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="contractDuration">Contract Duration:</label>
-            <input
-              type="text"
-              id="contractDuration"
-              name="contractDuration"
-              value={dealData.contractDuration}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="paymentMode">Payment Mode:</label>
-            <input
-              type="text"
-              id="paymentMode"
-              name="paymentMode"
-              value={dealData.paymentMode}
-              onChange={handleInputChange}
-            />
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="description">Description:</label>
-          <textarea
-            id="description"
-            name="description"
-            value={dealData.description}
-            onChange={handleInputChange}
-            rows="4"
-          ></textarea>
-        </div>
-
-        <button type="submit" disabled={loading}>
-          {loading ? 'Saving...' : 'Create Deal'}
+        <button type="submit" className="submit-button" disabled={loading}>
+          {loading ? 'Creating...' : 'Create Deal'}
         </button>
       </form>
     </div>
