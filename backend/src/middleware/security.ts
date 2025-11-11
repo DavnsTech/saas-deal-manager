@@ -1,73 +1,57 @@
-import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
-import { JWT_SECRET } from '../config/jwt';
-import { DecodedToken } from '../types';
-import { UserModel } from '../models/User';
+import jwt from 'jsonwebtoken';
+import { jwtConfig } from '../config/jwt';
+import { findUserById } from '../services/userService'; // Assuming you have a userService with this function
 
-// Middleware to verify JWT
-export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-
-  if (token == null) {
-    return res.sendStatus(401); // If no token is provided
-  }
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
-    // Optional: Check if user still exists in DB
-    const user = await UserModel.findById(decoded.userId);
-    if (!user) {
-      return res.sendStatus(403); // User not found
+// Extend the Express Request interface to include user information
+declare global {
+    namespace Express {
+        interface Request {
+            user?: { id: string; email: string }; // Or whatever user properties you store in JWT
+        }
     }
-    // Attach user info to request for downstream use
-    req.user = { userId: decoded.userId, username: decoded.username };
-    next();
-  } catch (error) {
-    console.error('JWT Verification Error:', error);
-    return res.sendStatus(403); // Invalid token
-  }
-};
+}
 
-// Middleware to check if the authenticated user is the owner of the resource (e.g., a deal)
-export const isResourceOwner = (resourceType: 'deal') => {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user?.userId;
-    if (!userId) {
-      return res.sendStatus(401); // Should not happen if authenticateToken runs first
+export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    if (token == null) {
+        return res.status(401).json({ message: 'Authorization token is required.' });
     }
 
     try {
-      if (resourceType === 'deal') {
-        const dealId = req.params.dealId; // Assuming deal ID is in params
-        if (!dealId) {
-          return res.status(400).json({ message: 'Deal ID is required for ownership check' });
-        }
-        const deal = await DealModel.findById(dealId); // Need DealModel here
+        const payload = jwt.verify(token, jwtConfig.secret) as { id: string; email: string }; // Type assertion
 
-        if (!deal) {
-          return res.sendStatus(404); // Deal not found
+        // Optional: Fetch user from DB to ensure user still exists and to attach full user object
+        const user = await findUserById(payload.id);
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid token: User not found.' });
         }
 
-        if (deal.ownerId !== userId) {
-          return res.sendStatus(403); // Forbidden: User is not the owner
-        }
-      } else {
-        // Handle other resource types if needed
-        return res.sendStatus(501); // Not Implemented
-      }
-
-      next();
+        req.user = { id: user.id, email: user.email }; // Attach user to request
+        next();
     } catch (error) {
-      console.error(`Ownership check error for ${resourceType}:`, error);
-      res.sendStatus(500);
+        console.error('JWT Verification Error:', error);
+        return res.status(403).json({ message: 'Invalid token.' }); // Forbidden
     }
-  };
 };
 
-// Extend Request type to include user information
-declare module 'express-serve-static-core' {
-  interface Request {
-    user?: { userId: string; username: string };
-  }
-}
+// Example of an authorization middleware (e.g., for admin roles)
+export const authorizeRole = (requiredRole: string) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        if (!req.user) {
+            // This should ideally be caught by authenticateToken, but as a safeguard:
+            return res.status(401).json({ message: 'Authentication required.' });
+        }
+
+        // Assuming your user object (fetched in authenticateToken) has a 'role' property
+        // You might need to adjust this based on how you store roles
+        const user = await findUserById(req.user.id); // Re-fetch or ensure user object is complete
+        if (!user || user.role !== requiredRole) {
+            return res.status(403).json({ message: `Permission denied. Requires ${requiredRole} role.` });
+        }
+
+        next();
+    };
+};
