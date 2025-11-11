@@ -1,49 +1,63 @@
-// This file would contain functions to interact with your backend API.
-// For simplicity, we'll mock it here. In a real app, you'd use fetch or Axios.
+import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api'; // Example using env var
+// Use environment variables for API base URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
-export const fetchDeals = async () => {
-  // In a real application:
-  // const response = await fetch(`${API_BASE_URL}/deals`);
-  // if (!response.ok) {
-  //   throw new Error(`HTTP error! status: ${response.status}`);
-  // }
-  // return await response.json();
+// Create an Axios instance for the API
+const api = axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
 
-  // Mock data for demonstration:
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        { id: 'd1', name: 'Acquisition for TechCorp', clientName: 'TechCorp', value: 150000, stage: 'Negotiation' },
-        { id: 'd2', name: 'SaaS Subscription for BizSolutions', clientName: 'BizSolutions', value: 25000, stage: 'Discovery' },
-        { id: 'd3', name: 'Consulting Services for Global Inc.', clientName: 'Global Inc.', value: 75000, stage: 'Closed Won' },
-      ]);
-    }, 1000); // Simulate network latency
-  });
+// Add a response interceptor to handle global errors
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        // Handle common errors like network issues, authentication, etc.
+        let message = 'An unexpected error occurred.';
+        if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            message = error.response.data?.message || `Error ${error.response.status}: ${error.response.statusText}`;
+        } else if (error.request) {
+            // The request was made but no response was received
+            message = 'No response from server. Please check your connection.';
+        } else {
+            // Something happened in setting up the request that triggered an Error
+            message = error.message;
+        }
+        console.error('API Error:', message);
+        // Optionally, you could dispatch a global error event or show a toast notification
+        return Promise.reject(new Error(message));
+    }
+);
+
+export const fetchDeals = (AbortControllerSignal) => {
+    console.log('Fetching deals from API...');
+    return api.get('/deals', { signal: AbortControllerSignal });
 };
 
-export const createDeal = async (dealData) => {
-  // In a real application:
-  // const response = await fetch(`${API_BASE_URL}/deals`, {
-  //   method: 'POST',
-  //   headers: {
-  //     'Content-Type': 'application/json',
-  //   },
-  //   body: JSON.stringify(dealData),
-  // });
-  // if (!response.ok) {
-  //   throw new Error(`HTTP error! status: ${response.status}`);
-  // }
-  // return await response.json();
-
-  // Mock success
-  console.log('Creating deal:', dealData);
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ ...dealData, id: `new-${Date.now()}` });
-    }, 500);
-  });
+export const fetchDealById = (id, AbortControllerSignal) => {
+    console.log(`Fetching deal ${id} from API...`);
+    return api.get(`/deals/${id}`, { signal: AbortControllerSignal });
 };
 
-// ... other API functions like getDealById, updateDeal, deleteDeal
+export const createDeal = (dealData) => {
+    console.log('Creating deal via API:', dealData);
+    return api.post('/deals', dealData);
+};
+
+export const updateDeal = (id, dealData) => {
+    console.log(`Updating deal ${id} via API:`, dealData);
+    return api.put(`/deals/${id}`, dealData);
+};
+
+export const deleteDeal = (id) => {
+    console.log(`Deleting deal ${id} via API...`);
+    return api.delete(`/deals/${id}`);
+};
+
+// You might also want to export the axios instance itself for more complex scenarios
+export { api };

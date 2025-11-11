@@ -1,13 +1,22 @@
-import express from 'express';
+import { Router } from 'express';
 import { DealController } from '../controllers/dealController';
+import { DealService } from '../services/dealService';
+import bodyParser from 'body-parser'; // To parse JSON request bodies
 
-const router = express.Router();
-const dealController = new DealController();
+const router = Router();
 
-router.get('/', (req, res) => dealController.getAllDeals(req, res));
-router.get('/:id', (req, res) => dealController.getDealById(req, res));
-router.post('/', (req, res) => dealController.createDeal(req, res));
-router.put('/:id', (req, res) => dealController.updateDeal(req, res));
-router.delete('/:id', (req, res) => dealController.deleteDeal(req, res));
+// Instantiate services and controllers with dependency injection
+const dealService = new DealService();
+const dealController = new DealController(dealService);
+
+// Use body-parser middleware for routes that expect a JSON body
+const jsonParser = bodyParser.json();
+
+// Define routes
+router.get('/', (req, res, next) => dealController.getAllDeals(req, res, next));
+router.get('/:id', (req, res, next) => dealController.getDealById(req, res, next));
+router.post('/', jsonParser, (req, res, next) => dealController.createDeal(req, res, next));
+router.put('/:id', jsonParser, (req, res, next) => dealController.updateDeal(req, res, next));
+router.delete('/:id', (req, res, next) => dealController.deleteDeal(req, res, next));
 
 export default router;
