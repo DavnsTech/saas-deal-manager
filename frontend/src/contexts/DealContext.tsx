@@ -1,15 +1,15 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
-import { Deal, CreateDealPayload } from '../types';
-import { fetchDeals as apiFetchDeals, createDeal as apiCreateDeal, getDealById as apiGetDealById } from '../api/dealsApi'; // Assuming these functions exist and are typed
+import React, { createContext, useState, useContext, ReactNode, useMemo, useCallback } from 'react';
+import { Deal } from '../types';
+import { getDeals, createDeal, updateDeal as apiUpdateDeal, deleteDeal as apiDeleteDeal } from '../api/dealsApi';
 
 interface DealContextType {
   deals: Deal[];
   loading: boolean;
   error: string | null;
   fetchDeals: () => Promise<void>;
-  createDeal: (dealData: CreateDealPayload) => Promise<Deal | null>;
-  getDealById: (dealId: string) => Promise<Deal | null>;
-  // Add other context functions like updateDeal, deleteDeal if needed
+  addDeal: (dealData: Omit<Deal, 'id'>) => Promise<void>;
+  updateDeal: (deal: Deal) => Promise<void>;
+  deleteDeal: (dealId: string) => Promise<void>;
 }
 
 const DealContext = createContext<DealContextType | undefined>(undefined);
@@ -20,66 +20,81 @@ interface DealProviderProps {
 
 export const DealProvider: React.FC<DealProviderProps> = ({ children }) => {
   const [deals, setDeals] = useState<Deal[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDeals = async () => {
+  const fetchDeals = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const fetchedDeals = await apiFetchDeals();
+      const fetchedDeals = await getDeals();
       setDeals(fetchedDeals);
-    } catch (err: any) {
-      setError(`Failed to fetch deals: ${err.message || 'An unknown error occurred'}`);
-      console.error('Fetch deals error:', err);
+    } catch (err) {
+      console.error("Failed to fetch deals:", err);
+      setError("Failed to load deals.");
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // No dependencies, this function itself doesn't change
 
-  const createDeal = async (dealData: CreateDealPayload): Promise<Deal | null> => {
-    setLoading(true);
-    setError(null);
+  const addDeal = useCallback(async (dealData: Omit<Deal, 'id'>) => {
+    setError(null); // Clear previous errors for this specific operation
     try {
-      const newDeal = await apiCreateDeal(dealData);
-      // Optimistically update state or re-fetch
+      const newDeal = await createDeal(dealData);
       setDeals(prevDeals => [...prevDeals, newDeal]);
-      return newDeal;
-    } catch (err: any) {
-      setError(`Failed to create deal: ${err.message || 'An unknown error occurred'}`);
-      console.error('Create deal error:', err);
-      return null;
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error("Failed to add deal:", err);
+      setError("Failed to add deal.");
+      throw err; // Re-throw to allow component to potentially show a specific error
     }
-  };
+  }, []);
 
-  const getDealById = async (dealId: string): Promise<Deal | null> => {
-    setLoading(true);
+  const updateDeal = useCallback(async (deal: Deal) => {
     setError(null);
     try {
-      const deal = await apiGetDealById(dealId);
-      return deal;
-    } catch (err: any) {
-      setError(`Failed to fetch deal ${dealId}: ${err.message || 'An unknown error occurred'}`);
-      console.error(`Fetch deal ${dealId} error:`, err);
-      return null;
-    } finally {
-      setLoading(false);
+      await apiUpdateDeal(deal); // Assuming apiUpdateDeal returns the updated deal or void
+      setDeals(prevDeals => prevDeals.map(d => (d.id === deal.id ? deal : d)));
+    } catch (err) {
+      console.error("Failed to update deal:", err);
+      setError("Failed to update deal.");
+      throw err;
     }
-  };
+  }, []);
+
+  const deleteDeal = useCallback(async (dealId: string) => {
+    setError(null);
+    try {
+      await apiDeleteDeal(dealId);
+      setDeals(prevDeals => prevDeals.filter(d => d.id !== dealId));
+    } catch (err) {
+      console.error("Failed to delete deal:", err);
+      setError("Failed to delete deal.");
+      throw err;
+    }
+  }, []);
+
+  // Memoize the context value to prevent unnecessary re-renders of consumers
+  const contextValue = useMemo(() => ({
+    deals,
+    loading,
+    error,
+    fetchDeals,
+    addDeal,
+    updateDeal,
+    deleteDeal,
+  }), [deals, loading, error, fetchDeals, addDeal, updateDeal, deleteDeal]);
 
   return (
-    <DealContext.Provider value={{ deals, loading, error, fetchDeals, createDeal, getDealById }}>
+    <DealContext.Provider value={contextValue}>
       {children}
     </DealContext.Provider>
   );
 };
 
-export const useDealContext = () => {
+export const useDeals = (): DealContextType => {
   const context = useContext(DealContext);
   if (context === undefined) {
-    throw new Error('useDealContext must be used within a DealProvider');
+    throw new Error('useDeals must be used within a DealProvider');
   }
   return context;
 };
