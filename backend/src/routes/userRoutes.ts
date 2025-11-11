@@ -1,13 +1,12 @@
 import { Router } from 'express';
-import { authenticateToken } from '../middleware/security';
-import { getCurrentUser, getUserDeals } from '../controllers/userController';
+import { getUsers, getUser } from '../controllers/userController';
+import { authenticate } from '../middleware/security';
 
 const router = Router();
 
-// Protect all user routes
-router.use(authenticateToken);
+router.use(authenticate);
 
-router.get('/me', getCurrentUser);
-router.get('/me/deals', getUserDeals); // Get deals for the currently authenticated user
+router.get('/', getUsers);
+router.get('/:id', getUser);
 
 export default router;

@@ -4,13 +4,15 @@ export default {
   up: async (queryInterface: QueryInterface) => {
     await queryInterface.createTable('users', {
       id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
+        type: DataTypes.INTEGER,
         primaryKey: true,
+        autoIncrement: true,
+        allowNull: false,
       },
-      name: {
+      username: {
         type: DataTypes.STRING,
         allowNull: false,
+        unique: true,
       },
       email: {
         type: DataTypes.STRING,
@@ -22,9 +24,9 @@ export default {
         allowNull: false,
       },
       role: {
-        type: DataTypes.ENUM('admin', 'sales', 'manager'),
+        type: DataTypes.STRING,
         allowNull: false,
-        defaultValue: 'sales',
+        defaultValue: 'user',
       },
       createdAt: {
         type: DataTypes.DATE,

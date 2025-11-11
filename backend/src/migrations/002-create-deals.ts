@@ -4,9 +4,10 @@ export default {
   up: async (queryInterface: QueryInterface) => {
     await queryInterface.createTable('deals', {
       id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
+        type: DataTypes.INTEGER,
         primaryKey: true,
+        autoIncrement: true,
+        allowNull: false,
       },
       name: {
         type: DataTypes.STRING,
@@ -17,33 +18,23 @@ export default {
         allowNull: false,
       },
       currency: {
-        type: DataTypes.STRING(3),
+        type: DataTypes.STRING,
         allowNull: false,
         defaultValue: 'USD',
       },
       status: {
         type: DataTypes.STRING,
         allowNull: false,
-        defaultValue: 'Active',
+        defaultValue: 'active',
       },
-      salesStage: {
-        type: DataTypes.ENUM(
-          'Prospection',
-          'Qualification',
-          'Prise de contact',
-          'Découverte',
-          'Proposition de valeur',
-          'Négociation',
-          'Closing',
-          'Livraison/Onboarding',
-          'Fidélisation/Upsell/Cross-sell'
-        ),
+      stage: {
+        type: DataTypes.ENUM('Prospection', 'Qualification', 'Prise de contact', 'Découverte', 'Proposition de valeur', 'Négociation', 'Closing', 'Livraison/Onboarding', 'Fidélisation/Upsell/Cross-sell'),
         allowNull: false,
         defaultValue: 'Prospection',
       },
       sourceLead: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       priority: {
         type: DataTypes.ENUM('Low', 'Medium', 'High'),
@@ -55,36 +46,29 @@ export default {
         allowNull: false,
         defaultValue: 50,
       },
-      createdDate: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-      },
-      expectedClosingDate: {
+      closingDate: {
         type: DataTypes.DATE,
         allowNull: true,
       },
       assignedUserId: {
-        type: DataTypes.UUID,
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: {
           model: 'users',
           key: 'id',
         },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
       },
-      company: {
+      clientEnterprise: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       contactPrincipal: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       email: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       phone: {
         type: DataTypes.STRING,
@@ -134,17 +118,19 @@ export default {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-      followupTracking: {
-        type: DataTypes.TEXT,
+      followUpReminder: {
+        type: DataTypes.STRING,
         allowNull: true,
       },
       leadScore: {
         type: DataTypes.INTEGER,
-        allowNull: true,
+        allowNull: false,
+        defaultValue: 0,
       },
-      estimatedLifetimeValue: {
+      lifetimeValue: {
         type: DataTypes.DECIMAL(10, 2),
-        allowNull: true,
+        allowNull: false,
+        defaultValue: 0,
       },
       regionCountry: {
         type: DataTypes.STRING,

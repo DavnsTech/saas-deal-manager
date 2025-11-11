@@ -2,21 +2,21 @@ import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../config/database';
 
 interface UserAttributes {
-  id: string;
-  name: string;
+  id: number;
+  username: string;
   email: string;
   password: string;
-  role: 'admin' | 'sales' | 'manager';
+  role: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-class User extends Model<UserAttributes> implements UserAttributes {
-  public id!: string;
-  public name!: string;
+export class User extends Model<UserAttributes> implements UserAttributes {
+  public id!: number;
+  public username!: string;
   public email!: string;
   public password!: string;
-  public role!: 'admin' | 'sales' | 'manager';
+  public role!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -24,13 +24,14 @@ class User extends Model<UserAttributes> implements UserAttributes {
 User.init(
   {
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER,
       primaryKey: true,
+      autoIncrement: true,
     },
-    name: {
+    username: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true,
     },
     email: {
       type: DataTypes.STRING,
@@ -42,9 +43,9 @@ User.init(
       allowNull: false,
     },
     role: {
-      type: DataTypes.ENUM('admin', 'sales', 'manager'),
+      type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: 'sales',
+      defaultValue: 'user',
     },
   },
   {
@@ -53,5 +54,3 @@ User.init(
     tableName: 'users',
   }
 );
-
-export default User;

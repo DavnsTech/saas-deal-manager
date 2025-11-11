@@ -1,12 +1,12 @@
-import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 
-dotenv.config(); // Load environment variables from .env file
+export const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+export const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
-export const jwtConfig = {
-    secret: process.env.JWT_SECRET || 'supersecretkeydefault', // Use a strong secret in production
-    expiresIn: process.env.JWT_EXPIRES_IN || '1h', // e.g., '1h', '7d', '24h'
+export const generateToken = (payload: object): string => {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 };
 
-if (!process.env.JWT_SECRET) {
-    console.warn('JWT_SECRET is not set in environment variables. Using a default. Set JWT_SECRET for production.');
-}
+export const verifyToken = (token: string): any => {
+  return jwt.verify(token, JWT_SECRET);
+};
