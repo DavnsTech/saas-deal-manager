@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { FaBell, FaUserCircle } from 'react-icons/fa';
+import { Link } from 'react-router-dom'; // Import Link for navigation
 
 const HeaderContainer = styled.header`
   background: white;
@@ -21,7 +22,7 @@ const Nav = styled.nav`
   gap: 20px;
 `;
 
-const NavLink = styled.a`
+const NavLink = styled(Link)` // Use styled(Link) for internal navigation
   text-decoration: none;
   color: #333;
   font-weight: 500;
@@ -62,8 +63,8 @@ const Header = () => {
     <HeaderContainer>
       <Logo>Deal Manager</Logo>
       <Nav>
-        <NavLink href="/">Tableau de bord</NavLink>
-        <NavLink href="/deals">Deals</NavLink>
+        <NavLink to="/">Tableau de bord</NavLink>
+        <NavLink to="/deals">Deals</NavLink>
       </Nav>
       <UserActions>
         <IconWrapper>
