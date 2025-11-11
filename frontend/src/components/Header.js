@@ -21,11 +21,16 @@ const Logo = styled.h1`
   color: #4361ee;
   font-size: 24px;
   margin: 0;
+  cursor: pointer; /* Make logo clickable */
 `;
 
 const Nav = styled.nav`
   display: flex;
   gap: 20px;
+
+  @media (max-width: 768px) {
+    display: none; /* Hide navigation on smaller screens */
+  }
 `;
 
 const NavLink = styled(Link)`
@@ -90,29 +95,32 @@ const LogoutButton = styled.button`
 const Header = () => {
   const navigate = useNavigate();
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+  const isAuthenticated = localStorage.getItem('token') !== null;
 
   const handleLogout = async () => {
     try {
       await logoutUser();
       // Clear user data from local storage
+      localStorage.removeItem('token');
       localStorage.removeItem('currentUser');
       navigate('/login'); // Redirect to login page
     } catch (error) {
       console.error("Logout failed:", error);
-      // Optionally show an error message to the user
+      // Handle logout error, e.g., show a message
     }
   };
 
-  // Determine if the user is logged in to show appropriate actions
-  const isAuthenticated = localStorage.getItem('token') !== null;
+  const handleLogoClick = () => {
+    navigate('/'); // Navigate to dashboard on logo click
+  };
 
   return (
     <HeaderContainer>
-      <Logo>Deal Manager</Logo>
+      <Logo onClick={handleLogoClick}>Deal Manager</Logo>
       <Nav>
         <NavLink to="/">Dashboard</NavLink>
         <NavLink to="/deals">Deals</NavLink>
-        {/* Add other navigation links if needed */}
+        {/* Add other navigation links here if needed */}
       </Nav>
       <UserActions>
         {isAuthenticated && (
@@ -121,12 +129,11 @@ const Header = () => {
               <FaBell size={20} />
               <NotificationBadge>3</NotificationBadge>
             </IconWrapper>
-            {/* Display user name or icon */}
-            <IconWrapper title={currentUser.name || 'User Profile'}>
+            <IconWrapper>
               <FaUserCircle size={24} />
-              {/* Could add a dropdown menu here for profile/settings */}
+              {/* You could add a dropdown menu here for user profile */}
             </IconWrapper>
-            <LogoutButton onClick={handleLogout} title="Logout">
+            <LogoutButton onClick={handleLogout}>
               <FaSignOutAlt />
             </LogoutButton>
           </>
@@ -143,4 +150,3 @@ const Header = () => {
 };
 
 export default Header;
-
