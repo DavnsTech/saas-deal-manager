@@ -1,10 +1,13 @@
 import { Router } from 'express';
-import { getCurrentUser, getAllUsers } from '../controllers/userController';
-import { authenticateToken, authorizeRole } from '../middleware/security';
+import { authenticateToken } from '../middleware/security';
+import { getCurrentUser, getUserDeals } from '../controllers/userController';
 
 const router = Router();
 
-router.get('/me', authenticateToken, getCurrentUser);
-router.get('/', authenticateToken, authorizeRole(['admin']), getAllUsers); // Only admins can see all users
+// Protect all user routes
+router.use(authenticateToken);
+
+router.get('/me', getCurrentUser);
+router.get('/me/deals', getUserDeals); // Get deals for the currently authenticated user
 
 export default router;

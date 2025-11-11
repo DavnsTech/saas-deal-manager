@@ -1,130 +1,209 @@
-import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
-import { fetchDeals, fetchDealById, createDeal, updateDeal, deleteDeal } from '../api/dealsApi';
-import { Deal } from '../types';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { Deal, User } from '../types';
+import { dealsApi } from '../api/dealsApi';
 
 interface DealContextType {
   deals: Deal[];
-  currentDeal: Deal | null;
   loading: boolean;
   error: string | null;
-  loadDeals: () => Promise<void>;
-  loadDeal: (id: string) => Promise<void>;
-  addDeal: (deal: Omit<Deal, '_id'>) => Promise<void>;
-  editDeal: (id: string, deal: Partial<Deal>) => Promise<void>;
-  removeDeal: (id: string) => Promise<void>;
-  clearError: () => void;
+  fetchDeals: () => Promise<void>;
+  addDeal: (dealData: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>) => Promise<Deal | undefined>;
+  updateDeal: (id: string, updateData: Partial<Deal>) => Promise<Deal | undefined>;
+  deleteDeal: (id: string) => Promise<boolean>;
+  currentUser: User | null;
+  setCurrentUser: (user: User | null) => void;
+  login: (credentials: any) => Promise<boolean>;
+  register: (userData: any) => Promise<boolean>;
+  logout: () => void;
 }
 
 const DealContext = createContext<DealContextType | undefined>(undefined);
 
-export const DealProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const useDeals = () => {
+  const context = useContext(DealContext);
+  if (!context) {
+    throw new Error('useDeals must be used within a DealProvider');
+  }
+  return context;
+};
+
+interface DealProviderProps {
+  children: ReactNode;
+}
+
+export const DealProvider: React.FC<DealProviderProps> = ({ children }) => {
   const [deals, setDeals] = useState<Deal[]>([]);
-  const [currentDeal, setCurrentDeal] = useState<Deal | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  const clearError = () => setError(null);
-
-  const loadDeals = async () => {
-    try {
-      setLoading(true);
-      const data = await fetchDeals();
-      setDeals(data);
-      setError(null);
-    } catch (err) {
-      setError('Failed to load deals');
-      console.error('Error loading deals:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadDeal = async (id: string) => {
-    try {
-      setLoading(true);
-      const data = await fetchDealById(id);
-      setCurrentDeal(data);
-      setError(null);
-    } catch (err) {
-      setError('Failed to load deal details');
-      console.error('Error loading deal:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addDeal = async (deal: Omit<Deal, '_id'>) => {
-    try {
-      setLoading(true);
-      const newDeal = await createDeal(deal);
-      setDeals(prev => [...prev, newDeal]);
-      setError(null);
-    } catch (err) {
-      setError('Failed to create deal');
-      console.error('Error creating deal:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const editDeal = async (id: string, deal: Partial<Deal>) => {
-    try {
-      setLoading(true);
-      const updatedDeal = await updateDeal(id, deal);
-      setDeals(prev => prev.map(d => (d._id === id ? updatedDeal : d)));
-      if (currentDeal?._id === id) {
-        setCurrentDeal(updatedDeal);
+  // Load user and token from localStorage on initial load
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    const storedUser = localStorage.getItem('currentUser');
+    if (token && storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setCurrentUser(user);
+        // Optionally, re-fetch deals if user is already logged in
+        fetchDeals();
+      } catch (e) {
+        console.error("Failed to parse stored user data:", e);
+        logout(); // Clear invalid data
       }
-      setError(null);
-    } catch (err) {
-      setError('Failed to update deal');
-      console.error('Error updating deal:', err);
+    }
+  }, []);
+
+
+  const fetchDeals = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const fetchedDeals = await dealsApi.getAllDeals();
+      // Ensure dates are parsed correctly if coming from API as strings
+      const parsedDeals = fetchedDeals.map((deal: any) => ({
+        ...deal,
+        createdAt: new Date(deal.createdAt),
+        updatedAt: new Date(deal.updatedAt),
+      }));
+      setDeals(parsedDeals);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch deals');
+      // Handle unauthorized access (e.g., redirect to login)
+      if (err.message.includes('401') || err.message.includes('403')) {
+        logout();
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const removeDeal = async (id: string) => {
+  const addDeal = async (dealData: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>) => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      await deleteDeal(id);
-      setDeals(prev => prev.filter(d => d._id !== id));
-      if (currentDeal?._id === id) {
-        setCurrentDeal(null);
+      const newDeal = await dealsApi.createDeal(dealData);
+      // Ensure dates are parsed correctly
+      const parsedDeal = {
+        ...newDeal,
+        createdAt: new Date(newDeal.createdAt),
+        updatedAt: new Date(newDeal.updatedAt),
+      };
+      setDeals([...deals, parsedDeal]);
+      return parsedDeal;
+    } catch (err: any) {
+      setError(err.message || 'Failed to add deal');
+      if (err.message.includes('401') || err.message.includes('403')) {
+        logout();
       }
-      setError(null);
-    } catch (err) {
-      setError('Failed to delete deal');
-      console.error('Error deleting deal:', err);
+      return undefined;
     } finally {
       setLoading(false);
     }
+  };
+
+  const updateDeal = async (id: string, updateData: Partial<Deal>) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const updatedDeal = await dealsApi.updateDeal(id, updateData);
+      // Ensure dates are parsed correctly
+      const parsedDeal = {
+        ...updatedDeal,
+        createdAt: new Date(updatedDeal.createdAt),
+        updatedAt: new Date(updatedDeal.updatedAt),
+      };
+      setDeals(deals.map(deal => (deal.id === id ? parsedDeal : deal)));
+      return parsedDeal;
+    } catch (err: any) {
+      setError(err.message || 'Failed to update deal');
+      if (err.message.includes('401') || err.message.includes('403')) {
+        logout();
+      }
+      return undefined;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteDeal = async (id: string): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+    try {
+      await dealsApi.deleteDeal(id);
+      setDeals(deals.filter(deal => deal.id !== id));
+      return true;
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete deal');
+      if (err.message.includes('401') || err.message.includes('403')) {
+        logout();
+      }
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const login = async (credentials: any): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await dealsApi.login(credentials);
+      localStorage.setItem('authToken', response.token);
+      localStorage.setItem('currentUser', JSON.stringify(response.user));
+      setCurrentUser(response.user);
+      await fetchDeals(); // Fetch deals after successful login
+      return true;
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (userData: any): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await dealsApi.register(userData);
+      // Optionally auto-login after registration, or redirect to login page
+      console.log('Registration successful:', response);
+      return true;
+    } catch (err: any) {
+      setError(err.message || 'Registration failed');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('currentUser');
+    setCurrentUser(null);
+    setDeals([]); // Clear deals from state
+    setError(null); // Clear any previous errors
   };
 
   return (
     <DealContext.Provider
       value={{
         deals,
-        currentDeal,
         loading,
         error,
-        loadDeals,
-        loadDeal,
+        fetchDeals,
         addDeal,
-        editDeal,
-        removeDeal,
-        clearError
+        updateDeal,
+        deleteDeal,
+        currentUser,
+        setCurrentUser,
+        login,
+        register,
+        logout,
       }}
     >
       {children}
     </DealContext.Provider>
   );
-};
-
-export const useDealContext = () => {
-  const context = useContext(DealContext);
-  if (!context) {
-    throw new Error('useDealContext must be used within a DealProvider');
-  }
-  return context;
 };

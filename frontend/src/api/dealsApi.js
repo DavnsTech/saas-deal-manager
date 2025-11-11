@@ -1,73 +1,45 @@
-import axios from 'axios';
+// Mock API for demonstration. In a real app, this would use fetch or axios.
+// Assumes a running backend at http://localhost:5000/api
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api'; // Use environment variable
+const API_BASE_URL = 'http://localhost:5000/api'; // Replace with your actual API base URL
 
-const getAuthToken = () => localStorage.getItem('token');
+const getAuthToken = () => localStorage.getItem('authToken');
 
-const dealsApi = axios.create({
-  baseURL: `${API_URL}/deals`,
-});
+const request = async (url, options = {}) => {
+  const token = getAuthToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+    ...options.headers,
+  };
 
-// Add a request interceptor to include the token
-dealsApi.interceptors.request.use(
-  (config) => {
-    const token = getAuthToken();
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+  try {
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      ...options,
+      headers,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
-export const fetchDeals = async () => {
-  try {
-    const response = await dealsApi.get('/');
-    return response.data;
+    return await response.json();
   } catch (error) {
-    console.error('Error fetching deals:', error);
-    throw error; // Re-throw to be handled by the component
+    console.error('API Request Error:', error);
+    throw error; // Re-throw to be handled by the caller
   }
 };
 
-export const fetchDealById = async (id) => {
-  try {
-    const response = await dealsApi.get(`/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching deal with ID ${id}:`, error);
-    throw error;
-  }
-};
+export const dealsApi = {
+  getAllDeals: () => request('/deals'),
+  getDealById: (id) => request(`/deals/${id}`),
+  createDeal: (dealData) => request('/deals', { method: 'POST', body: JSON.stringify(dealData) }),
+  updateDeal: (id, updateData) => request(`/deals/${id}`, { method: 'PATCH', body: JSON.stringify(updateData) }),
+  deleteDeal: (id) => request(`/deals/${id}`, { method: 'DELETE' }),
 
-export const createDeal = async (dealData) => {
-  try {
-    const response = await dealsApi.post('/', dealData);
-    return response.data;
-  } catch (error) {
-    console.error('Error creating deal:', error);
-    throw error;
-  }
-};
-
-export const updateDeal = async (id, dealData) => {
-  try {
-    const response = await dealsApi.put(`/${id}`, dealData);
-    return response.data;
-  } catch (error) {
-    console.error(`Error updating deal with ID ${id}:`, error);
-    throw error;
-  }
-};
-
-export const deleteDeal = async (id) => {
-  try {
-    const response = await dealsApi.delete(`/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error(`Error deleting deal with ID ${id}:`, error);
-    throw error;
-  }
+  // Placeholder for auth API calls, assuming similar structure
+  login: (credentials) => request('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
+  register: (userData) => request('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
+  getCurrentUser: () => request('/users/me'),
 };

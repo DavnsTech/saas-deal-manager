@@ -1,22 +1,26 @@
 import { Router } from 'express';
 import {
-  handleGetAllDeals,
-  handleGetDealById,
-  handleCreateDeal,
-  handleUpdateDeal,
-  handleDeleteDeal
+  getAllDeals,
+  getDealById,
+  createDeal,
+  updateDeal,
+  deleteDeal
 } from '../controllers/dealController';
-import { authenticateToken, authorizeRole } from '../middleware/security';
+import { authenticateToken, isResourceOwner } from '../middleware/security';
 
 const router = Router();
 
-// Publicly accessible or needs authentication depending on requirements
-router.get('/', authenticateToken, handleGetAllDeals);
-router.post('/', authenticateToken, handleCreateDeal); // Only authenticated users can create
+// Public route for getting all deals (might be restricted in a real app)
+// router.get('/', getAllDeals); // Consider authentication for this too
 
-// Routes requiring specific roles or ownership checks would be more complex
-router.get('/:id', authenticateToken, handleGetDealById);
-router.put('/:id', authenticateToken, authorizeRole(['admin']), handleUpdateDeal); // Example: Only admin can update
-router.delete('/:id', authenticateToken, authorizeRole(['admin']), handleDeleteDeal); // Example: Only admin can delete
+// Protect all other deal routes
+router.use(authenticateToken);
+
+router.post('/', createDeal); // Create a new deal (owner is the authenticated user)
+router.get('/', getAllDeals); // Get all deals for the authenticated user (or all if admin) - adjust as per requirements
+
+router.get('/:dealId', getDealById); // Get a specific deal
+router.patch('/:dealId', isResourceOwner('deal'), updateDeal); // Update a specific deal (only owner)
+router.delete('/:dealId', isResourceOwner('deal'), deleteDeal); // Delete a specific deal (only owner)
 
 export default router;

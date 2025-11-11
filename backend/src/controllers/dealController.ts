@@ -1,74 +1,84 @@
-import { Request, Response, NextFunction } from 'express';
-import {
-  getAllDeals,
-  getDealById,
-  createDeal,
-  updateDeal,
-  deleteDeal
-} from '../services/dealService';
+import { Request, Response } from 'express';
+import { DealService } from '../services/dealService';
 import { Deal as DealType } from '../types';
 
-export const handleGetAllDeals = async (req: Request, res: Response, next: NextFunction) => {
+export const getAllDeals = async (req: Request, res: Response) => {
   try {
-    // Assuming user ID is available from authentication middleware
-    const userId = (req as any).user.userId; // Cast to any to access user property if not strongly typed
-    const deals = await getAllDeals(userId);
-    res.status(200).json(deals);
+    const deals = await DealService.getAllDeals();
+    res.json(deals);
   } catch (error) {
-    next(error);
+    console.error('Get all deals error:', error);
+    res.status(500).json({ message: 'Internal server error fetching deals' });
   }
 };
 
-export const handleGetDealById = async (req: Request, res: Response, next: NextFunction) => {
+export const getDealById = async (req: Request, res: Response) => {
+  const { dealId } = req.params;
   try {
-    const { id } = req.params;
-    const deal = await getDealById(id);
+    const deal = await DealService.getDealById(dealId);
     if (!deal) {
-      return res.status(404).json({ message: 'Deal not found' });
+      return res.sendStatus(404);
     }
-    res.status(200).json(deal);
+    res.json(deal);
   } catch (error) {
-    next(error);
+    console.error(`Get deal by ID error for ${dealId}:`, error);
+    res.status(500).json({ message: 'Internal server error fetching deal' });
   }
 };
 
-export const handleCreateDeal = async (req: Request, res: Response, next: NextFunction) => {
+export const createDeal = async (req: Request, res: Response) => {
+  const dealData: Omit<DealType, 'id' | 'createdAt' | 'updatedAt'> = req.body;
+  const ownerId = req.user?.userId; // Get owner ID from authenticated user
+
+  if (!ownerId) {
+    return res.sendStatus(401); // User must be authenticated
+  }
+
+  // Add ownerId to the data being passed to the service
+  const dealWithOwner = { ...dealData, ownerId };
+
   try {
-    const dealData: DealType = req.body;
-    // Basic validation (more robust validation should be added)
-    if (!dealData.name || !dealData.value || !dealData.stage || !dealData.customerId || !dealData.assignedUserId) {
-      return res.status(400).json({ message: 'Missing required fields' });
-    }
-    const newDeal = await createDeal(dealData);
+    const newDeal = await DealService.createDeal(dealWithOwner);
     res.status(201).json(newDeal);
-  } catch (error) {
-    next(error);
+  } catch (error: any) {
+    console.error('Create deal error:', error);
+    // Handle specific validation errors if needed
+    if (error.message.includes('Missing required deal fields')) {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: 'Internal server error creating deal' });
   }
 };
 
-export const handleUpdateDeal = async (req: Request, res: Response, next: NextFunction) => {
+export const updateDeal = async (req: Request, res: Response) => {
+  const { dealId } = req.params;
+  const updateData = req.body;
+
   try {
-    const { id } = req.params;
-    const dealData: Partial<DealType> = req.body;
-    const updatedDeal = await updateDeal(id, dealData);
+    // isResourceOwner middleware should have already checked ownership
+    const updatedDeal = await DealService.updateDeal(dealId, updateData);
     if (!updatedDeal) {
-      return res.status(404).json({ message: 'Deal not found' });
+      return res.sendStatus(404);
     }
-    res.status(200).json(updatedDeal);
+    res.json(updatedDeal);
   } catch (error) {
-    next(error);
+    console.error(`Update deal error for ${dealId}:`, error);
+    res.status(500).json({ message: 'Internal server error updating deal' });
   }
 };
 
-export const handleDeleteDeal = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteDeal = async (req: Request, res: Response) => {
+  const { dealId } = req.params;
+
   try {
-    const { id } = req.params;
-    const deletedDeal = await deleteDeal(id);
-    if (!deletedDeal) {
-      return res.status(404).json({ message: 'Deal not found' });
+    // isResourceOwner middleware should have already checked ownership
+    const deleted = await DealService.deleteDeal(dealId);
+    if (!deleted) {
+      return res.sendStatus(404);
     }
-    res.status(200).json({ message: 'Deal deleted successfully', deal: deletedDeal });
+    res.sendStatus(204); // No Content
   } catch (error) {
-    next(error);
+    console.error(`Delete deal error for ${dealId}:`, error);
+    res.status(500).json({ message: 'Internal server error deleting deal' });
   }
 };

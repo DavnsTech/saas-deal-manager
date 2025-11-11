@@ -1,29 +1,39 @@
-import { Request, Response, NextFunction } from 'express';
-import User, { IUser } from '../models/User';
-import { UserPayload, AuthRequest } from '../types';
+import { Request, Response } from 'express';
+import { UserModel } from '../models/User';
+import { DealService } from '../services/dealService';
 
-export const getCurrentUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const getCurrentUser = async (req: Request, res: Response) => {
+  // `req.user` is populated by the `authenticateToken` middleware
+  if (!req.user) {
+    return res.sendStatus(401); // Should not happen if middleware is used correctly
+  }
+
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Authentication required' });
-    }
-    // Fetch full user details from DB based on ID in payload
-    const user = await User.findById(req.user.userId).select('-passwordHash'); // Exclude password hash
+    // Fetch user details (excluding password hash)
+    const user = await UserModel.findById(req.user.userId);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.sendStatus(404);
     }
-    res.status(200).json(user);
+    // Return public user info
+    res.json({ userId: user.id, username: user.username, email: user.email });
   } catch (error) {
-    next(error);
+    console.error('Get current user error:', error);
+    res.status(500).json({ message: 'Internal server error fetching user details' });
   }
 };
 
-export const getAllUsers = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const getUserDeals = async (req: Request, res: Response) => {
+  const userId = req.user?.userId; // Get current authenticated user ID
+
+  if (!userId) {
+    return res.sendStatus(401);
+  }
+
   try {
-    // This route should ideally be protected by an 'admin' role
-    const users = await User.find().select('-passwordHash'); // Exclude password hash
-    res.status(200).json(users);
+    const deals = await DealService.getDealsByOwner(userId);
+    res.json(deals);
   } catch (error) {
-    next(error);
+    console.error('Get user deals error:', error);
+    res.status(500).json({ message: 'Internal server error fetching user deals' });
   }
 };
