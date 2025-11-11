@@ -1,25 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { 
-  FaArrowLeft, 
-  FaEdit, 
-  FaTrash, 
-  FaPaperclip, 
-  FaComment, 
-  FaCalendarAlt, 
-  FaUser, 
-  FaEnvelope, 
-  FaPhone, 
-  FaIndustry, 
-  FaBuilding, 
-  FaTag 
-} from 'react-icons/fa';
+import { FaArrowLeft, FaEdit, FaTrash, FaPaperclip, FaComment, FaCalendarAlt, FaUser, FaEnvelope, FaPhone, FaIndustry, FaBuilding, FaTag } from 'react-icons/fa';
+import { dealsApi } from '../api/dealsApi';
 
 const DealDetailContainer = styled.div`
   padding: 20px;
   background-color: #f4f7fc;
   min-height: calc(100vh - 70px);
+  margin-top: 70px;
+  margin-left: 250px;
+
+  @media (max-width: 768px) {
+    margin-left: 70px;
+  }
 `;
 
 const BackLink = styled(Link)`
@@ -90,18 +84,17 @@ const StageBadge = styled.span`
   color: ${props => {
     switch(props.stage) {
       case 'Prospection': return '#616161';
-      case 'Qualification': return '#947600';
-      case 'Prise de contact': return '#947600';
-      case 'Découverte': return '#947600';
-      case 'Proposition de valeur': return '#947600';
-      case 'Négociation': return '#947600';
-      case 'Closing': return '#947600';
+      case 'Qualification': return '#998000';
+      case 'Prise de contact': return '#996600';
+      case 'Découverte': return '#995200';
+      case 'Proposition de valeur': return '#993d00';
+      case 'Négociation': return '#992900';
+      case 'Closing': return '#7a3d00';
       case 'Livraison/Onboarding': return '#1b5e20';
-      case 'Fidélisation/Upsell/Cross-sell': return '#1b5e20';
+      case 'Fidélisation/Upsell/Cross-sell': return '#0d3c0d';
       default: return '#424242';
     }
   }};
-  align-self: flex-start;
 `;
 
 const ActionButtons = styled.div`
@@ -110,44 +103,38 @@ const ActionButtons = styled.div`
 `;
 
 const ActionButton = styled.button`
+  background: ${props => props.danger ? '#e74c3c' : '#4361ee'};
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  padding: 8px 15px;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
   font-weight: 500;
   transition: background 0.2s ease;
   
+  &:hover {
+    background: ${props => props.danger ? '#c0392b' : '#3a56d4'};
+  }
+  
   svg {
-    margin-right: 5px;
-  }
-  
-  &.edit {
-    background: #4361ee;
-    color: white;
-    
-    &:hover {
-      background: #3a56d4;
-    }
-  }
-  
-  &.delete {
-    background: #dc3545;
-    color: white;
-    
-    &:hover {
-      background: #c82333;
-    }
+    margin-right: 8px;
   }
 `;
 
-const DetailSection = styled.div`
+const SectionsContainer = styled.div`
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+`;
+
+const SectionCard = styled.div`
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 25px;
-  margin-bottom: 25px;
+  padding: 20px;
+  margin-bottom: 20px;
 `;
 
 const SectionTitle = styled.h2`
@@ -157,92 +144,17 @@ const SectionTitle = styled.h2`
   padding-bottom: 10px;
   border-bottom: 1px solid #eee;
   color: #333;
-`;
-
-const DetailGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-`;
-
-const DetailItem = styled.div`
-  margin-bottom: 15px;
-  
-  label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 5px;
-    color: #555;
-    font-size: 14px;
-  }
-  
-  span {
-    display: block;
-    font-size: 16px;
-    color: #333;
-  }
-`;
-
-const ContactCard = styled.div`
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 20px;
-  margin-top: 10px;
-`;
-
-const CommentSection = styled.div`
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 25px;
-`;
-
-const CommentForm = styled.form`
   display: flex;
-  margin-top: 20px;
-`;
-
-const CommentInput = styled.textarea`
-  flex: 1;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-family: inherit;
-  font-size: 16px;
-  resize: vertical;
-  min-height: 80px;
+  align-items: center;
   
-  &:focus {
-    outline: none;
-    border-color: #4361ee;
-    box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+  svg {
+    margin-right: 10px;
+    color: #4361ee;
   }
 `;
 
-const CommentButton = styled.button`
-  background: #4361ee;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 12px 20px;
-  margin-left: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  align-self: flex-start;
-  
-  &:hover {
-    background: #3a56d4;
-  }
-`;
-
-const CommentsList = styled.div`
-  margin-top: 30px;
-`;
-
-const Comment = styled.div`
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 15px;
+const DetailRow = styled.div`
+  display: flex;
   margin-bottom: 15px;
   
   &:last-child {
@@ -250,102 +162,70 @@ const Comment = styled.div`
   }
 `;
 
-const CommentHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
+const DetailLabel = styled.div`
+  width: 200px;
+  font-weight: 600;
+  color: #555;
 `;
 
-const CommentAuthor = styled.div`
-  font-weight: 600;
+const DetailValue = styled.div`
+  flex: 1;
   color: #333;
 `;
 
-const CommentDate = styled.div`
-  font-size: 14px;
+const LoadingMessage = styled.div`
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
   color: #666;
 `;
 
-const CommentText = styled.div`
-  color: #444;
-  line-height: 1.5;
+const ErrorMessage = styled.div`
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #e74c3c;
 `;
 
 const DealDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  
-  // Mock data for demonstration
-  const deal = {
-    id: id,
-    name: 'Contrat ABC Corporation',
-    amount: 75000,
-    currency: 'EUR',
-    stage: 'Négociation',
-    source: 'Réseau',
-    priority: 'Haute',
-    probability: 80,
-    createdDate: '2023-06-15',
-    expectedCloseDate: '2023-09-30',
-    salesRep: 'Marie Dubois',
-    company: 'ABC Corporation',
-    primaryContact: 'Jean Martin',
-    email: 'jean.martin@abccorp.com',
-    phone: '+33 1 23 45 67 89',
-    industry: 'Technologie',
-    companySize: '500-1000 employés',
-    acquisitionChannel: 'Partenariat',
-    identifiedNeed: 'Solution de gestion CRM',
-    proposedSolution: 'Plateforme CRM personnalisée',
-    contractType: 'Contrat annuel',
-    contractDuration: '12 mois',
-    paymentMethod: 'Facturation mensuelle',
-    lastInteraction: '2023-07-18',
-    internalComments: 'Client très intéressé, négociations en cours',
-    followUpReminder: 'Relance prévue le 2023-07-25',
-    leadScore: 85,
-    estimatedLifetimeValue: 150000,
-    region: 'Île-de-France'
-  };
+  const [deal, setDeal] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [comments, setComments] = useState([
-    {
-      id: 1,
-      author: 'Marie Dubois',
-      date: '2023-07-15',
-      text: 'Premier contact établi. Le client est intéressé par notre solution.'
-    },
-    {
-      id: 2,
-      author: 'Pierre Lambert',
-      date: '2023-07-18',
-      text: 'Négociations en cours sur le prix. Attendre leur réponse.'
+  useEffect(() => {
+    const fetchDeal = async () => {
+      try {
+        setLoading(true);
+        const data = await dealsApi.getDealById(id);
+        setDeal(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchDeal();
     }
-  ]);
+  }, [id]);
 
-  const [newComment, setNewComment] = useState('');
-
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce deal ?')) {
-      // In a real app, this would call an API to delete the deal
-      alert('Deal supprimé avec succès');
-      navigate('/deals');
+      try {
+        await dealsApi.deleteDeal(id);
+        navigate('/deals');
+      } catch (err) {
+        alert('Erreur lors de la suppression du deal');
+      }
     }
   };
 
-  const handleAddComment = (e) => {
-    e.preventDefault();
-    if (newComment.trim()) {
-      const comment = {
-        id: comments.length + 1,
-        author: 'Utilisateur Actuel',
-        date: new Date().toISOString().split('T')[0],
-        text: newComment
-      };
-      setComments([comment, ...comments]);
-      setNewComment('');
-    }
-  };
+  if (loading) return <LoadingMessage>Chargement du deal...</LoadingMessage>;
+  if (error) return <ErrorMessage>Erreur: {error}</ErrorMessage>;
+  if (!deal) return <ErrorMessage>Deal non trouvé</ErrorMessage>;
 
   return (
     <DealDetailContainer>
@@ -356,193 +236,154 @@ const DealDetail = () => {
       <DealHeader>
         <DealTitleAndStatus>
           <DealTitle>{deal.name}</DealTitle>
-          <DealAmount>{deal.amount.toLocaleString('fr-FR')} {deal.currency}</DealAmount>
-          <StageBadge stage={deal.stage}>{deal.stage}</StageBadge>
+          <DealAmount>{deal.amount} {deal.currency}</DealAmount>
+          <StageBadge stage={deal.stage}>
+            {deal.stage}
+          </StageBadge>
         </DealTitleAndStatus>
         
         <ActionButtons>
-          <ActionButton className="edit">
+          <ActionButton as={Link} to={`/deals/${id}/edit`}>
             <FaEdit /> Modifier
           </ActionButton>
-          <ActionButton className="delete" onClick={handleDelete}>
+          <ActionButton danger onClick={handleDelete}>
             <FaTrash /> Supprimer
           </ActionButton>
         </ActionButtons>
       </DealHeader>
       
-      <DetailSection>
-        <SectionTitle>Informations du Deal</SectionTitle>
-        <DetailGrid>
-          <DetailItem>
-            <label>Statut</label>
-            <span>{deal.stage}</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Source du lead</label>
-            <span>{deal.source}</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Priorité</label>
-            <span>{deal.priority}</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Probabilité de closing</label>
-            <span>{deal.probability}%</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Date de création</label>
-            <span>{deal.createdDate}</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Date de clôture prévue</label>
-            <span>{deal.expectedCloseDate}</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Responsable commercial</label>
-            <span>{deal.salesRep}</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Valeur à vie estimée</label>
-            <span>{deal.estimatedLifetimeValue.toLocaleString('fr-FR')} {deal.currency}</span>
-          </DetailItem>
-        </DetailGrid>
-      </DetailSection>
-      
-      <DetailSection>
-        <SectionTitle>Informations Client</SectionTitle>
-        <DetailGrid>
-          <DetailItem>
-            <label>Client/Entreprise</label>
-            <span>{deal.company}</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Contact principal</label>
-            <span>{deal.primaryContact}</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Email</label>
-            <span>{deal.email}</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Téléphone</label>
-            <span>{deal.phone}</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Secteur d'activité</label>
-            <span>{deal.industry}</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Taille de l'entreprise</label>
-            <span>{deal.companySize}</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Canal d'acquisition</label>
-            <span>{deal.acquisitionChannel}</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Région/Pays</label>
-            <span>{deal.region}</span>
-          </DetailItem>
-        </DetailGrid>
+      <SectionsContainer>
+        <div>
+          <SectionCard>
+            <SectionTitle>
+              <FaUser /> Informations sur le client
+            </SectionTitle>
+            <DetailRow>
+              <DetailLabel>Entreprise:</DetailLabel>
+              <DetailValue>{deal.company}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Contact principal:</DetailLabel>
+              <DetailValue>{deal.primaryContact}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Email:</DetailLabel>
+              <DetailValue>{deal.email}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Téléphone:</DetailLabel>
+              <DetailValue>{deal.phone}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Secteur d'activité:</DetailLabel>
+              <DetailValue>{deal.industry}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Taille de l'entreprise:</DetailLabel>
+              <DetailValue>{deal.companySize}</DetailValue>
+            </DetailRow>
+          </SectionCard>
+          
+          <SectionCard>
+            <SectionTitle>
+              <FaTag /> Détails du deal
+            </SectionTitle>
+            <DetailRow>
+              <DetailLabel>Source du lead:</DetailLabel>
+              <DetailValue>{deal.leadSource}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Priorité:</DetailLabel>
+              <DetailValue>{deal.priority}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Probabilité de closing:</DetailLabel>
+              <DetailValue>{deal.closingProbability}%</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Date de création:</DetailLabel>
+              <DetailValue>{new Date(deal.createdAt).toLocaleDateString()}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Date de clôture prévue:</DetailLabel>
+              <DetailValue>{new Date(deal.expectedCloseDate).toLocaleDateString()}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Responsable commercial:</DetailLabel>
+              <DetailValue>{deal.owner}</DetailValue>
+            </DetailRow>
+          </SectionCard>
+          
+          <SectionCard>
+            <SectionTitle>
+              <FaComment /> Commentaires internes
+            </SectionTitle>
+            <DetailValue>{deal.comments || 'Aucun commentaire'}</DetailValue>
+          </SectionCard>
+        </div>
         
-        <ContactCard>
-          <h3>Détails du Contact</h3>
-          <DetailGrid>
-            <DetailItem>
-              <label>Nom</label>
-              <span>{deal.primaryContact}</span>
-            </DetailItem>
-            <DetailItem>
-              <label>Email</label>
-              <span>{deal.email}</span>
-            </DetailItem>
-            <DetailItem>
-              <label>Téléphone</label>
-              <span>{deal.phone}</span>
-            </DetailItem>
-          </DetailGrid>
-        </ContactCard>
-      </DetailSection>
-      
-      <DetailSection>
-        <SectionTitle>Détails de l'Offre</SectionTitle>
-        <DetailGrid>
-          <DetailItem>
-            <label>Besoin identifié</label>
-            <span>{deal.identifiedNeed}</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Solution proposée</label>
-            <span>{deal.proposedSolution}</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Type de contrat</label>
-            <span>{deal.contractType}</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Durée du contrat</label>
-            <span>{deal.contractDuration}</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Mode de paiement</label>
-            <span>{deal.paymentMethod}</span>
-          </DetailItem>
-        </DetailGrid>
-      </DetailSection>
-      
-      <DetailSection>
-        <SectionTitle>Suivi</SectionTitle>
-        <DetailGrid>
-          <DetailItem>
-            <label>Date de dernière interaction</label>
-            <span>{deal.lastInteraction}</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Score du lead</label>
-            <span>{deal.leadScore}/100</span>
-          </DetailItem>
-          <DetailItem>
-            <label>Suivi de relance</label>
-            <span>{deal.followUpReminder}</span>
-          </DetailItem>
-        </DetailGrid>
-        
-        <DetailItem>
-          <label>Commentaires internes</label>
-          <span>{deal.internalComments}</span>
-        </DetailItem>
-        
-        <DetailItem>
-          <label>Documents joints</label>
-          <span><FaPaperclip /> 3 fichiers joints</span>
-        </DetailItem>
-      </DetailSection>
-      
-      <CommentSection>
-        <SectionTitle>Commentaires</SectionTitle>
-        <CommentForm onSubmit={handleAddComment}>
-          <CommentInput 
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Ajouter un commentaire..."
-          />
-          <CommentButton type="submit">
-            <FaComment /> Ajouter
-          </CommentButton>
-        </CommentForm>
-        
-        <CommentsList>
-          {comments.map(comment => (
-            <Comment key={comment.id}>
-              <CommentHeader>
-                <CommentAuthor>{comment.author}</CommentAuthor>
-                <CommentDate>{comment.date}</CommentDate>
-              </CommentHeader>
-              <CommentText>{comment.text}</CommentText>
-            </Comment>
-          ))}
-        </CommentsList>
-      </CommentSection>
+        <div>
+          <SectionCard>
+            <SectionTitle>
+              <FaCalendarAlt /> Suivi de relance
+            </SectionTitle>
+            <DetailValue>{deal.followUp || 'Aucun suivi programmé'}</DetailValue>
+          </SectionCard>
+          
+          <SectionCard>
+            <SectionTitle>
+              <FaPaperclip /> Documents joints
+            </SectionTitle>
+            <DetailValue>{deal.documents || 'Aucun document'}</DetailValue>
+          </SectionCard>
+          
+          <SectionCard>
+            <SectionTitle>
+              <FaBuilding /> Informations supplémentaires
+            </SectionTitle>
+            <DetailRow>
+              <DetailLabel>Canal d'acquisition:</DetailLabel>
+              <DetailValue>{deal.acquisitionChannel}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Besoin identifié:</DetailLabel>
+              <DetailValue>{deal.identifiedNeed}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Solution proposée:</DetailLabel>
+              <DetailValue>{deal.proposedSolution}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Type de contrat:</DetailLabel>
+              <DetailValue>{deal.contractType}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Durée du contrat:</DetailLabel>
+              <DetailValue>{deal.contractDuration}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Mode de paiement:</DetailLabel>
+              <DetailValue>{deal.paymentMethod}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Date de dernière interaction:</DetailLabel>
+              <DetailValue>{new Date(deal.lastInteraction).toLocaleDateString()}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Score du lead:</DetailLabel>
+              <DetailValue>{deal.leadScore}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Valeur à vie estimée:</DetailLabel>
+              <DetailValue>{deal.lifetimeValue}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Région/Pays:</DetailLabel>
+              <DetailValue>{deal.region}</DetailValue>
+            </DetailRow>
+          </SectionCard>
+        </div>
+      </SectionsContainer>
     </DealDetailContainer>
   );
 };
