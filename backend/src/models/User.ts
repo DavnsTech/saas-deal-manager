@@ -1,38 +1,39 @@
-// Assuming a simple in-memory store or a placeholder for a database model.
-// In a real app, you'd use an ORM (e.g., Prisma, TypeORM, Sequelize).
+import mongoose, { Schema, Document } from 'mongoose';
+import bcrypt from 'bcryptjs';
 
-export interface User {
-  id: string;
-  username: string;
+export interface IUser extends Document {
   email: string;
-  passwordHash: string; // Store hashed passwords, never plain text
+  passwordHash: string;
+  firstName: string;
+  lastName: string;
+  role: 'admin' | 'user';
   createdAt: Date;
   updatedAt: Date;
 }
 
-// Example of how you might interact with a user store (e.g., in-memory for demonstration)
-let users: User[] = [];
-let nextUserId = 1;
+const userSchema: Schema = new Schema({
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  passwordHash: { type: String, required: true },
+  firstName: { type: String, required: true, trim: true },
+  lastName: { type: String, required: true, trim: true },
+  role: { type: String, enum: ['admin', 'user'], default: 'user' },
+}, {
+  timestamps: true
+});
 
-export const createUser = (userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): User => {
-  const newUser: User = {
-    ...userData,
-    id: String(nextUserId++),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-  users.push(newUser);
-  return newUser;
+// Method to compare password
+userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
+  return bcrypt.compare(candidatePassword, this.passwordHash);
 };
 
-export const findUserByEmail = (email: string): User | undefined => {
-  return users.find(user => user.email === email);
-};
+// Hash password before saving
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('passwordHash')) {
+    return next();
+  }
+  const salt = await bcrypt.genSalt(10);
+  this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
+  next();
+});
 
-export const findUserById = (id: string): User | undefined => {
-  return users.find(user => user.id === id);
-};
-
-export const getAllUsers = (): User[] => {
-  return [...users]; // Return a copy to prevent external modification
-};
+export default mongoose.model<IUser>('User', userSchema);

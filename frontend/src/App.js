@@ -1,25 +1,48 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Deals from './pages/Deals';
 import DealDetail from './pages/DealDetail';
 import CreateDeal from './pages/CreateDeal';
-import './App.css';
+import './App.css'; // Import App-specific styles
 
 function App() {
+  // Basic authentication check (replace with actual auth logic)
+  const isAuthenticated = localStorage.getItem('token') !== null;
+
   return (
-    <div className="app">
+    <div className="app-container">
       <Header />
-      <div className="main-container">
-        <Sidebar />
-        <main className="content">
+      <div className="main-content">
+        {isAuthenticated && <Sidebar />}
+        <main className="page-content">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/deals" element={<Deals />} />
-            <Route path="/deals/:id" element={<DealDetail />} />
-            <Route path="/deals/create" element={<CreateDeal />} />
+            {/* Public Routes */}
+            <Route path="/login" element={<div>Login Page (Not Implemented)</div>} />
+            <Route path="/register" element={<div>Register Page (Not Implemented)</div>} />
+
+            {/* Protected Routes */}
+            <Route
+              path="/"
+              element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />}
+            />
+            <Route
+              path="/deals"
+              element={isAuthenticated ? <Deals /> : <Navigate to="/login" replace />}
+            />
+            <Route
+              path="/deals/:id"
+              element={isAuthenticated ? <DealDetail /> : <Navigate to="/login" replace />}
+            />
+            <Route
+              path="/deals/new"
+              element={isAuthenticated ? <CreateDeal /> : <Navigate to="/login" replace />}
+            />
+
+            {/* Fallback or Not Found */}
+            <Route path="*" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />} />
           </Routes>
         </main>
       </div>

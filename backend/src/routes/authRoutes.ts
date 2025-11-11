@@ -1,15 +1,9 @@
-import express from 'express';
-import { register, login, getProfile, updateProfile } from '../controllers/authController';
-import { authenticate } from '../config/jwt';
+import { Router } from 'express';
+import { registerUser, loginUser } from '../controllers/authController';
 
-const router = express.Router();
+const router = Router();
 
-// Public routes
-router.post('/register', register);
-router.post('/login', login);
-
-// Protected routes
-router.get('/profile', authenticate, getProfile);
-router.put('/profile', authenticate, updateProfile);
+router.post('/register', registerUser);
+router.post('/login', loginUser);
 
 export default router;

@@ -1,37 +1,61 @@
-import express, { Express, Request, Response } from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
-import cors from 'cors';
+import mongoose from 'mongoose';
 import authRoutes from './routes/authRoutes';
-import userRoutes from './routes/userRoutes';
 import dealRoutes from './routes/dealRoutes';
+import userRoutes from './routes/userRoutes';
 
-dotenv.config(); // Load environment variables
+dotenv.config();
 
 const app: Express = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3001;
+const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/deal_manager'; // Use environment variable
 
-// Middlewares
-app.use(cors()); // Enable CORS for all origins (configure for production)
-app.use(express.json()); // Parse JSON request bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
+// Middleware
+app.use(express.json()); // For parsing application/json
+app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 
-// Basic health check route
-app.get('/', (req: Request, res: Response) => {
-  res.send('Deal Manager Backend is running!');
+// CORS setup (basic, needs to be more robust for production)
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins for development
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
 });
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes); // Assuming userRoutes exists for user management
-app.use('/api/deals', dealRoutes);
+// Database Connection
+const connectDB = async () => {
+  try {
+    await mongoose.connect(mongoUri);
+    console.log('MongoDB connected successfully');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    process.exit(1); // Exit process with failure
+  }
+};
 
-// Basic error handling middleware (example)
-app.use((err: Error, req: Request, res: Response, next: Function) => {
+connectDB();
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/deals', dealRoutes);
+app.use('/api/users', userRoutes);
+
+// Basic Root Route
+app.get('/', (req: Request, res: Response) => {
+  res.send('Deal Manager Backend API is running!');
+});
+
+// Global Error Handler
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');
 });
 
-// Start the server
+// Start Server
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });

@@ -1,62 +1,34 @@
-// User roles
-export type UserRole = 'admin' | 'sales' | 'manager';
+import { Request } from 'express';
 
-// Deal interface
-export interface IDeal {
-  id: string;
+export interface UserPayload {
+  userId: string;
+  email: string;
+  role: 'admin' | 'user'; // Example roles
+}
+
+export interface AuthRequest extends Request {
+  user?: UserPayload;
+}
+
+export interface Deal {
+  _id?: string;
   name: string;
-  amount: number;
+  description?: string;
+  value: number;
   currency: string;
-  status: string;
-  stage: string;
-  source: string;
-  priority: string;
-  closingProbability: number;
-  createdAt: Date;
-  expectedCloseDate: Date;
-  salesRep: string;
-  company: string;
-  primaryContact: string;
-  email: string;
-  phone: string;
-  industry: string;
-  companySize: string;
-  acquisitionChannel: string;
-  identifiedNeed: string;
-  proposedSolution: string;
-  contractType: string;
-  contractDuration: string;
-  paymentMethod: string;
-  lastInteractionDate: Date;
-  internalNotes: string;
-  followUpReminder: Date;
-  leadScore: number;
-  estimatedLifetimeValue: number;
-  region: string;
-  attachments: string[];
-  createdBy: string;
-  updatedBy: string;
-  createdAt: Date;
-  updatedAt: Date;
+  stage: string; // e.g., 'Prospecting', 'Negotiation', 'Closed Won', 'Closed Lost'
+  customerId: string; // Assuming a customer ID for now, could be a separate model
+  assignedUserId: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-// Authentication interfaces
-export interface IAuthRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    role: UserRole;
-  };
-}
-
-export interface IRegisterRequest {
-  email: string;
-  password: string;
+export interface Customer {
+  _id?: string;
   name: string;
-  role?: UserRole;
-}
-
-export interface ILoginRequest {
+  contactPerson?: string;
   email: string;
-  password: string;
+  phone?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
