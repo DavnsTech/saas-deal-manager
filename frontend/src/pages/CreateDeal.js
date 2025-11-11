@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDeals } from '../contexts/DealContext';
-import styled from 'styled-components'; // Use styled-components for consistency
+import styled from 'styled-components';
+import { FaArrowLeft } from 'react-icons/fa'; // Import FaArrowLeft
 
-// Re-importing styled components from the existing ones or defining new ones
 const CreateDealContainer = styled.div`
   padding: 30px;
   background-color: #f4f7fc;
@@ -11,6 +11,23 @@ const CreateDealContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+`;
+
+const BackLink = styled(Link)` // Using Link from react-router-dom
+  display: inline-flex;
+  align-items: center;
+  color: #4361ee;
+  text-decoration: none;
+  margin-bottom: 20px;
+  font-weight: 500;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+  
+  svg {
+    margin-right: 8px;
+  }
 `;
 
 const FormWrapper = styled.div`
@@ -42,8 +59,7 @@ const Form = styled.form`
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  margin-bottom: 15px;
-
+  
   label {
     font-weight: 600;
     margin-bottom: 8px;
@@ -87,10 +103,10 @@ const FormTextarea = styled.textarea`
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 16px;
-  font-family: inherit; /* Use inherited font */
-  min-height: 100px; /* Give it some default height */
-  resize: vertical; /* Allow vertical resizing */
+  font-family: inherit; /* Use the same font as the rest of the app */
+  min-height: 100px; /* Make textareas a bit taller */
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  resize: vertical; /* Allow vertical resizing */
 
   &:focus {
     outline: none;
@@ -99,75 +115,40 @@ const FormTextarea = styled.textarea`
   }
 `;
 
-const FormRow = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 20px; /* Add margin for spacing between rows */
-`;
-
 const FullWidthFormGroup = styled(FormGroup)`
   grid-column: 1 / -1; /* Span across all columns */
 `;
 
 const SubmitButton = styled.button`
+  grid-column: 1 / -1; /* Span across all columns */
   background: #4361ee;
   color: white;
-  padding: 12px 25px;
+  padding: 12px 20px;
   border: none;
   border-radius: 4px;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s ease;
-  margin-top: 20px; /* Space above the button */
+  margin-top: 20px;
 
   &:hover {
     background: #3a56d4;
   }
-
-  &:disabled {
-    background: #cccccc;
-    cursor: not-allowed;
-  }
 `;
 
-const ErrorMessage = styled.p`
-  color: #dc3545;
-  text-align: center;
-  margin-bottom: 20px;
-  font-weight: 500;
-`;
-
-const salesStages = [
-  'Prospection',
-  'Qualification',
-  'Prise de contact',
-  'Découverte',
-  'Proposition de valeur',
-  'Négociation',
-  'Closing',
-  'Livraison/Onboarding',
-  'Fidélisation/Upsell/Cross-sell'
-];
-
-const currencyOptions = ['USD', 'EUR', 'GBP', 'JPY']; // Example currencies
-const statusOptions = ['Open', 'Closed Won', 'Closed Lost', 'On Hold'];
-const priorityOptions = ['Low', 'Medium', 'High', 'Urgent'];
-
-function CreateDeal() {
-  const { addDeal } = useDeals();
+const CreateDeal = () => {
   const navigate = useNavigate();
+  const { addDeal } = useDeals();
   const [formData, setFormData] = useState({
     name: '',
-    amount: '',
+    amount: 0,
     currency: 'USD',
     status: 'Open',
     stage: 'Prospection',
     source: '',
     priority: 'Medium',
-    probability: '',
-    createdAt: new Date().toISOString().split('T')[0], // Default to today
+    probability: 0,
     closeDate: '',
     responsible: '',
     client: '',
@@ -182,94 +163,82 @@ function CreateDeal() {
     contractType: '',
     contractDuration: '',
     paymentMode: '',
-    lastInteraction: '',
     internalComments: '',
-    attachedDocuments: '',
-    followUpReminder: '',
-    leadScore: '',
-    lifetimeValue: '',
+    leadScore: 0,
+    lifetimeValue: 0,
     region: ''
   });
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(''); // Clear previous errors
-    setIsLoading(true);
-
-    // Basic validation
-    if (!formData.name || !formData.amount || isNaN(parseFloat(formData.amount))) {
-      setError('Deal name is required and amount must be a valid number.');
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      // Prepare data for API, ensuring numeric fields are parsed correctly
-      const dealDataToSend = {
-        ...formData,
-        amount: parseFloat(formData.amount),
-        probability: formData.probability ? parseFloat(formData.probability) : 0,
-        leadScore: formData.leadScore ? parseFloat(formData.leadScore) : 0,
-        lifetimeValue: formData.lifetimeValue ? parseFloat(formData.lifetimeValue) : 0,
-        // Ensure dates are in correct format if they exist
-        createdAt: formData.createdAt ? new Date(formData.createdAt).toISOString() : new Date().toISOString(),
-        closeDate: formData.closeDate ? new Date(formData.closeDate).toISOString() : null,
-        lastInteraction: formData.lastInteraction ? new Date(formData.lastInteraction).toISOString() : null,
-        followUpReminder: formData.followUpReminder ? new Date(formData.followUpReminder).toISOString() : null,
-      };
+      // Convert numeric fields to numbers
+      const numericFields = ['amount', 'probability', 'leadScore', 'lifetimeValue'];
+      const processedData = { ...formData };
+      numericFields.forEach(field => {
+        if (processedData[field]) {
+          processedData[field] = parseFloat(processedData[field]);
+        }
+      });
+      
+      // Ensure probability is between 0 and 100
+      if (processedData.probability > 100) processedData.probability = 100;
+      if (processedData.probability < 0) processedData.probability = 0;
 
-      await addDeal(dealDataToSend);
-      navigate('/deals'); // Navigate to deals list on success
-    } catch (err) {
-      setError(err.message || 'Failed to create deal. Please try again.');
-      console.error("Submission error:", err);
-    } finally {
-      setIsLoading(false);
+      await addDeal(processedData);
+      navigate('/deals');
+    } catch (error) {
+      console.error("Error creating deal:", error);
+      // Optionally display an error message to the user
     }
   };
 
+  // Mock data for select options
+  const salesStages = ['Prospection', 'Qualification', 'Prise de contact', 'Découverte', 'Proposition de valeur', 'Négociation', 'Closing', 'Livraison/Onboarding', 'Fidélisation/Upsell/Cross-sell'];
+  const statuses = ['Open', 'Closed Won', 'Closed Lost', 'On Hold'];
+  const priorities = ['Low', 'Medium', 'High', 'Urgent'];
+  const currencies = ['USD', 'EUR', 'GBP', 'CAD'];
+  const companySizes = ['<50', '50-200', '201-500', '500+'];
+  const contractTypes = ['Service Agreement', 'Product Sale', 'Subscription', 'Partnership'];
+  const paymentModes = ['Monthly Invoice', 'Upfront Payment', 'Net 30', 'Net 60'];
+
   return (
     <CreateDealContainer>
+      <BackLink to="/deals">
+        <FaArrowLeft /> Back to Deals
+      </BackLink>
       <FormWrapper>
         <PageTitle>Create New Deal</PageTitle>
-        {error && <ErrorMessage>{error}</ErrorMessage>}
         <Form onSubmit={handleSubmit}>
           <FormGroup>
             <label htmlFor="name">Deal Name</label>
-            <FormInput
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-            />
+            <FormInput type="text" id="name" name="name" value={formData.name} onChange={handleChange} required />
           </FormGroup>
 
           <FormGroup>
             <label htmlFor="amount">Amount</label>
-            <FormInput
-              type="number"
-              id="amount"
-              name="amount"
-              value={formData.amount}
-              onChange={handleChange}
-              required
-              step="0.01"
-            />
+            <FormInput type="number" id="amount" name="amount" value={formData.amount} onChange={handleChange} required />
           </FormGroup>
 
           <FormGroup>
             <label htmlFor="currency">Currency</label>
             <FormSelect id="currency" name="currency" value={formData.currency} onChange={handleChange}>
-              {currencyOptions.map(option => <option key={option} value={option}>{option}</option>)}
+              {currencies.map(c => <option key={c} value={c}>{c}</option>)}
+            </FormSelect>
+          </FormGroup>
+
+          <FormGroup>
+            <label htmlFor="status">Status</label>
+            <FormSelect id="status" name="status" value={formData.status} onChange={handleChange}>
+              {statuses.map(s => <option key={s} value={s}>{s}</option>)}
             </FormSelect>
           </FormGroup>
 
@@ -281,277 +250,126 @@ function CreateDeal() {
           </FormGroup>
 
           <FormGroup>
-            <label htmlFor="client">Client/Company</label>
-            <FormInput
-              type="text"
-              id="client"
-              name="client"
-              value={formData.client}
-              onChange={handleChange}
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <label htmlFor="contact">Contact Principal</label>
-            <FormInput
-              type="text"
-              id="contact"
-              name="contact"
-              value={formData.contact}
-              onChange={handleChange}
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <label htmlFor="email">Email</label>
-            <FormInput
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <label htmlFor="phone">Phone</label>
-            <FormInput
-              type="tel"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <label htmlFor="responsible">Responsible Sales Rep</label>
-            <FormInput
-              type="text"
-              id="responsible"
-              name="responsible"
-              value={formData.responsible}
-              onChange={handleChange}
-            />
+            <label htmlFor="source">Source</label>
+            <FormInput type="text" id="source" name="source" value={formData.source} onChange={handleChange} />
           </FormGroup>
 
           <FormGroup>
             <label htmlFor="priority">Priority</label>
             <FormSelect id="priority" name="priority" value={formData.priority} onChange={handleChange}>
-              {priorityOptions.map(p => <option key={p} value={p}>{p}</option>)}
+              {priorities.map(p => <option key={p} value={p}>{p}</option>)}
             </FormSelect>
           </FormGroup>
 
           <FormGroup>
             <label htmlFor="probability">Probability (%)</label>
-            <FormInput
-              type="number"
-              id="probability"
-              name="probability"
-              value={formData.probability}
-              onChange={handleChange}
-              min="0"
-              max="100"
-              step="1"
-            />
+            <FormInput type="number" id="probability" name="probability" value={formData.probability} onChange={handleChange} min="0" max="100" />
           </FormGroup>
 
           <FormGroup>
             <label htmlFor="closeDate">Expected Close Date</label>
-            <FormInput
-              type="date"
-              id="closeDate"
-              name="closeDate"
-              value={formData.closeDate ? formData.closeDate.split('T')[0] : ''} // Format for date input
-              onChange={handleChange}
-            />
+            <FormInput type="date" id="closeDate" name="closeDate" value={formData.closeDate} onChange={handleChange} />
           </FormGroup>
 
           <FormGroup>
-            <label htmlFor="source">Lead Source</label>
-            <FormInput
-              type="text"
-              id="source"
-              name="source"
-              value={formData.source}
-              onChange={handleChange}
-            />
+            <label htmlFor="responsible">Sales Rep</label>
+            <FormInput type="text" id="responsible" name="responsible" value={formData.responsible} onChange={handleChange} />
           </FormGroup>
 
           <FormGroup>
-            <label htmlFor="acquisitionChannel">Acquisition Channel</label>
-            <FormInput
-              type="text"
-              id="acquisitionChannel"
-              name="acquisitionChannel"
-              value={formData.acquisitionChannel}
-              onChange={handleChange}
-            />
+            <label htmlFor="client">Client/Company Name</label>
+            <FormInput type="text" id="client" name="client" value={formData.client} onChange={handleChange} />
           </FormGroup>
 
           <FormGroup>
-            <label htmlFor="sector">Industry Sector</label>
-            <FormInput
-              type="text"
-              id="sector"
-              name="sector"
-              value={formData.sector}
-              onChange={handleChange}
-            />
+            <label htmlFor="contact">Primary Contact</label>
+            <FormInput type="text" id="contact" name="contact" value={formData.contact} onChange={handleChange} />
+          </FormGroup>
+
+          <FormGroup>
+            <label htmlFor="email">Email</label>
+            <FormInput type="email" id="email" name="email" value={formData.email} onChange={handleChange} />
+          </FormGroup>
+
+          <FormGroup>
+            <label htmlFor="phone">Phone</label>
+            <FormInput type="tel" id="phone" name="phone" value={formData.phone} onChange={handleChange} />
+          </FormGroup>
+
+          <FormGroup>
+            <label htmlFor="sector">Industry/Sector</label>
+            <FormInput type="text" id="sector" name="sector" value={formData.sector} onChange={handleChange} />
           </FormGroup>
 
           <FormGroup>
             <label htmlFor="companySize">Company Size</label>
-            <FormInput
-              type="text"
-              id="companySize"
-              name="companySize"
-              value={formData.companySize}
-              onChange={handleChange}
-            />
+            <FormSelect id="companySize" name="companySize" value={formData.companySize} onChange={handleChange}>
+              <option value="">Select Size</option>
+              {companySizes.map(size => <option key={size} value={size}>{size}</option>)}
+            </FormSelect>
           </FormGroup>
 
           <FormGroup>
+            <label htmlFor="acquisitionChannel">Acquisition Channel</label>
+            <FormInput type="text" id="acquisitionChannel" name="acquisitionChannel" value={formData.acquisitionChannel} onChange={handleChange} />
+          </FormGroup>
+
+          <FullWidthFormGroup>
             <label htmlFor="identifiedNeed">Identified Need</label>
-            <FormTextarea
-              id="identifiedNeed"
-              name="identifiedNeed"
-              value={formData.identifiedNeed}
-              onChange={handleChange}
-            />
-          </FormGroup>
+            <FormTextarea id="identifiedNeed" name="identifiedNeed" value={formData.identifiedNeed} onChange={handleChange} />
+          </FullWidthFormGroup>
 
-          <FormGroup>
+          <FullWidthFormGroup>
             <label htmlFor="proposedSolution">Proposed Solution</label>
-            <FormTextarea
-              id="proposedSolution"
-              name="proposedSolution"
-              value={formData.proposedSolution}
-              onChange={handleChange}
-            />
-          </FormGroup>
+            <FormTextarea id="proposedSolution" name="proposedSolution" value={formData.proposedSolution} onChange={handleChange} />
+          </FullWidthFormGroup>
 
           <FormGroup>
             <label htmlFor="contractType">Contract Type</label>
-            <FormInput
-              type="text"
-              id="contractType"
-              name="contractType"
-              value={formData.contractType}
-              onChange={handleChange}
-            />
+            <FormSelect id="contractType" name="contractType" value={formData.contractType} onChange={handleChange}>
+              <option value="">Select Type</option>
+              {contractTypes.map(type => <option key={type} value={type}>{type}</option>)}
+            </FormSelect>
           </FormGroup>
 
           <FormGroup>
             <label htmlFor="contractDuration">Contract Duration</label>
-            <FormInput
-              type="text"
-              id="contractDuration"
-              name="contractDuration"
-              value={formData.contractDuration}
-              onChange={handleChange}
-            />
+            <FormInput type="text" id="contractDuration" name="contractDuration" value={formData.contractDuration} onChange={handleChange} placeholder="e.g., 12 months" />
           </FormGroup>
 
           <FormGroup>
             <label htmlFor="paymentMode">Payment Mode</label>
-            <FormInput
-              type="text"
-              id="paymentMode"
-              name="paymentMode"
-              value={formData.paymentMode}
-              onChange={handleChange}
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <label htmlFor="lastInteraction">Date of Last Interaction</label>
-            <FormInput
-              type="datetime-local" // Use datetime-local for more precise date/time
-              id="lastInteraction"
-              name="lastInteraction"
-              value={formData.lastInteraction ? formData.lastInteraction.split('.')[0] : ''} // Format for datetime-local input
-              onChange={handleChange}
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <label htmlFor="followUpReminder">Follow-up Reminder</label>
-            <FormInput
-              type="datetime-local"
-              id="followUpReminder"
-              name="followUpReminder"
-              value={formData.followUpReminder ? formData.followUpReminder.split('.')[0] : ''}
-              onChange={handleChange}
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <label htmlFor="leadScore">Lead Score</label>
-            <FormInput
-              type="number"
-              id="leadScore"
-              name="leadScore"
-              value={formData.leadScore}
-              onChange={handleChange}
-              step="1"
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <label htmlFor="lifetimeValue">Estimated Lifetime Value</label>
-            <FormInput
-              type="number"
-              id="lifetimeValue"
-              name="lifetimeValue"
-              value={formData.lifetimeValue}
-              onChange={handleChange}
-              step="0.01"
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <label htmlFor="region">Region/Country</label>
-            <FormInput
-              type="text"
-              id="region"
-              name="region"
-              value={formData.region}
-              onChange={handleChange}
-            />
+            <FormSelect id="paymentMode" name="paymentMode" value={formData.paymentMode} onChange={handleChange}>
+              <option value="">Select Mode</option>
+              {paymentModes.map(mode => <option key={mode} value={mode}>{mode}</option>)}
+            </FormSelect>
           </FormGroup>
 
           <FullWidthFormGroup>
             <label htmlFor="internalComments">Internal Comments</label>
-            <FormTextarea
-              id="internalComments"
-              name="internalComments"
-              value={formData.internalComments}
-              onChange={handleChange}
-            />
+            <FormTextarea id="internalComments" name="internalComments" value={formData.internalComments} onChange={handleChange} />
           </FullWidthFormGroup>
 
-          <FullWidthFormGroup>
-            <label htmlFor="attachedDocuments">Attached Documents (e.g., filenames)</label>
-            <FormInput
-              type="text"
-              id="attachedDocuments"
-              name="attachedDocuments"
-              value={formData.attachedDocuments}
-              onChange={handleChange}
-              placeholder="e.g., proposal.pdf, contract.docx"
-            />
-          </FullWidthFormGroup>
+          <FormGroup>
+            <label htmlFor="leadScore">Lead Score</label>
+            <FormInput type="number" id="leadScore" name="leadScore" value={formData.leadScore} onChange={handleChange} />
+          </FormGroup>
 
-          <FullWidthFormGroup>
-            <SubmitButton type="submit" disabled={isLoading}>
-              {isLoading ? 'Creating...' : 'Create Deal'}
-            </SubmitButton>
-          </FullWidthFormGroup>
+          <FormGroup>
+            <label htmlFor="lifetimeValue">Estimated Lifetime Value</label>
+            <FormInput type="number" id="lifetimeValue" name="lifetimeValue" value={formData.lifetimeValue} onChange={handleChange} />
+          </FormGroup>
+
+          <FormGroup>
+            <label htmlFor="region">Region/Country</label>
+            <FormInput type="text" id="region" name="region" value={formData.region} onChange={handleChange} />
+          </FormGroup>
+          
+          <SubmitButton type="submit">Create Deal</SubmitButton>
         </Form>
       </FormWrapper>
     </CreateDealContainer>
   );
-}
+};
 
 export default CreateDeal;

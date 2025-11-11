@@ -6,8 +6,8 @@ import Dashboard from './pages/Dashboard';
 import Deals from './pages/Deals';
 import DealDetail from './pages/DealDetail';
 import CreateDeal from './pages/CreateDeal';
-import Login from './pages/Login'; // Assuming you will create a Login page
-import Register from './pages/Register'; // Assuming you will create a Register page
+import Login from './pages/Login';
+import Register from './pages/Register';
 import DealContextProvider from './contexts/DealContext';
 import './App.css'; // Global styles
 
@@ -44,9 +44,14 @@ function App() {
                 path="/deals/create"
                 element={isAuthenticated ? <CreateDeal /> : <Navigate to="/login" replace />}
               />
+              {/* Example of an edit route - requires implementation */}
+              <Route
+                path="/deals/:id/edit"
+                element={isAuthenticated ? <div>Edit Deal Page (Not Implemented)</div> : <Navigate to="/login" replace />}
+              />
+
 
               {/* Fallback Route */}
-              {/* If authenticated, redirect unknown routes to dashboard. If not, redirect to login. */}
               <Route
                 path="*"
                 element={isAuthenticated ? <Navigate to="/" replace /> : <Navigate to="/login" replace />}
