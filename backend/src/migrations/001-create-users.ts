@@ -1,13 +1,12 @@
 import { QueryInterface, DataTypes } from 'sequelize';
 
-export default {
+module.exports = {
   up: async (queryInterface: QueryInterface) => {
     await queryInterface.createTable('users', {
       id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
-        allowNull: false,
       },
       username: {
         type: DataTypes.STRING,
@@ -24,18 +23,11 @@ export default {
         allowNull: false,
       },
       role: {
-        type: DataTypes.STRING,
-        allowNull: false,
+        type: DataTypes.ENUM('admin', 'user'),
         defaultValue: 'user',
       },
-      createdAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-      updatedAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
+      createdAt: DataTypes.DATE,
+      updatedAt: DataTypes.DATE,
     });
   },
 

@@ -1,24 +1,12 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { User } from '../models/User';
+import { AuthRequest } from '../types';
 
-export const getUsers = async (req: Request, res: Response) => {
+export const getProfile = async (req: AuthRequest, res: Response) => {
   try {
-    const users = await User.findAll({ attributes: ['id', 'username', 'email', 'role'] });
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch users' });
-  }
-};
-
-export const getUser = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const user = await User.findByPk(id, { attributes: ['id', 'username', 'email', 'role'] });
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    const user = await User.findByPk(req.user!.id, { attributes: { exclude: ['password'] } });
     res.json(user);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch user' });
+    res.status(500).json({ message: 'Error fetching profile' });
   }
 };
