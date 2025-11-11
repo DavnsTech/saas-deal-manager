@@ -1,18 +1,15 @@
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { fetchDeals, createDeal, updateDeal, deleteDeal, fetchDealById } from '../api/dealsApi';
-import { Deal } from '../types'; // Assuming 'Deal' type is defined in ../types
+import React, { createContext, useState, useContext, ReactNode } from 'react';
+import { Deal, CreateDealPayload } from '../types';
+import { fetchDeals as apiFetchDeals, createDeal as apiCreateDeal, getDealById as apiGetDealById } from '../api/dealsApi'; // Assuming these functions exist and are typed
 
 interface DealContextType {
   deals: Deal[];
   loading: boolean;
   error: string | null;
-  selectedDeal: Deal | null;
   fetchDeals: () => Promise<void>;
-  fetchDeal: (id: string) => Promise<Deal | null>;
-  addDeal: (dealData: Omit<Deal, 'id'>) => Promise<Deal | null>;
-  editDeal: (id: string, dealData: Partial<Deal>) => Promise<Deal | null>;
-  removeDeal: (id: string) => Promise<boolean>;
-  setSelectedDeal: (deal: Deal | null) => void;
+  createDeal: (dealData: CreateDealPayload) => Promise<Deal | null>;
+  getDealById: (dealId: string) => Promise<Deal | null>;
+  // Add other context functions like updateDeal, deleteDeal if needed
 }
 
 const DealContext = createContext<DealContextType | undefined>(undefined);
@@ -23,123 +20,65 @@ interface DealProviderProps {
 
 export const DealProvider: React.FC<DealProviderProps> = ({ children }) => {
   const [deals, setDeals] = useState<Deal[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
 
-  const fetchAllDeals = async () => {
+  const fetchDeals = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchDeals();
-      setDeals(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
-      setDeals([]); // Clear deals on error
+      const fetchedDeals = await apiFetchDeals();
+      setDeals(fetchedDeals);
+    } catch (err: any) {
+      setError(`Failed to fetch deals: ${err.message || 'An unknown error occurred'}`);
+      console.error('Fetch deals error:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchSingleDeal = async (id: string): Promise<Deal | null> => {
+  const createDeal = async (dealData: CreateDealPayload): Promise<Deal | null> => {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchDealById(id);
-      // If we are fetching a single deal, and it's currently selected, update it
-      if (selectedDeal && selectedDeal.id === id) {
-          setSelectedDeal(data);
-      }
-      return data;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addDeal = async (dealData: Omit<Deal, 'id'>): Promise<Deal | null> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const newDeal = await createDeal(dealData);
-      setDeals(prevDeals => [...prevDeals, newDeal]); // Optimistic UI update
+      const newDeal = await apiCreateDeal(dealData);
+      // Optimistically update state or re-fetch
+      setDeals(prevDeals => [...prevDeals, newDeal]);
       return newDeal;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+    } catch (err: any) {
+      setError(`Failed to create deal: ${err.message || 'An unknown error occurred'}`);
+      console.error('Create deal error:', err);
       return null;
     } finally {
       setLoading(false);
     }
   };
 
-  const editDeal = async (id: string, dealData: Partial<Deal>): Promise<Deal | null> => {
+  const getDealById = async (dealId: string): Promise<Deal | null> => {
     setLoading(true);
     setError(null);
     try {
-      const updatedDeal = await updateDeal(id, dealData);
-      setDeals(prevDeals =>
-        prevDeals.map(deal => (deal.id === id ? updatedDeal : deal))
-      );
-      if (selectedDeal && selectedDeal.id === id) {
-        setSelectedDeal(updatedDeal); // Update selected deal if it's the one being edited
-      }
-      return updatedDeal;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      const deal = await apiGetDealById(dealId);
+      return deal;
+    } catch (err: any) {
+      setError(`Failed to fetch deal ${dealId}: ${err.message || 'An unknown error occurred'}`);
+      console.error(`Fetch deal ${dealId} error:`, err);
       return null;
     } finally {
       setLoading(false);
     }
-  };
-
-  const removeDeal = async (id: string): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
-    try {
-      await deleteDeal(id);
-      setDeals(prevDeals => prevDeals.filter(deal => deal.id !== id));
-      if (selectedDeal && selectedDeal.id === id) {
-        setSelectedDeal(null); // Clear selected deal if it's the one being deleted
-      }
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Initial fetch when the component mounts
-  useEffect(() => {
-    fetchAllDeals();
-  }, []);
-
-  const contextValue: DealContextType = {
-    deals,
-    loading,
-    error,
-    selectedDeal,
-    fetchDeals: fetchAllDeals,
-    fetchDeal: fetchSingleDeal,
-    addDeal,
-    editDeal,
-    removeDeal,
-    setSelectedDeal,
   };
 
   return (
-    <DealContext.Provider value={contextValue}>
+    <DealContext.Provider value={{ deals, loading, error, fetchDeals, createDeal, getDealById }}>
       {children}
     </DealContext.Provider>
   );
 };
 
-export const useDealContext = (): DealContextType => {
+export const useDealContext = () => {
   const context = useContext(DealContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useDealContext must be used within a DealProvider');
   }
   return context;
