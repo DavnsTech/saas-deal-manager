@@ -6,49 +6,50 @@ import Dashboard from './pages/Dashboard';
 import Deals from './pages/Deals';
 import DealDetail from './pages/DealDetail';
 import CreateDeal from './pages/CreateDeal';
-import './App.css'; // Import App-specific styles
+import DealContextProvider from './contexts/DealContext';
+import './App.css';
 
 function App() {
   // Basic authentication check (replace with actual auth logic)
   const isAuthenticated = localStorage.getItem('token') !== null;
 
   return (
-    <div className="app-container">
-      <Header />
-      <div className="main-content">
-        {isAuthenticated && <Sidebar />}
-        <main className="page-content">
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<div>Login Page (Not Implemented)</div>} />
-            <Route path="/register" element={<div>Register Page (Not Implemented)</div>} />
+    <DealContextProvider>
+      <div className="app">
+        <Header />
+        <div className="main-container">
+          {isAuthenticated && <Sidebar />}
+          <main className="content">
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/login" element={<div>Login Page (Not Implemented)</div>} />
+              <Route path="/register" element={<div>Register Page (Not Implemented)</div>} />
 
-            {/* Protected Routes */}
-            <Route
-              path="/"
-              element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />}
-            />
-            <Route
-              path="/deals"
-              element={isAuthenticated ? <Deals /> : <Navigate to="/login" replace />}
-            />
-            <Route
-              path="/deals/:id"
-              element={isAuthenticated ? <DealDetail /> : <Navigate to="/login" replace />}
-            />
-            {/* Changed route to match navigation and API expectations */}
-            <Route
-              path="/deals/new"
-              element={isAuthenticated ? <CreateDeal /> : <Navigate to="/login" replace />}
-            />
+              {/* Protected Routes */}
+              <Route
+                path="/"
+                element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/deals"
+                element={isAuthenticated ? <Deals /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/deals/:id"
+                element={isAuthenticated ? <DealDetail /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/deals/create"
+                element={isAuthenticated ? <CreateDeal /> : <Navigate to="/login" replace />}
+              />
 
-            {/* Fallback or Not Found */}
-            {/* Redirects to login if not authenticated, otherwise to Dashboard. Could be a 404 page. */}
-            <Route path="*" element={isAuthenticated ? <Navigate to="/" replace /> : <Navigate to="/login" replace />} />
-          </Routes>
-        </main>
+              {/* Fallback */}
+              <Route path="*" element={isAuthenticated ? <Navigate to="/" replace /> : <Navigate to="/login" replace />} />
+            </Routes>
+          </main>
+        </div>
       </div>
-    </div>
+    </DealContextProvider>
   );
 }
 
