@@ -1,14 +1,10 @@
 .create-deal {
-  max-width: 600px;
-  margin: 0 auto;
   padding: 20px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .create-deal h2 {
-  text-align: center;
   margin-bottom: 20px;
 }
 
@@ -23,7 +19,8 @@
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group textarea {
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
@@ -31,22 +28,20 @@
   font-size: 16px;
 }
 
-button {
-  width: 100%;
-  padding: 12px;
+.form-group textarea {
+  height: 100px;
+}
+
+button[type="submit"] {
   background: #4361ee;
   color: white;
+  padding: 10px 20px;
   border: none;
   border-radius: 4px;
-  font-size: 16px;
   cursor: pointer;
+  font-size: 16px;
 }
 
-button:hover {
+button[type="submit"]:hover {
   background: #3a56d4;
-}
-
-.error {
-  color: #dc3545;
-  margin-bottom: 15px;
 }

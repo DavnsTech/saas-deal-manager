@@ -1,7 +1,16 @@
 import axios from 'axios';
 
+// Configure axios to include token in headers if available
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Base URL for your API. Consider moving this to an environment variable.
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api'; // Example
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 /**
  * Fetches all deals from the API.
@@ -62,7 +71,7 @@ export const createDeal = async (dealData) => {
 };
 
 /**
- * Updates an existing deal.
+ * Updates an existing deal by its ID.
  * @param {string} id - The ID of the deal to update.
  * @param {object} dealData - The updated data for the deal.
  * @returns {Promise<Deal>} A promise that resolves with the updated deal object.

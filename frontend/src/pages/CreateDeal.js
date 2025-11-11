@@ -27,7 +27,7 @@ function CreateDeal() {
     source: '',
     priority: 'Medium',
     probability: '',
-    createdAt: '',
+    createdAt: new Date().toISOString().split('T')[0],
     closeDate: '',
     responsible: '',
     client: '',
@@ -73,13 +73,14 @@ function CreateDeal() {
   return (
     <div className="create-deal">
       <h2>Create New Deal</h2>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label>Name</label>
+          <label>Name *</label>
           <input type="text" name="name" value={formData.name} onChange={handleChange} required />
         </div>
         <div className="form-group">
-          <label>Amount</label>
+          <label>Amount *</label>
           <input type="number" name="amount" value={formData.amount} onChange={handleChange} required />
         </div>
         <div className="form-group">
@@ -87,57 +88,25 @@ function CreateDeal() {
           <select name="currency" value={formData.currency} onChange={handleChange}>
             <option value="USD">USD</option>
             <option value="EUR">EUR</option>
-          </select>
-        </div>
-        <div className="form-group">
-          <label>Status</label>
-          <select name="status" value={formData.status} onChange={handleChange}>
-            <option value="Open">Open</option>
-            <option value="Closed">Closed</option>
+            <option value="GBP">GBP</option>
           </select>
         </div>
         <div className="form-group">
           <label>Stage</label>
           <select name="stage" value={formData.stage} onChange={handleChange}>
-            {salesStages.map(stage => (
-              <option key={stage} value={stage}>{stage}</option>
-            ))}
+            {salesStages.map(stage => <option key={stage} value={stage}>{stage}</option>)}
           </select>
         </div>
         <div className="form-group">
-          <label>Source</label>
-          <input type="text" name="source" value={formData.source} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Priority</label>
-          <select name="priority" value={formData.priority} onChange={handleChange}>
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
-          </select>
-        </div>
-        <div className="form-group">
-          <label>Probability (%)</label>
-          <input type="number" name="probability" value={formData.probability} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Date Created</label>
-          <input type="date" name="createdAt" value={formData.createdAt} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Expected Close Date</label>
+          <label>Close Date</label>
           <input type="date" name="closeDate" value={formData.closeDate} onChange={handleChange} />
         </div>
         <div className="form-group">
-          <label>Responsible</label>
-          <input type="text" name="responsible" value={formData.responsible} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Client/Company</label>
+          <label>Client</label>
           <input type="text" name="client" value={formData.client} onChange={handleChange} />
         </div>
         <div className="form-group">
-          <label>Contact Principal</label>
+          <label>Contact</label>
           <input type="text" name="contact" value={formData.contact} onChange={handleChange} />
         </div>
         <div className="form-group">
@@ -157,58 +126,17 @@ function CreateDeal() {
           <input type="text" name="companySize" value={formData.companySize} onChange={handleChange} />
         </div>
         <div className="form-group">
-          <label>Acquisition Channel</label>
-          <input type="text" name="acquisitionChannel" value={formData.acquisitionChannel} onChange={handleChange} />
+          <label>Priority</label>
+          <select name="priority" value={formData.priority} onChange={handleChange}>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
         </div>
         <div className="form-group">
-          <label>Identified Need</label>
-          <textarea name="identifiedNeed" value={formData.identifiedNeed} onChange={handleChange}></textarea>
+          <label>Probability (%)</label>
+          <input type="number" name="probability" value={formData.probability} onChange={handleChange} min="0" max="100" />
         </div>
-        <div className="form-group">
-          <label>Proposed Solution</label>
-          <textarea name="proposedSolution" value={formData.proposedSolution} onChange={handleChange}></textarea>
-        </div>
-        <div className="form-group">
-          <label>Contract Type</label>
-          <input type="text" name="contractType" value={formData.contractType} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Contract Duration</label>
-          <input type="text" name="contractDuration" value={formData.contractDuration} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Payment Mode</label>
-          <input type="text" name="paymentMode" value={formData.paymentMode} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Last Interaction</label>
-          <input type="date" name="lastInteraction" value={formData.lastInteraction} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Internal Comments</label>
-          <textarea name="internalComments" value={formData.internalComments} onChange={handleChange}></textarea>
-        </div>
-        <div className="form-group">
-          <label>Attached Documents</label>
-          <input type="text" name="attachedDocuments" value={formData.attachedDocuments} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Follow-up Reminder</label>
-          <input type="text" name="followUpReminder" value={formData.followUpReminder} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Lead Score</label>
-          <input type="number" name="leadScore" value={formData.leadScore} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Lifetime Value</label>
-          <input type="number" name="lifetimeValue" value={formData.lifetimeValue} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Region/Country</label>
-          <input type="text" name="region" value={formData.region} onChange={handleChange} />
-        </div>
-        {error && <p className="error">{error}</p>}
         <button type="submit">Create Deal</button>
       </form>
     </div>

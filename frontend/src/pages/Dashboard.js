@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-import { FaPlus, FaChartLine, FaDollarSign, FaList, FaUsers, FaCalendarAlt } from 'react-icons/fa';
 import { useDeals } from '../contexts/DealContext';
+import { FaPlus, FaChartLine, FaDollarSign, FaList, FaUsers, FaCalendarAlt } from 'react-icons/fa';
 
 const DashboardContainer = styled.div`
   padding: 20px;
@@ -101,16 +101,33 @@ const DealsTable = styled.table`
   tr:last-child td {
     border-bottom: none;
   }
+  
+  tbody tr:hover {
+    background: #f9f9f9;
+  }
 `;
 
-const Dashboard = () => {
-  const { deals } = useDeals();
+const Deals = () => {
+  const { deals, loading, error } = useDeals();
+  const [stats, setStats] = useState({
+    totalDeals: 0,
+    totalValue: 0,
+    closingSoon: 0,
+    wonDeals: 0,
+  });
 
-  // Calculate stats
-  const totalDeals = deals.length;
-  const totalValue = deals.reduce((sum, deal) => sum + (deal.amount || 0), 0);
-  const closedDeals = deals.filter(deal => deal.status === 'Closed').length;
-  const recentDeals = deals.slice(0, 5); // Last 5 for simplicity
+  useEffect(() => {
+    if (deals.length > 0) {
+      const totalDeals = deals.length;
+      const totalValue = deals.reduce((sum, deal) => sum + deal.amount, 0);
+      const closingSoon = deals.filter(deal => new Date(deal.closeDate) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)).length;
+      const wonDeals = deals.filter(deal => deal.status === 'Closed Won').length;
+      setStats({ totalDeals, totalValue, closingSoon, wonDeals });
+    }
+  }, [deals]);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <DashboardContainer>
@@ -120,7 +137,7 @@ const Dashboard = () => {
             <FaList />
           </StatIcon>
           <StatInfo>
-            <h3>{totalDeals}</h3>
+            <h3>{stats.totalDeals}</h3>
             <p>Total Deals</p>
           </StatInfo>
         </StatCard>
@@ -129,57 +146,53 @@ const Dashboard = () => {
             <FaDollarSign />
           </StatIcon>
           <StatInfo>
-            <h3>${totalValue.toLocaleString()}</h3>
+            <h3>${stats.totalValue.toLocaleString()}</h3>
             <p>Total Value</p>
           </StatInfo>
         </StatCard>
         <StatCard>
           <StatIcon color="#ffc107">
-            <FaChartLine />
+            <FaCalendarAlt />
           </StatIcon>
           <StatInfo>
-            <h3>{closedDeals}</h3>
-            <p>Closed Deals</p>
+            <h3>{stats.closingSoon}</h3>
+            <p>Closing Soon</p>
           </StatInfo>
         </StatCard>
         <StatCard>
           <StatIcon color="#dc3545">
-            <FaUsers />
+            <FaChartLine />
           </StatIcon>
           <StatInfo>
-            <h3>12</h3> {/* Placeholder */}
-            <p>Active Users</p>
+            <h3>{stats.wonDeals}</h3>
+            <p>Won Deals</p>
           </StatInfo>
         </StatCard>
       </StatsGrid>
 
       <SectionHeader>
         <h2>Recent Deals</h2>
-        <Link to="/deals" style={{ textDecoration: 'none' }}>
-          <button style={{ background: '#4361ee', color: 'white', padding: '10px 15px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-            View All Deals
-          </button>
-        </Link>
+        <Link to="/deals" style={{ color: '#4361ee', textDecoration: 'none' }}>View All</Link>
       </SectionHeader>
 
       <DealsTable>
         <thead>
           <tr>
             <th>Name</th>
+            <th>Client</th>
             <th>Amount</th>
             <th>Stage</th>
-            <th>Status</th>
-            <th>Date</th>
+            <th>Close Date</th>
           </tr>
         </thead>
         <tbody>
-          {recentDeals.map(deal => (
+          {deals.slice(0, 5).map(deal => (
             <tr key={deal.id}>
-              <td><Link to={`/deals/${deal.id}`}>{deal.name}</Link></td>
-              <td>${deal.amount}</td>
+              <td><Link to={`/deals/${deal.id}`} style={{ color: '#4361ee', textDecoration: 'none' }}>{deal.name}</Link></td>
+              <td>{deal.client}</td>
+              <td>${deal.amount.toLocaleString()}</td>
               <td>{deal.stage}</td>
-              <td>{deal.status}</td>
-              <td>{new Date(deal.createdAt).toLocaleDateString()}</td>
+              <td>{new Date(deal.closeDate).toLocaleDateString()}</td>
             </tr>
           ))}
         </tbody>
@@ -188,4 +201,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Deals;

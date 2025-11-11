@@ -71,7 +71,9 @@ function DealContextProvider({ children }) {
   };
 
   useEffect(() => {
-    loadDeals();
+    if (localStorage.getItem('token')) {
+      loadDeals();
+    }
   }, []);
 
   const value = {
