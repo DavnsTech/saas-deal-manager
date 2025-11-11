@@ -3,12 +3,14 @@
 
 const API_BASE_URL = 'http://localhost:5000/api'; // Replace with your actual API base URL
 
-const getAuthToken = () => localStorage.getItem('authToken');
+// Standardized token retrieval from localStorage
+const getAuthToken = () => localStorage.getItem('token');
 
 const request = async (url, options = {}) => {
   const token = getAuthToken();
   const headers = {
     'Content-Type': 'application/json',
+    // Ensure Authorization header is only added if a token exists
     ...(token && { 'Authorization': `Bearer ${token}` }),
     ...options.headers,
   };
@@ -20,14 +22,26 @@ const request = async (url, options = {}) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
+      // Attempt to parse JSON for error details, fallback to status text
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        errorData = { message: response.statusText || 'An unexpected error occurred' };
+      }
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    // Handle cases where response might be empty (e.g., DELETE)
+    if (response.status === 204) {
+        return null; // No content
     }
 
     return await response.json();
   } catch (error) {
     console.error('API Request Error:', error);
-    throw error; // Re-throw to be handled by the caller
+    // Re-throw to be handled by the caller, potentially showing a user-friendly message
+    throw error;
   }
 };
 

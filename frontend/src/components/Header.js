@@ -1,14 +1,17 @@
 import React from 'react';
+import { Link, useNavigate } from 'react-router-dom'; // Import Link and useNavigate
 import './Header.css'; // Import Header-specific styles
 
 function Header() {
+  const navigate = useNavigate(); // Hook for programmatic navigation
+
   // Basic auth check for conditional rendering
   const isAuthenticated = localStorage.getItem('token') !== null;
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    // Redirect to login page (using window.location for simplicity, ideally use useNavigate)
-    window.location.href = '/login';
+    // Use navigate for client-side routing
+    navigate('/login');
   };
 
   return (
@@ -18,14 +21,14 @@ function Header() {
         <ul>
           {isAuthenticated ? (
             <>
-              <li><a href="/">Dashboard</a></li>
-              <li><a href="/deals">Deals</a></li>
+              <li><Link to="/">Dashboard</Link></li> {/* Use Link */}
+              <li><Link to="/deals">Deals</Link></li> {/* Use Link */}
               <li onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</li>
             </>
           ) : (
             <>
-              <li><a href="/login">Login</a></li>
-              <li><a href="/register">Register</a></li>
+              <li><Link to="/login">Login</Link></li> {/* Use Link */}
+              <li><Link to="/register">Register</Link></li> {/* Use Link */}
             </>
           )}
         </ul>
