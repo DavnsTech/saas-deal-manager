@@ -4,24 +4,24 @@
 
 ## Backend
 
-backend/package.json → Créé  
-backend/tsconfig.json → Créé  
-backend/src/index.ts → Créé  
-backend/src/config/database.ts → Créé  
-backend/src/config/jwt.ts → Créé  
-backend/src/models/User.ts → Créé  
-backend/src/models/Deal.ts → Créé  
-backend/src/migrations/001-create-users.ts → Créé  
-backend/src/migrations/002-create-deals.ts → Créé  
-backend/src/controllers/authController.ts → Créé  
-backend/src/controllers/dealController.ts → Créé  
-backend/src/controllers/userController.ts → Créé  
-backend/src/middleware/security.ts → Créé  
-backend/src/routes/authRoutes.ts → Créé  
-backend/src/routes/dealRoutes.ts → Créé  
-backend/src/routes/userRoutes.ts → Créé  
-backend/src/services/dealService.ts → Créé  
-backend/src/types/index.ts → Créé  
+- backend/package.json → Created
+- backend/tsconfig.json → Created
+- backend/src/index.ts → Created
+- backend/src/config/database.ts → Created
+- backend/src/config/jwt.ts → Created
+- backend/src/types/index.ts → Created
+- backend/src/models/User.ts → Created
+- backend/src/models/Deal.ts → Created
+- backend/src/migrations/001-create-users.ts → Created
+- backend/src/migrations/002-create-deals.ts → Created
+- backend/src/services/dealService.ts → Created
+- backend/src/controllers/authController.ts → Created
+- backend/src/controllers/dealController.ts → Created
+- backend/src/controllers/userController.ts → Created
+- backend/src/middleware/security.ts → Created
+- backend/src/routes/authRoutes.ts → Created
+- backend/src/routes/dealRoutes.ts → Created
+- backend/src/routes/userRoutes.ts → Created
 
 ## Frontend
 

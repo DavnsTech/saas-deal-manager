@@ -1,16 +1,47 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { DataTypes, Model } from 'sequelize';
+import sequelize from '../config/database';
 
-@Entity()
-export class User {
-  @PrimaryGeneratedColumn()
-  id!: number;
-
-  @Column({ unique: true })
-  username!: string;
-
-  @Column()
-  password!: string;
-
-  @Column({ default: true })
-  isActive!: boolean;
+class User extends Model {
+  public id!: number;
+  public email!: string;
+  public password!: string;
+  public name!: string;
+  public role!: string;
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
 }
+
+User.init(
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    role: {
+      type: DataTypes.STRING,
+      defaultValue: 'user',
+    },
+  },
+  {
+    sequelize,
+    modelName: 'User',
+    tableName: 'users',
+    timestamps: true,
+  }
+);
+
+export default User;
