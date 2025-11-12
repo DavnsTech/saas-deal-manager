@@ -1,55 +1,53 @@
 import axios from 'axios';
-import { Deal } from '../types';
+import { Deal } from '../types'; // Assuming Deal type is defined in ../types
 
-const API_URL = 'http://localhost:5000/api/deals';
+const API_URL = 'http://localhost:5000/api'; // Or your actual backend URL
 
-const getAuthToken = (): string | null => localStorage.getItem('token');
-
-export const fetchDeals = async (): Promise<Deal[]> => {
-  const token = getAuthToken();
-  const response = await axios.get(API_URL, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  return response.data;
+export const getDeals = async (): Promise<Deal[]> => {
+  try {
+    const response = await axios.get(`${API_URL}/deals`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching deals:', error);
+    throw error;
+  }
 };
 
-export const createDeal = async (dealData: Partial<Deal>): Promise<Deal> => {
-  const token = getAuthToken();
-  const response = await axios.post(API_URL, dealData, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  return response.data;
+export const getDealById = async (id: string): Promise<Deal> => {
+  try {
+    const response = await axios.get(`${API_URL}/deals/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching deal with id ${id}:`, error);
+    throw error;
+  }
 };
 
-export const getDealById = async (id: number): Promise<Deal> => {
-  const token = getAuthToken();
-  const response = await axios.get(`${API_URL}/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  return response.data;
+export const createDeal = async (dealData: Omit<Deal, 'id'>): Promise<Deal> => {
+  try {
+    const response = await axios.post(`${API_URL}/deals`, dealData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating deal:', error);
+    throw error;
+  }
 };
 
-export const updateDeal = async (id: number, dealData: Partial<Deal>): Promise<Deal> => {
-  const token = getAuthToken();
-  const response = await axios.put(`${API_URL}/${id}`, dealData, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  return response.data;
+export const updateDeal = async (id: string, dealData: Partial<Deal>): Promise<Deal> => {
+  try {
+    const response = await axios.put(`${API_URL}/deals/${id}`, dealData);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating deal with id ${id}:`, error);
+    throw error;
+  }
 };
 
-export const deleteDeal = async (id: number): Promise<void> => {
-  const token = getAuthToken();
-  await axios.delete(`${API_URL}/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export const deleteDeal = async (id: string): Promise<void> => {
+  try {
+    await axios.delete(`${API_URL}/deals/${id}`);
+  } catch (error) {
+    console.error(`Error deleting deal with id ${id}:`, error);
+    throw error;
+  }
 };

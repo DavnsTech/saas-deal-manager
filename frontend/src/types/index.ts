@@ -1,39 +1,31 @@
+// Basic Deal type, expand as needed based on backend Deal model
 export interface Deal {
-  id: number;
+  id: string;
   name: string;
-  amount: number;
-  currency: string;
-  status: string;
-  stage: string;
-  source: string;
-  priority: string;
-  probability: number;
-  creationDate: string;
-  expectedCloseDate: string;
-  responsible: string;
   company: string;
-  contact: string;
-  email: string;
-  phone: string;
-  sector: string;
-  companySize: string;
-  acquisitionChannel: string;
-  identifiedNeed: string;
-  proposedSolution: string;
-  contractType: string;
-  contractDuration: string;
-  paymentMode: string;
-  lastInteractionDate: string;
-  internalComments: string;
-  attachedDocuments: string[];
-  followUpSchedule: string;
-  leadScore: number;
-  lifetimeValue: number;
-  region: string;
+  value: number;
+  stage: string; // e.g., 'Prospecting', 'Negotiation', 'Closed Won', 'Closed Lost'
+  createdAt?: Date;
+  updatedAt?: Date;
+  // Add custom fields here as your CRM evolves
+  // Example: customField1?: string;
+  // Example: customField2?: number;
 }
 
+// User type for authentication (if applicable)
 export interface User {
-  id: number;
+  id: string;
   username: string;
   email: string;
+  // Add other user properties as needed
 }
+
+// Define possible deal stages for consistency
+export type DealStage =
+  | 'Prospecting'
+  | 'Qualification'
+  | 'Proposal'
+  | 'Negotiation'
+  | 'Closed Won'
+  | 'Closed Lost';
+
