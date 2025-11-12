@@ -1,11 +1,14 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import './Header.css';
+import { Link, useNavigate } from 'react-router-dom';
+import './Header.css'; // Assuming Header.css exists for styling
 
 const Header = () => {
+  const navigate = useNavigate();
+
   const handleLogout = () => {
     localStorage.removeItem('token');
-    window.location.href = '/login';
+    // Use navigate for programmatic routing
+    navigate('/login');
   };
 
   return (
@@ -15,8 +18,8 @@ const Header = () => {
         <ul>
           <li><Link to="/dashboard">Dashboard</Link></li>
           <li><Link to="/deals">Deals</Link></li>
-          <li><Link to="/create-deal">Create Deal</Link></li>
-          <li onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</li>
+          {/* Removed "Create Deal" from header to keep it cleaner, can be added back if desired */}
+          <li onClick={handleLogout} style={{ cursor: 'pointer', color: '#dc3545' }}>Logout</li>
         </ul>
       </nav>
     </header>
