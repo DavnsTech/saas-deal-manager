@@ -1,41 +1,16 @@
-import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import sequelize from '../config/database';
+import User from '../models/User';
 
-export class CreateUsers1678886400000 implements MigrationInterface {
-  public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.createTable(
-      new Table({
-        name: 'user',
-        columns: [
-          {
-            name: 'id',
-            type: 'int',
-            isPrimary: true,
-            isGenerated: true,
-            generationStrategy: 'increment',
-          },
-          {
-            name: 'username',
-            type: 'varchar',
-            isUnique: true,
-            length: '100',
-          },
-          {
-            name: 'password',
-            type: 'varchar',
-            length: '255',
-          },
-          {
-            name: 'isActive',
-            type: 'boolean',
-            default: true,
-          },
-        ],
-      }),
-      true
-    );
+const createUsersTable = async () => {
+  try {
+    await sequelize.authenticate();
+    await User.sync({ force: true }); // Use force: true to recreate table in development
+    console.log('Users table created successfully.');
+  } catch (error) {
+    console.error('Unable to create users table:', error);
+  } finally {
+    await sequelize.close();
   }
+};
 
-  public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropTable('user');
-  }
-}
+createUsersTable();
