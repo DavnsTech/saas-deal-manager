@@ -1,20 +1,26 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './Header.css';
 
-function Header() {
+const Header = () => {
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+  };
+
   return (
     <header className="app-header">
       <div className="logo">Deal Manager</div>
       <nav>
         <ul>
-          <li><a href="#dashboard">Dashboard</a></li>
-          <li><a href="#deals">Deals</a></li>
-          <li><a href="#create-deal">Create Deal</a></li>
-          <li><a href="#logout">Logout</a></li>
+          <li><Link to="/dashboard">Dashboard</Link></li>
+          <li><Link to="/deals">Deals</Link></li>
+          <li><Link to="/create-deal">Create Deal</Link></li>
+          <li onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</li>
         </ul>
       </nav>
     </header>
   );
-}
+};
 
 export default Header;

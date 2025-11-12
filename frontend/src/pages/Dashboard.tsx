@@ -1,75 +1,79 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useDeals } from '../contexts/DealContext';
-import './Dashboard.css';
-
-// Define the Deal type for clarity
-interface Deal {
-  id: number;
-  name: string;
-  description?: string;
-  value: number;
-  stage: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import './Dashboard.css'; // Assuming Dashboard.css is still relevant
+import { Deal } from '../types';
 
 const Dashboard: React.FC = () => {
-  const { deals, loading, error, fetchDeals } = useDeals();
+  const { deals, loading, error } = useDeals();
 
-  useEffect(() => {
-    fetchDeals();
-  }, [fetchDeals]);
+  if (loading) {
+    return <div className="dashboard-container">Loading dashboard data...</div>;
+  }
 
-  // Calculate summary statistics
+  if (error) {
+    return <div className="dashboard-container">Error loading dashboard: {error.message}</div>;
+  }
+
+  // Calculate key metrics
   const totalDeals: number = deals.length;
-  const totalValue: number = deals.reduce((sum: number, deal: Deal) => sum + deal.value, 0);
+  const closedWonDeals: number = deals.filter((deal: Deal) => deal.stage === 'Closed Won').length;
+  const closedLostDeals: number = deals.filter((deal: Deal) => deal.stage === 'Closed Lost').length;
+  const totalDealValue: number = deals.reduce((sum: number, deal: Deal) => sum + parseFloat(deal.value?.toString() || '0'), 0);
+  const avgDealValue: string = totalDeals > 0 ? (totalDealValue / totalDeals).toFixed(2) : '0.00';
 
-  // Count deals by stage
+  // Group deals by stage for visualization
   const dealsByStage: { [key: string]: number } = deals.reduce((acc: { [key: string]: number }, deal: Deal) => {
     acc[deal.stage] = (acc[deal.stage] || 0) + 1;
     return acc;
   }, {});
 
-  if (loading) {
-    return <div className="dashboard-page">Loading dashboard...</div>;
-  }
-
-  if (error) {
-    return <div className="dashboard-page error-message">Error loading dashboard: {error}</div>;
-  }
+  const stageNames: string[] = ['Prospecting', 'Qualification', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'];
 
   return (
-    <div className="dashboard-page">
-      <h1>Dashboard</h1>
-      <div className="dashboard-summary">
-        <div className="summary-card">
-          <h2>Total Deals</h2>
+    <div className="dashboard-container">
+      <h2>Dashboard Overview</h2>
+
+      <div className="dashboard-metrics">
+        <div className="metric-card">
+          <h3>Total Deals</h3>
           <p>{totalDeals}</p>
         </div>
-        <div className="summary-card">
-          <h2>Total Deal Value</h2>
-          <p>${totalValue.toFixed(2)}</p>
+        <div className="metric-card">
+          <h3>Closed Won</h3>
+          <p>{closedWonDeals}</p>
+        </div>
+        <div className="metric-card">
+          <h3>Closed Lost</h3>
+          <p>{closedLostDeals}</p>
+        </div>
+        <div className="metric-card">
+          <h3>Total Deal Value</h3>
+          <p>${totalDealValue.toLocaleString()}</p>
+        </div>
+        <div className="metric-card">
+          <h3>Average Deal Value</h3>
+          <p>${avgDealValue}</p>
         </div>
       </div>
 
-      <div className="dashboard-sections">
-        <div className="deals-by-stage">
-          <h2>Deals by Stage</h2>
-          {Object.keys(dealsByStage).length > 0 ? (
-            <ul>
-              {Object.entries(dealsByStage).map(([stage, count]) => (
-                <li key={stage}>
-                  {stage}: {count}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No deals found.</p>
-          )}
-        </div>
-
-        {/* Add more dashboard sections here, e.g., recent deals, sales performance charts */}
+      <h3>Deals by Sales Stage</h3>
+      <div className="stage-visualization">
+        {stageNames.map(stage => (
+          <div key={stage} className="stage-bar">
+            <div className="stage-label">{stage}</div>
+            <div
+              className="stage-count"
+              style={{
+                height: `${(dealsByStage[stage] || 0) * 20}px`, // Adjust multiplier for visual scaling
+                backgroundColor: '#4CAF50', // Example color
+              }}
+            >
+              {dealsByStage[stage] || 0}
+            </div>
+          </div>
+        ))}
       </div>
+      {/* You could add more charts or visualizations here */}
     </div>
   );
 };

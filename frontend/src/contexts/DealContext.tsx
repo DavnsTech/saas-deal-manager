@@ -1,26 +1,14 @@
-import React, { createContext, useState, useContext, useCallback, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import * as dealsApi from '../api/dealsApi';
+import { Deal } from '../types';
 
-// Define the Deal type based on your backend model or API response
-interface Deal {
-  id: number;
-  name: string;
-  description?: string;
-  value: number;
-  stage: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Define the context type
 interface DealContextType {
   deals: Deal[];
   loading: boolean;
-  error: string | null;
-  fetchDeals: () => Promise<void>;
-  addDeal: (dealData: Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Deal>;
-  updateDeal: (id: number, dealData: Partial<Deal>) => Promise<Deal>;
-  deleteDeal: (id: number) => Promise<void>;
+  error: Error | null;
+  addDeal: (dealData: Omit<Deal, 'id'>) => Promise<Deal>;
+  updateDealContext: (id: string, dealData: Partial<Deal>) => Promise<Deal>;
+  deleteDealFromContext: (id: string) => Promise<void>;
 }
 
 const DealContext = createContext<DealContextType | undefined>(undefined);
@@ -39,71 +27,58 @@ interface DealProviderProps {
 
 export const DealProvider: React.FC<DealProviderProps> = ({ children }) => {
   const [deals, setDeals] = useState<Deal[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  const fetchDeals = useCallback(async (): Promise<void> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await dealsApi.getDeals();
-      setDeals(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch deals');
-      setDeals([]); // Clear deals on error
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    const fetchDeals = async (): Promise<void> => {
+      try {
+        setLoading(true);
+        const data = await dealsApi.getDeals();
+        setDeals(data);
+      } catch (err: any) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDeals();
   }, []);
 
-  const addDeal = useCallback(async (dealData: Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>): Promise<Deal> => {
-    setLoading(true);
-    setError(null);
+  const addDeal = async (dealData: Omit<Deal, 'id'>): Promise<Deal> => {
     try {
       const newDeal = await dealsApi.createDeal(dealData);
-      setDeals(prevDeals => [...prevDeals, newDeal]);
-      return newDeal; // Return the created deal
+      setDeals([...deals, newDeal]);
+      return newDeal;
     } catch (err: any) {
-      setError(err.message || 'Failed to add deal');
-      throw err; // Re-throw to allow component to handle it
-    } finally {
-      setLoading(false);
+      setError(err);
+      throw err;
     }
-  }, []);
+  };
 
-  const updateDeal = useCallback(async (id: number, dealData: Partial<Deal>): Promise<Deal> => {
-    setLoading(true);
-    setError(null);
+  const updateDealContext = async (id: string, dealData: Partial<Deal>): Promise<Deal> => {
     try {
       const updatedDeal = await dealsApi.updateDeal(id, dealData);
-      setDeals(prevDeals =>
-        prevDeals.map(deal => (deal.id === id ? updatedDeal : deal))
-      );
+      setDeals(deals.map(deal => (deal.id === id ? updatedDeal : deal)));
       return updatedDeal;
     } catch (err: any) {
-      setError(err.message || 'Failed to update deal');
+      setError(err);
       throw err;
-    } finally {
-      setLoading(false);
     }
-  }, []);
+  };
 
-  const deleteDeal = useCallback(async (id: number): Promise<void> => {
-    setLoading(true);
-    setError(null);
+  const deleteDealFromContext = async (id: string): Promise<void> => {
     try {
       await dealsApi.deleteDeal(id);
-      setDeals(prevDeals => prevDeals.filter(deal => deal.id !== id));
+      setDeals(deals.filter(deal => deal.id !== id));
     } catch (err: any) {
-      setError(err.message || 'Failed to delete deal');
+      setError(err);
       throw err;
-    } finally {
-      setLoading(false);
     }
-  }, []);
+  };
 
   return (
-    <DealContext.Provider value={{ deals, loading, error, fetchDeals, addDeal, updateDeal, deleteDeal }}>
+    <DealContext.Provider value={{ deals, loading, error, addDeal, updateDealContext, deleteDealFromContext }}>
       {children}
     </DealContext.Provider>
   );

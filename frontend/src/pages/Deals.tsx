@@ -1,71 +1,64 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { useDeals } from '../contexts/DealContext';
-import './Deals.css';
-
-// Define the Deal type for clarity
-interface Deal {
-  id: number;
-  name: string;
-  description?: string;
-  value: number;
-  stage: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import './Deals.css'; // Assuming Deals.css is still relevant
+import { Deal } from '../types';
 
 const Deals: React.FC = () => {
-  const { deals, loading, error, fetchDeals } = useDeals();
-
-  useEffect(() => {
-    // Fetch deals only if they haven't been fetched yet or if there's an error that needs re-fetching
-    if (deals.length === 0 && !loading && !error) {
-      fetchDeals();
-    }
-  }, [deals, loading, error, fetchDeals]);
+  const { deals, loading, error, deleteDealFromContext } = useDeals();
 
   if (loading) {
-    return <div className="deals-page">Loading deals...</div>;
+    return <div className="deals-container">Loading deals...</div>;
   }
 
   if (error) {
-    return <div className="deals-page error-message">Error loading deals: {error}</div>;
+    return <div className="deals-container">Error loading deals: {error.message}</div>;
   }
 
+  const handleDelete = async (id: string): Promise<void> => {
+    if (window.confirm('Are you sure you want to delete this deal?')) {
+      try {
+        await deleteDealFromContext(id);
+      } catch (err: any) {
+        console.error('Error deleting deal:', err);
+        // You might want to show a user-facing error message here
+      }
+    }
+  };
+
   return (
-    <div className="deals-page">
-      <h1>All Deals</h1>
-      <Link to="/create-deal" className="create-deal-button">Create New Deal</Link>
-      <div className="deals-list">
-        {deals.length > 0 ? (
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Value</th>
-                <th>Stage</th>
-                <th>Last Updated</th>
-                <th>Actions</th>
+    <div className="deals-container">
+      <h2>All Deals</h2>
+      <Link to="/create-deal" className="add-deal-button">Add New Deal</Link>
+      {deals.length === 0 ? (
+        <p>No deals found. <Link to="/create-deal">Create one now!</Link></p>
+      ) : (
+        <table className="deals-table">
+          <thead>
+            <tr>
+              <th>Deal Name</th>
+              <th>Company</th>
+              <th>Value</th>
+              <th>Sales Stage</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {deals.map((deal: Deal) => (
+              <tr key={deal.id}>
+                <td><Link to={`/deals/${deal.id}`}>{deal.name}</Link></td>
+                <td>{deal.company}</td>
+                <td>${parseFloat(deal.value?.toString() || '0').toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td>{deal.stage}</td>
+                <td>
+                  <Link to={`/deals/${deal.id}/edit`} className="action-button edit">Edit</Link>
+                  <button onClick={() => handleDelete(deal.id)} className="action-button delete">Delete</button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {deals.map((deal: Deal) => (
-                <tr key={deal.id}>
-                  <td>{deal.name}</td>
-                  <td>${deal.value.toFixed(2)}</td>
-                  <td>{deal.stage}</td>
-                  <td>{new Date(deal.updatedAt).toLocaleDateString()}</td>
-                  <td>
-                    <Link to={`/deals/${deal.id}`} className="view-button">View</Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p>No deals found. <Link to="/create-deal">Create one now!</Link></p>
-        )}
-      </div>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };

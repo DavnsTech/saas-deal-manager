@@ -1,17 +1,22 @@
 import React from 'react';
-import './Header.css';
+import { Link } from 'react-router-dom';
+import './Header.css'; // Assuming Header.css is still relevant
 
 const Header: React.FC = () => {
+  const handleLogout = (): void => {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+  };
+
   return (
     <header className="app-header">
       <div className="logo">Deal Manager</div>
       <nav>
         <ul>
-          <li><a href="#dashboard">Dashboard</a></li>
-          <li><a href="#deals">Deals</a></li>
-          <li><a href="#create-deal">Create Deal</a></li>
-          {/* In a real app, you'd conditionally render logout based on auth state */}
-          <li><a href="#logout">Logout</a></li>
+          <li><Link to="/dashboard">Dashboard</Link></li>
+          <li><Link to="/deals">Deals</Link></li>
+          <li><Link to="/create-deal">Create Deal</Link></li>
+          <li onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</li>
         </ul>
       </nav>
     </header>
