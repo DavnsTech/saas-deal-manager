@@ -1,77 +1,69 @@
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Deal } from '../types';
-import * as dealsApi from '../api/dealsApi';
+import { dealsApi } from '../api/dealsApi';
 
 interface DealContextType {
   deals: Deal[];
   loading: boolean;
   error: string | null;
   fetchDeals: () => Promise<void>;
-  addDeal: (dealData: Omit<Deal, 'id'>) => Promise<void>;
-  updateDeal: (id: string, dealData: Partial<Deal>) => Promise<void>;
-  deleteDeal: (id: string) => Promise<void>;
-  getDealById: (id: string) => Promise<Deal | undefined>;
+  createDeal: (deal: Partial<Deal>) => Promise<void>;
+  updateDeal: (id: number, deal: Partial<Deal>) => Promise<void>;
+  deleteDeal: (id: number) => Promise<void>;
 }
 
 const DealContext = createContext<DealContextType | undefined>(undefined);
 
-export const DealProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const useDeals = () => {
+  const context = useContext(DealContext);
+  if (!context) {
+    throw new Error('useDeals must be used within DealProvider');
+  }
+  return context;
+};
+
+export const DealProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [deals, setDeals] = useState<Deal[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchDeals = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await dealsApi.getDeals();
-      setDeals(data);
+      const response = await dealsApi.fetchDeals();
+      setDeals(response.data);
     } catch (err) {
-      setError('Failed to fetch deals.');
-      console.error(err);
+      setError('Failed to fetch deals');
     } finally {
       setLoading(false);
     }
   };
 
-  const getDealById = async (id: string): Promise<Deal | undefined> => {
+  const createDeal = async (deal: Partial<Deal>) => {
     try {
-      return await dealsApi.getDealById(id);
+      const response = await dealsApi.createDeal(deal);
+      setDeals([...deals, response.data]);
     } catch (err) {
-      console.error(`Failed to fetch deal ${id}:`, err);
-      return undefined;
+      setError('Failed to create deal');
     }
   };
 
-  const addDeal = async (dealData: Omit<Deal, 'id'>) => {
+  const updateDeal = async (id: number, deal: Partial<Deal>) => {
     try {
-      const newDeal = await dealsApi.createDeal(dealData);
-      setDeals((prevDeals) => [...prevDeals, newDeal]);
+      const response = await dealsApi.updateDeal(id, deal);
+      setDeals(deals.map(d => d.id === id ? response.data : d));
     } catch (err) {
-      console.error('Failed to add deal:', err);
-      throw err; // Re-throw to be caught by the component
+      setError('Failed to update deal');
     }
   };
 
-  const updateDeal = async (id: string, dealData: Partial<Deal>) => {
-    try {
-      const updatedDeal = await dealsApi.updateDeal(id, dealData);
-      setDeals((prevDeals) =>
-        prevDeals.map((deal) => (deal.id === id ? updatedDeal : deal))
-      );
-    } catch (err) {
-      console.error(`Failed to update deal ${id}:`, err);
-      throw err; // Re-throw to be caught by the component
-    }
-  };
-
-  const deleteDeal = async (id: string) => {
+  const deleteDeal = async (id: number) => {
     try {
       await dealsApi.deleteDeal(id);
-      setDeals((prevDeals) => prevDeals.filter((deal) => deal.id !== id));
+      setDeals(deals.filter(d => d.id !== id));
     } catch (err) {
-      console.error(`Failed to delete deal ${id}:`, err);
-      throw err; // Re-throw to be caught by the component
+      setError('Failed to delete deal');
     }
   };
 
@@ -80,27 +72,8 @@ export const DealProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   return (
-    <DealContext.Provider
-      value={{
-        deals,
-        loading,
-        error,
-        fetchDeals,
-        addDeal,
-        updateDeal,
-        deleteDeal,
-        getDealById,
-      }}
-    >
+    <DealContext.Provider value={{ deals, loading, error, fetchDeals, createDeal, updateDeal, deleteDeal }}>
       {children}
     </DealContext.Provider>
   );
-};
-
-export const useDeals = (): DealContextType => {
-  const context = useContext(DealContext);
-  if (context === undefined) {
-    throw new Error('useDeals must be used within a DealProvider');
-  }
-  return context;
 };

@@ -1,67 +1,76 @@
 import React, { useState } from 'react';
-import './Login.css'; // Assuming Login.css for styling
+import { useNavigate, Link } from 'react-router-dom';
+import styled from 'styled-components';
+
+const LoginContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #f4f7fc;
+`;
+
+const LoginForm = styled.form`
+  background: white;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  width: 400px;
+`;
+
+const Title = styled.h2`
+  text-align: center;
+  margin-bottom: 20px;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+`;
+
+const Button = styled.button`
+  width: 100%;
+  padding: 10px;
+  background: #4361ee;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  &:hover {
+    background: #3a56d4;
+  }
+`;
+
+const LinkText = styled.p`
+  text-align: center;
+  margin-top: 10px;
+`;
 
 const Login: React.FC = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null); // Clear previous errors
-
-    if (!username || !password) {
-      setError('Please enter both username and password.');
-      return;
-    }
-
-    // TODO: Implement actual login logic here
-    // This would typically involve calling an authentication API
-    console.log('Attempting to log in with:', { username, password });
-    // Example:
-    // try {
-    //   const response = await authApi.login({ username, password });
-    //   // Store token, user info, and redirect
-    //   localStorage.setItem('token', response.token);
-    //   // Redirect logic...
-    // } catch (err) {
-    //   setError('Login failed. Please check your credentials.');
-    // }
-
-    // Placeholder for successful login redirection
-    alert('Login successful! (Placeholder)');
-    // window.location.href = '/dashboard'; // Or use React Router navigate
+    // For now, mock login
+    localStorage.setItem('token', 'mock-token');
+    navigate('/');
   };
 
   return (
-    <div className="login-page">
-      <h2>Login</h2>
-      {error && <p className="error-message">{error}</p>}
-      <form onSubmit={handleLogin}>
-        <div className="form-group">
-          <label htmlFor="username">Username:</label>
-          <input
-            type="text"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="password">Password:</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit" className="login-button">Login</button>
-      </form>
-      <p>Don't have an account? <a href="/register">Register</a></p>
-    </div>
+    <LoginContainer>
+      <LoginForm onSubmit={handleSubmit}>
+        <Title>Login</Title>
+        <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <Button type="submit">Login</Button>
+        <LinkText><Link to="/register">Don't have an account? Register</Link></LinkText>
+      </LoginForm>
+    </LoginContainer>
   );
 };
 
