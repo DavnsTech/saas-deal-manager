@@ -2,9 +2,17 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Header.css'; // Assuming Header.css exists for styling
 
+/**
+ * Header component for the application.
+ * Displays the logo, navigation links, and a logout button.
+ */
 const Header = () => {
   const navigate = useNavigate();
 
+  /**
+   * Handles user logout by removing the token from localStorage
+   * and navigating the user to the login page.
+   */
   const handleLogout = () => {
     localStorage.removeItem('token');
     // Use navigate for programmatic routing

@@ -2,10 +2,19 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import './Sidebar.css'; // Assuming Sidebar.css exists for styling
 
+/**
+ * Sidebar component for the application.
+ * Displays navigation links to different sections of the CRM.
+ */
 const Sidebar = () => {
   const location = useLocation();
 
-  // Function to determine the class for active links
+  /**
+   * Determines the CSS class for a NavLink based on the current location.
+   * Applies 'active' class if the link's path is a prefix of the current pathname.
+   * @param {string} path - The path to check against the current location.
+   * @returns {string} The CSS class name ('active' or empty).
+   */
   const getNavLinkClass = (path) => {
     return location.pathname.startsWith(path) ? 'active' : '';
   };
