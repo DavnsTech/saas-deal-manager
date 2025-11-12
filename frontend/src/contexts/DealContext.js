@@ -70,8 +70,18 @@ export const DealProvider = ({ children }) => {
     }
   }, []);
 
+  const value = {
+    deals,
+    loading,
+    error,
+    fetchDeals,
+    addDeal,
+    updateDeal,
+    deleteDeal,
+  };
+
   return (
-    <DealContext.Provider value={{ deals, loading, error, fetchDeals, addDeal, updateDeal, deleteDeal }}>
+    <DealContext.Provider value={value}>
       {children}
     </DealContext.Provider>
   );
