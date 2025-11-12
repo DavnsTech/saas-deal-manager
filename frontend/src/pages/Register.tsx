@@ -1,94 +1,78 @@
 import React, { useState } from 'react';
-import './Register.css'; // Assuming Register.css for styling
+import { useNavigate, Link } from 'react-router-dom';
+import styled from 'styled-components';
+
+const RegisterContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #f4f7fc;
+`;
+
+const RegisterForm = styled.form`
+  background: white;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  width: 400px;
+`;
+
+const Title = styled.h2`
+  text-align: center;
+  margin-bottom: 20px;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+`;
+
+const Button = styled.button`
+  width: 100%;
+  padding: 10px;
+  background: #4361ee;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  &:hover {
+    background: #3a56d4;
+  }
+`;
+
+const LinkText = styled.p`
+  text-align: center;
+  margin-top: 10px;
+`;
 
 const Register: React.FC = () => {
-  const [username, setUsername] = useState('');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null); // Clear previous errors
-
-    if (!username || !email || !password || !confirmPassword) {
-      setError('Please fill in all fields.');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
-
-    // TODO: Implement actual registration logic here
-    // This would typically involve calling a registration API
-    console.log('Attempting to register with:', { username, email, password });
-    // Example:
-    // try {
-    //   await authApi.register({ username, email, password });
-    //   // Redirect to login or dashboard
-    //   alert('Registration successful! Please log in.');
-    //   // window.location.href = '/login'; // Or use React Router navigate
-    // } catch (err) {
-    //   setError('Registration failed. Please try again.');
-    // }
-
-    // Placeholder for successful registration redirection
-    alert('Registration successful! (Placeholder)');
-    // window.location.href = '/login'; // Or use React Router navigate
+    // Mock register
+    localStorage.setItem('token', 'mock-token');
+    navigate('/login');
   };
 
   return (
-    <div className="register-page">
-      <h2>Register</h2>
-      {error && <p className="error-message">{error}</p>}
-      <form onSubmit={handleRegister}>
-        <div className="form-group">
-          <label htmlFor="username">Username:</label>
-          <input
-            type="text"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="email">Email:</label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="password">Password:</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="confirmPassword">Confirm Password:</label>
-          <input
-            type="password"
-            id="confirmPassword"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit" className="register-button">Register</button>
-      </form>
-      <p>Already have an account? <a href="/login">Login</a></p>
-    </div>
+    <RegisterContainer>
+      <RegisterForm onSubmit={handleSubmit}>
+        <Title>Register</Title>
+        <Input type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
+        <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <Button type="submit">Register</Button>
+        <LinkText><Link to="/login">Already have an account? Login</Link></LinkText>
+      </RegisterForm>
+    </RegisterContainer>
   );
 };
 

@@ -1,74 +1,183 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import styled from 'styled-components';
+import { FaPlus, FaSearch, FaFilter } from 'react-icons/fa';
 import { useDeals } from '../contexts/DealContext';
-import './Deals.css'; // Assuming Deals.css is used for styling
+
+const DealsContainer = styled.div`
+  padding: 20px;
+  background-color: #f4f7fc;
+  min-height: calc(100vh - 70px);
+`;
+
+const SectionHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  h2 {
+    font-size: 22px;
+    color: #333;
+    font-weight: 600;
+  }
+`;
+
+const ControlsContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+`;
+
+const SearchBar = styled.div`
+  display: flex;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 10px 15px;
+  flex: 1;
+  min-width: 250px;
+`;
+
+const SearchInput = styled.input`
+  flex: 1;
+  border: none;
+  padding: 5px 10px;
+  font-size: 16px;
+  outline: none;
+  background: transparent;
+`;
+
+const FilterButton = styled.button`
+  background: #f0f4f8;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  color: #4361ee;
+  transition: background 0.2s ease;
+  &:hover {
+    background: #e0e7ee;
+  }
+  svg {
+    margin-right: 8px;
+  }
+`;
+
+const CreateDealButton = styled(Link)`
+  background: #4361ee;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 4px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  transition: background 0.2s ease;
+  &:hover {
+    background: #3a56d4;
+  }
+  svg {
+    margin-right: 8px;
+  }
+`;
+
+const DealsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+`;
+
+const DealCard = styled.div`
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  transition: transform 0.2s ease;
+  cursor: pointer;
+  &:hover {
+    transform: translateY(-5px);
+  }
+`;
+
+const DealCardHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+`;
+
+const DealTitle = styled.h3`
+  margin: 0;
+  color: #333;
+`;
+
+const DealAmount = styled.p`
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #4361ee;
+`;
+
+const DealInfo = styled.p`
+  margin: 5px 0;
+  color: #666;
+`;
+
+const StageBadge = styled.span`
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: #e0e0e0;
+  color: #616161;
+`;
 
 const Deals: React.FC = () => {
-  const navigate = useNavigate();
-  const { deals, loading, error, deleteDeal } = useDeals();
+  const { deals, loading } = useDeals();
+  const [search, setSearch] = useState('');
+  const filteredDeals = deals.filter(deal => deal.name.toLowerCase().includes(search.toLowerCase()) || deal.company.toLowerCase().includes(search.toLowerCase()));
 
-  const handleViewDeal = (id: string) => {
-    navigate(`/deals/${id}`);
-  };
-
-  const handleDelete = async (id: string, dealName: string) => {
-    if (window.confirm(`Are you sure you want to delete the deal "${dealName}"?`)) {
-      try {
-        await deleteDeal(id);
-        // No need to manually remove from state, context handles it
-      } catch (err) {
-        console.error(`Error deleting deal ${id}:`, err);
-        // Optionally show an error message to the user
-      }
-    }
-  };
-
-  if (loading) {
-    return <div className="deals-page">Loading deals...</div>;
-  }
-
-  if (error) {
-    return <div className="deals-page error-message">Error: {error}</div>;
-  }
+  if (loading) return <p>Loading...</p>;
 
   return (
-    <div className="deals-page">
-      <h2>All Deals</h2>
-      <button onClick={() => navigate('/deals/create')} className="create-deal-button">
-        Create New Deal
-      </button>
-      <table className="deals-table">
-        <thead>
-          <tr>
-            <th>Deal Name</th>
-            <th>Company</th>
-            <th>Value ($)</th>
-            <th>Stage</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {deals.length > 0 ? (
-            deals.map((deal) => (
-              <tr key={deal.id}>
-                <td>{deal.name}</td>
-                <td>{deal.company}</td>
-                <td>{deal.value.toLocaleString()}</td>
-                <td>{deal.stage}</td>
-                <td>
-                  <button onClick={() => handleViewDeal(deal.id)} className="view-button">View</button>
-                  <button onClick={() => handleDelete(deal.id, deal.name)} className="delete-button">Delete</button>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={5}>No deals found.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+    <DealsContainer>
+      <SectionHeader>
+        <h2>All Deals</h2>
+      </SectionHeader>
+      <ControlsContainer>
+        <SearchBar>
+          <FaSearch />
+          <SearchInput type="text" placeholder="Search deals..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        </SearchBar>
+        <FilterButton>
+          <FaFilter /> Filter
+        </FilterButton>
+        <CreateDealButton to="/deals/create">
+          <FaPlus /> Create Deal
+        </CreateDealButton>
+      </ControlsContainer>
+      <DealsGrid>
+        {filteredDeals.map(deal => (
+          <Link key={deal.id} to={`/deals/${deal.id}`} style={{ textDecoration: 'none' }}>
+            <DealCard>
+              <DealCardHeader>
+                <DealTitle>{deal.name}</DealTitle>
+                <StageBadge>{deal.stage}</StageBadge>
+              </DealCardHeader>
+              <DealAmount>${deal.amount}</DealAmount>
+              <DealInfo>Company: {deal.company}</DealInfo>
+              <DealInfo>Contact: {deal.contact}</DealInfo>
+            </DealCard>
+          </Link>
+        ))}
+      </DealsGrid>
+    </DealsContainer>
   );
 };
 
