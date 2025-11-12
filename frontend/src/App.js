@@ -9,31 +9,39 @@ import DealDetailPage from './pages/DealDetail';
 import { DealProvider } from './contexts/DealContext';
 import Header from './components/Header'; // Assuming Header is now outside Routes
 import Sidebar from './components/Sidebar'; // Assuming Sidebar is now outside Routes
-import './App.css';
+import './App.css'; // Global styles
 
-// Protected Route Component
+// Protected Route Component: Ensures that a user must be logged in to access certain routes.
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
+  // If no token is found, redirect to the login page.
   if (!token) {
     return <Navigate to="/login" replace />;
   }
+  // Otherwise, render the requested child component.
   return children;
 };
 
+/**
+ * Main App component that sets up routing and global providers.
+ * Uses React Router for navigation and DealProvider for state management.
+ */
 function App() {
   return (
     <Router>
+      {/* DealProvider makes deal-related state and functions available to its descendants */}
       <DealProvider>
-        <div className="app-layout"> {/* Wrapper for header, sidebar, and content */}
+        <div className="app-layout"> {/* Wrapper for header, sidebar, and main content */}
           <Header />
           <div className="main-content-area"> {/* Wrapper for sidebar and main section */}
             <Sidebar />
             <main className="content">
               <Routes>
+                {/* Public Routes */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
 
-                {/* Protected Routes */}
+                {/* Protected Routes - Require authentication */}
                 <Route
                   path="/dashboard"
                   element={
@@ -67,17 +75,8 @@ function App() {
                   }
                 />
 
-                {/* Redirect to dashboard if logged in and on root */}
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
-                      <Navigate to="/dashboard" replace />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Catch-all for unmatched routes (optional) */}
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                {/* Redirect any unmatched routes to login */}
+                <Route path="*" element={<Navigate to="/login" replace />} />
               </Routes>
             </main>
           </div>
