@@ -1,158 +1,214 @@
 import { DataTypes, Model } from 'sequelize';
-import { database } from '../config/database';
+import { sequelize } from '../config/database';
 
-interface DealAttributes {
-  id: number;
-  nomDeal: string;
-  montant: number;
-  devise: string;
-  statut: string;
-  etapeVente: string;
-  sourceLead: string;
-  priorite: string;
-  probabiliteClosing: number;
-  dateCreation: Date;
-  dateCloturePrevue: Date;
-  responsableCommercial: string;
-  clientEntreprise: string;
-  contactPrincipal: string;
+export interface DealAttributes {
+  id: string;
+  name: string;
+  amount: number;
+  currency: string;
+  status: string;
+  stage: string;
+  source: string;
+  priority: string;
+  probability: number;
+  createdAt: Date;
+  closeDate: Date;
+  responsible: string;
+  client: string;
+  contact: string;
   email: string;
-  telephone: string;
-  secteurActivite: string;
-  tailleEntreprise: string;
-  canalAcquisition: string;
-  besoinIdentifie: string;
-  solutionProposee: string;
-  typeContrat: string;
-  dureeContrat: string;
-  modePaiement: string;
-  dateDerniereInteraction: Date;
-  commentairesInternes: string;
-  documentsJoints: string;
-  suiviRelance: string;
-  scoreLead: number;
-  valeurVieEstimee: number;
-  regionPays: string;
-  userId: number;
+  phone: string;
+  sector: string;
+  companySize: string;
+  acquisitionChannel: string;
+  identifiedNeed: string;
+  proposedSolution: string;
+  contractType: string;
+  contractDuration: string;
+  paymentMode: string;
+  lastInteraction: Date;
+  internalComments: string;
+  attachedDocuments: string;
+  followUpReminder: Date;
+  leadScore: number;
+  lifetimeValue: number;
+  region: string;
+  updatedAt: Date;
 }
 
-class Deal extends Model<DealAttributes> implements DealAttributes {
-  public id!: number;
-  public nomDeal!: string;
-  public montant!: number;
-  public devise!: string;
-  public statut!: string;
-  public etapeVente!: string;
-  public sourceLead!: string;
-  public priorite!: string;
-  public probabiliteClosing!: number;
-  public dateCreation!: Date;
-  public dateCloturePrevue!: Date;
-  public responsableCommercial!: string;
-  public clientEntreprise!: string;
-  public contactPrincipal!: string;
+export class Deal extends Model<DealAttributes> implements DealAttributes {
+  public id!: string;
+  public name!: string;
+  public amount!: number;
+  public currency!: string;
+  public status!: string;
+  public stage!: string;
+  public source!: string;
+  public priority!: string;
+  public probability!: number;
+  public readonly createdAt!: Date;
+  public closeDate!: Date;
+  public responsible!: string;
+  public client!: string;
+  public contact!: string;
   public email!: string;
-  public telephone!: string;
-  public secteurActivite!: string;
-  public tailleEntreprise!: string;
-  public canalAcquisition!: string;
-  public besoinIdentifie!: string;
-  public solutionProposee!: string;
-  public typeContrat!: string;
-  public dureeContrat!: string;
-  public modePaiement!: string;
-  public dateDerniereInteraction!: Date;
-  public commentairesInternes!: string;
-  public documentsJoints!: string;
-  public suiviRelance!: string;
-  public scoreLead!: number;
-  public valeurVieEstimee!: number;
-  public regionPays!: string;
-  public userId!: number;
+  public phone!: string;
+  public sector!: string;
+  public companySize!: string;
+  public acquisitionChannel!: string;
+  public identifiedNeed!: string;
+  public proposedSolution!: string;
+  public contractType!: string;
+  public contractDuration!: string;
+  public paymentMode!: string;
+  public lastInteraction!: Date;
+  public internalComments!: string;
+  public attachedDocuments!: string;
+  public followUpReminder!: Date;
+  public leadScore!: number;
+  public lifetimeValue!: number;
+  public region!: string;
+  public readonly updatedAt!: Date;
 }
 
-Deal.init({
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
+Deal.init(
+  {
+    id: {
+      type: DataTypes.UUID,
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4,
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    amount: {
+      type: DataTypes.DECIMAL(15, 2),
+      allowNull: false,
+    },
+    currency: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    stage: {
+      type: DataTypes.ENUM(
+        'Prospection',
+        'Qualification',
+        'Prise de contact',
+        'Découverte',
+        'Proposition de valeur',
+        'Négociation',
+        'Closing',
+        'Livraison/Onboarding',
+        'Fidélisation/Upsell/Cross-sell'
+      ),
+      allowNull: false,
+    },
+    source: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    priority: {
+      type: DataTypes.ENUM('Low', 'Medium', 'High'),
+      allowNull: true,
+    },
+    probability: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    closeDate: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    responsible: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    client: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    contact: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    sector: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    companySize: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    acquisitionChannel: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    identifiedNeed: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    proposedSolution: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    contractType: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    contractDuration: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    paymentMode: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    lastInteraction: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    internalComments: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    attachedDocuments: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    followUpReminder: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    leadScore: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    lifetimeValue: {
+      type: DataTypes.DECIMAL(15, 2),
+      allowNull: true,
+    },
+    region: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
   },
-  nomDeal: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  montant: {
-    type: DataTypes.DECIMAL(10, 2),
-    allowNull: false,
-  },
-  devise: {
-    type: DataTypes.STRING,
-    defaultValue: 'EUR',
-  },
-  statut: {
-    type: DataTypes.STRING,
-    defaultValue: 'Ouvert',
-  },
-  etapeVente: {
-    type: DataTypes.ENUM(
-      'Prospection',
-      'Qualification',
-      'Prise de contact',
-      'Découverte',
-      'Proposition de valeur',
-      'Négociation',
-      'Closing',
-      'Livraison/Onboarding',
-      'Fidélisation/Upsell/Cross-sell'
-    ),
-    defaultValue: 'Prospection',
-  },
-  sourceLead: DataTypes.STRING,
-  priorite: {
-    type: DataTypes.ENUM('Haute', 'Moyenne', 'Basse'),
-    defaultValue: 'Moyenne',
-  },
-  probabiliteClosing: {
-    type: DataTypes.INTEGER,
-    defaultValue: 50,
-  },
-  dateCreation: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-  },
-  dateCloturePrevue: DataTypes.DATE,
-  responsableCommercial: DataTypes.STRING,
-  clientEntreprise: DataTypes.STRING,
-  contactPrincipal: DataTypes.STRING,
-  email: DataTypes.STRING,
-  telephone: DataTypes.STRING,
-  secteurActivite: DataTypes.STRING,
-  tailleEntreprise: DataTypes.STRING,
-  canalAcquisition: DataTypes.STRING,
-  besoinIdentifie: DataTypes.TEXT,
-  solutionProposee: DataTypes.TEXT,
-  typeContrat: DataTypes.STRING,
-  dureeContrat: DataTypes.STRING,
-  modePaiement: DataTypes.STRING,
-  dateDerniereInteraction: DataTypes.DATE,
-  commentairesInternes: DataTypes.TEXT,
-  documentsJoints: DataTypes.STRING,
-  suiviRelance: DataTypes.TEXT,
-  scoreLead: DataTypes.INTEGER,
-  valeurVieEstimee: DataTypes.DECIMAL(10, 2),
-  regionPays: DataTypes.STRING,
-  userId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-}, {
-  sequelize: database,
-  tableName: 'deals',
-});
-
-// Associations
-import { User } from './User';
-Deal.belongsTo(User, { foreignKey: 'userId' });
-User.hasMany(Deal, { foreignKey: 'userId' });
-
-export { Deal };
+  {
+    sequelize,
+    modelName: 'Deal',
+    tableName: 'deals',
+    timestamps: true,
+  }
+);

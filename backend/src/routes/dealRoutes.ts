@@ -1,13 +1,9 @@
 import { Router } from 'express';
-import { getDeals, getDealById, createDeal, updateDeal, deleteDeal } from '../controllers/dealController';
-import { authenticateToken } from '../middleware/security';
+import { getDeals, createDeal } from '../controllers/dealController';
 
 const router = Router();
 
-router.get('/', authenticateToken, getDeals);
-router.get('/:id', authenticateToken, getDealById);
-router.post('/', authenticateToken, createDeal);
-router.put('/:id', authenticateToken, updateDeal);
-router.delete('/:id', authenticateToken, deleteDeal);
+router.get('/', getDeals);
+router.post('/', createDeal);
 
-export { router as dealRoutes };
+export default router;

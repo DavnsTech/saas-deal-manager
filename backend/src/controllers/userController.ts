@@ -1,12 +1,7 @@
-import { Response } from 'express';
-import { User } from '../models/User';
-import { AuthRequest } from '../types';
+// Placeholder for user controller - to be implemented in future tasks
+import { Request, Response } from 'express';
 
-export const getProfile = async (req: AuthRequest, res: Response) => {
-  try {
-    const user = await User.findByPk(req.user!.id, { attributes: { exclude: ['password'] } });
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching profile' });
-  }
+export const getUsers = (req: Request, res: Response) => {
+  // Implementation here
+  res.json({ message: 'Get users endpoint' });
 };

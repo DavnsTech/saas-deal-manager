@@ -1,63 +1,148 @@
 import { QueryInterface, DataTypes } from 'sequelize';
 
-module.exports = {
+export default {
   up: async (queryInterface: QueryInterface) => {
     await queryInterface.createTable('deals', {
       id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         primaryKey: true,
-        autoIncrement: true,
-      },
-      nomDeal: DataTypes.STRING,
-      montant: DataTypes.DECIMAL(10, 2),
-      devise: DataTypes.STRING,
-      statut: DataTypes.STRING,
-      etapeVente: DataTypes.ENUM(
-        'Prospection',
-        'Qualification',
-        'Prise de contact',
-        'Découverte',
-        'Proposition de valeur',
-        'Négociation',
-        'Closing',
-        'Livraison/Onboarding',
-        'Fidélisation/Upsell/Cross-sell'
-      ),
-      sourceLead: DataTypes.STRING,
-      priorite: DataTypes.ENUM('Haute', 'Moyenne', 'Basse'),
-      probabiliteClosing: DataTypes.INTEGER,
-      dateCreation: DataTypes.DATE,
-      dateCloturePrevue: DataTypes.DATE,
-      responsableCommercial: DataTypes.STRING,
-      clientEntreprise: DataTypes.STRING,
-      contactPrincipal: DataTypes.STRING,
-      email: DataTypes.STRING,
-      telephone: DataTypes.STRING,
-      secteurActivite: DataTypes.STRING,
-      tailleEntreprise: DataTypes.STRING,
-      canalAcquisition: DataTypes.STRING,
-      besoinIdentifie: DataTypes.TEXT,
-      solutionProposee: DataTypes.TEXT,
-      typeContrat: DataTypes.STRING,
-      dureeContrat: DataTypes.STRING,
-      modePaiement: DataTypes.STRING,
-      dateDerniereInteraction: DataTypes.DATE,
-      commentairesInternes: DataTypes.TEXT,
-      documentsJoints: DataTypes.STRING,
-      suiviRelance: DataTypes.TEXT,
-      scoreLead: DataTypes.INTEGER,
-      valeurVieEstimee: DataTypes.DECIMAL(10, 2),
-      regionPays: DataTypes.STRING,
-      userId: {
-        type: DataTypes.INTEGER,
+        defaultValue: DataTypes.UUIDV4,
         allowNull: false,
-        references: {
-          model: 'users',
-          key: 'id',
-        },
       },
-      createdAt: DataTypes.DATE,
-      updatedAt: DataTypes.DATE,
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      amount: {
+        type: DataTypes.DECIMAL(15, 2),
+        allowNull: false,
+      },
+      currency: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      status: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      stage: {
+        type: DataTypes.ENUM(
+          'Prospection',
+          'Qualification',
+          'Prise de contact',
+          'Découverte',
+          'Proposition de valeur',
+          'Négociation',
+          'Closing',
+          'Livraison/Onboarding',
+          'Fidélisation/Upsell/Cross-sell'
+        ),
+        allowNull: false,
+      },
+      source: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      priority: {
+        type: DataTypes.ENUM('Low', 'Medium', 'High'),
+        allowNull: true,
+      },
+      probability: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      closeDate: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      responsible: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      client: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      contact: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      email: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      phone: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      sector: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      companySize: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      acquisitionChannel: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      identifiedNeed: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      proposedSolution: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      contractType: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      contractDuration: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      paymentMode: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      lastInteraction: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      internalComments: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      attachedDocuments: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      followUpReminder: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      leadScore: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      lifetimeValue: {
+        type: DataTypes.DECIMAL(15, 2),
+        allowNull: true,
+      },
+      region: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
     });
   },
 
