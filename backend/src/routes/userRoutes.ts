@@ -1,12 +1,11 @@
 import { Router } from 'express';
-import { getUsers, getUser } from '../controllers/userController';
-import { authenticateToken } from '../middleware/security';
+import { getProfile } from '../controllers/userController';
+import { authMiddleware } from '../middleware/security';
 
 const router = Router();
 
-router.use(authenticateToken);
+router.use(authMiddleware); // All user routes require auth
 
-router.get('/', getUsers);
-router.get('/:id', getUser);
+router.get('/profile', getProfile);
 
 export default router;
