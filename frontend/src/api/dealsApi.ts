@@ -1,24 +1,103 @@
 import axios from 'axios';
-import { Deal } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// Define an interface for the Deal object for better type safety
+interface Deal {
+  id?: number;
+  name: string;
+  description?: string;
+  value: number;
+  stage: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-});
+const API_URL = 'http://localhost:3000/api/deals'; // Assuming your backend is running on port 3000
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+export const getDeals = async (): Promise<Deal[]> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Authentication token not found.');
+    }
+    const response = await axios.get<Deal[]>(API_URL, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching deals:', error instanceof Error ? error.message : 'An unknown error occurred');
+    throw error;
   }
-  return config;
-});
+};
 
-export const dealsApi = {
-  fetchDeals: (): Promise<{ data: Deal[] }> => api.get('/deals'),
-  createDeal: (deal: Partial<Deal>): Promise<{ data: Deal }> => api.post('/deals', deal),
-  getDeal: (id: number): Promise<{ data: Deal }> => api.get(`/deals/${id}`),
-  updateDeal: (id: number, deal: Partial<Deal>): Promise<{ data: Deal }> => api.put(`/deals/${id}`, deal),
-  deleteDeal: (id: number): Promise<void> => api.delete(`/deals/${id}`),
+export const getDealById = async (id: number): Promise<Deal> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Authentication token not found.');
+    }
+    const response = await axios.get<Deal>(`${API_URL}/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching deal with id ${id}:`, error instanceof Error ? error.message : 'An unknown error occurred');
+    throw error;
+  }
+};
+
+export const createDeal = async (dealData: Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>): Promise<Deal> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Authentication token not found.');
+    }
+    const response = await axios.post<Deal>(API_URL, dealData, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error creating deal:', error instanceof Error ? error.message : 'An unknown error occurred');
+    throw error;
+  }
+};
+
+export const updateDeal = async (id: number, dealData: Partial<Deal>): Promise<Deal> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Authentication token not found.');
+    }
+    const response = await axios.put<Deal>(`${API_URL}/${id}`, dealData, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating deal with id ${id}:`, error instanceof Error ? error.message : 'An unknown error occurred');
+    throw error;
+  }
+};
+
+export const deleteDeal = async (id: number): Promise<void> => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Authentication token not found.');
+    }
+    await axios.delete(`${API_URL}/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  } catch (error) {
+    console.error(`Error deleting deal with id ${id}:`, error instanceof Error ? error.message : 'An unknown error occurred');
+    throw error;
+  }
 };

@@ -1,216 +1,190 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
-import { FaArrowLeft, FaEdit, FaTrash, FaPaperclip, FaComment, FaCalendarAlt, FaUser, FaEnvelope, FaPhone, FaIndustry, FaBuilding, FaTag } from 'react-icons/fa';
-import { useDeals } from '../contexts/DealContext';
-import { Deal } from '../types';
+import { useParams, useNavigate } from 'react-router-dom';
+import * as dealsApi from '../api/dealsApi'; // Import from the TS API file
+import './DealDetail.css';
 
-const DealDetailContainer = styled.div`
-  padding: 20px;
-  background-color: #f4f7fc;
-  min-height: calc(100vh - 70px);
-`;
+// Define the Deal type for clarity
+interface Deal {
+  id: number;
+  name: string;
+  description?: string;
+  value: number;
+  stage: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
-const BackLink = styled(Link)`
-  display: inline-flex;
-  align-items: center;
-  color: #4361ee;
-  text-decoration: none;
-  margin-bottom: 20px;
-  &:hover {
-    text-decoration: underline;
-  }
-  svg {
-    margin-right: 8px;
-  }
-`;
-
-const DealHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 30px;
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-`;
-
-const DealTitleAndStatus = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const DealTitle = styled.h1`
-  font-size: 28px;
-  margin: 0 0 10px 0;
-  color: #333;
-`;
-
-const DealAmount = styled.div`
-  font-size: 32px;
-  font-weight: bold;
-  color: #4361ee;
-  margin-bottom: 10px;
-`;
-
-const StageBadge = styled.span<{ stage: string }>`
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 14px;
-  font-weight: 600;
-  text-transform: uppercase;
-  background: ${props => {
-    switch(props.stage) {
-      case 'Prospection': return '#e0e0e0';
-      case 'Qualification': return '#fff9c4';
-      case 'Prise de contact': return '#ffecb3';
-      case 'Découverte': return '#ffe0b2';
-      case 'Proposition de valeur': return '#ffcc80';
-      case 'Négociation': return '#ffb74d';
-      case 'Closing': return '#f57c00';
-      case 'Livraison/Onboarding': return '#81c784';
-      case 'Fidélisation/Upsell/Cross-sell': return '#388e3c';
-      default: return '#bdbdbd';
-    }
-  }};
-  color: ${props => {
-    switch(props.stage) {
-      case 'Prospection': return '#616161';
-      case 'Qualification': return '#f57f17';
-      case 'Prise de contact': return '#e65100';
-      case 'Découverte': return '#bf360c';
-      case 'Proposition de valeur': return '#ff6f00';
-      case 'Négociation': return '#e65100';
-      case 'Closing': return '#ffffff';
-      case 'Livraison/Onboarding': return '#ffffff';
-      case 'Fidélisation/Upsell/Cross-sell': return '#ffffff';
-      default: return '#424242';
-    }
-  }};
-`;
-
-const DealActions = styled.div`
-  display: flex;
-  gap: 10px;
-`;
-
-const ActionButton = styled.button<{ variant?: string }>`
-  padding: 10px 15px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  background: ${props => props.variant === 'danger' ? '#dc3545' : '#4361ee'};
-  color: white;
-  &:hover {
-    background: ${props => props.variant === 'danger' ? '#c82333' : '#3a56d4'};
-  }
-`;
-
-const DealInfoGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
-`;
-
-const InfoCard = styled.div`
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-`;
-
-const InfoTitle = styled.h3`
-  margin: 0 0 15px 0;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-`;
-
-const InfoItem = styled.div`
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-`;
+const salesStages = ['Prospecting', 'Qualification', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'];
 
 const DealDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>(); // Get id from URL params
   const navigate = useNavigate();
-  const { deals, deleteDeal } = useDeals();
   const [deal, setDeal] = useState<Deal | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [editFormData, setEditFormData] = useState<Partial<Deal>>({}); // Use Partial for editable fields
 
   useEffect(() => {
-    if (id) {
-      const foundDeal = deals.find(d => d.id === parseInt(id));
-      setDeal(foundDeal || null);
-    }
-  }, [deals, id]);
+    const fetchDeal = async () => {
+      if (!id) return; // Guard against missing id
+      try {
+        const data = await dealsApi.getDealById(parseInt(id, 10));
+        setDeal(data);
+        setEditFormData(data); // Initialize edit form with current deal data
+      } catch (err: any) {
+        setError(err.message || 'Failed to load deal details.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchDeal();
+  }, [id]);
 
-  if (!deal) return <p>Deal not found</p>;
+  const handleEditClick = (): void => {
+    setIsEditing(true);
+  };
 
-  const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this deal?')) {
-      await deleteDeal(deal.id);
-      navigate('/deals');
+  const handleCancelClick = (): void => {
+    setIsEditing(false);
+    if (deal) {
+      setEditFormData(deal); // Reset form data to original deal data
     }
   };
 
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>): void => {
+    const { name, value } = e.target;
+    setEditFormData(prevData => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  const handleSaveClick = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault();
+    setError('');
+    if (!id) return; // Guard against missing id
+
+    // Basic validation for required fields in edit mode
+    if (!editFormData.name || editFormData.value === undefined || editFormData.value < 0 || !editFormData.stage) {
+      setError('Please ensure all required fields are filled correctly.');
+      return;
+    }
+
+    try {
+      const updatedDeal = await dealsApi.updateDeal(parseInt(id, 10), editFormData as Deal); // Cast to Deal for backend
+      setDeal(updatedDeal); // Update state with saved data
+      setIsEditing(false);
+      // Optionally navigate to deals list or show a success message
+      // navigate('/deals');
+    } catch (err: any) {
+      setError(err.message || 'Failed to update deal.');
+    }
+  };
+
+  const handleDeleteClick = async (): Promise<void> => {
+    if (window.confirm('Are you sure you want to delete this deal?')) {
+      if (!id) return; // Guard against missing id
+      try {
+        await dealsApi.deleteDeal(parseInt(id, 10));
+        navigate('/deals'); // Redirect to deals list after deletion
+      } catch (err: any) {
+        setError(err.message || 'Failed to delete deal.');
+      }
+    }
+  };
+
+  if (isLoading) {
+    return <div className="deal-detail-page">Loading deal details...</div>;
+  }
+
+  if (error) {
+    return <div className="deal-detail-page error-message">Error: {error}</div>;
+  }
+
+  if (!deal) {
+    return <div className="deal-detail-page">Deal not found.</div>;
+  }
+
   return (
-    <DealDetailContainer>
-      <BackLink to="/deals">
-        <FaArrowLeft /> Back to Deals
-      </BackLink>
-      <DealHeader>
-        <DealTitleAndStatus>
-          <DealTitle>{deal.name}</DealTitle>
-          <DealAmount>${deal.amount}</DealAmount>
-          <StageBadge stage={deal.stage}>{deal.stage}</StageBadge>
-        </DealTitleAndStatus>
-        <DealActions>
-          <ActionButton>
-            <FaEdit /> Edit
-          </ActionButton>
-          <ActionButton variant="danger" onClick={handleDelete}>
-            <FaTrash /> Delete
-          </ActionButton>
-        </DealActions>
-      </DealHeader>
-      <DealInfoGrid>
-        <InfoCard>
-          <InfoTitle><FaUser /> Contact Information</InfoTitle>
-          <InfoItem><FaBuilding /> Company: {deal.company}</InfoItem>
-          <InfoItem><FaUser /> Contact: {deal.contact}</InfoItem>
-          <InfoItem><FaEnvelope /> Email: {deal.email}</InfoItem>
-          <InfoItem><FaPhone /> Phone: {deal.phone}</InfoItem>
-        </InfoCard>
-        <InfoCard>
-          <InfoTitle><FaIndustry /> Company Details</InfoTitle>
-          <InfoItem><FaIndustry /> Industry: {deal.industry}</InfoItem>
-          <InfoItem><FaBuilding /> Size: {deal.companySize}</InfoItem>
-          <InfoItem><FaTag /> Acquisition Channel: {deal.acquisitionChannel}</InfoItem>
-          <InfoItem><FaTag /> Region: {deal.region}</InfoItem>
-        </InfoCard>
-        <InfoCard>
-          <InfoTitle><FaCalendarAlt /> Deal Timeline</InfoTitle>
-          <InfoItem><FaCalendarAlt /> Created: {new Date(deal.createdAt).toLocaleDateString()}</InfoItem>
-          <InfoItem><FaCalendarAlt /> Expected Close: {deal.expectedCloseDate}</InfoItem>
-          <InfoItem><FaCalendarAlt /> Last Interaction: {deal.lastInteraction}</InfoItem>
-        </InfoCard>
-        <InfoCard>
-          <InfoTitle><FaComment /> Additional Information</InfoTitle>
-          <InfoItem>Identified Need: {deal.identifiedNeed}</InfoItem>
-          <InfoItem>Proposed Solution: {deal.proposedSolution}</InfoItem>
-          <InfoItem>Internal Comments: {deal.internalComments}</InfoItem>
-        </InfoCard>
-      </DealInfoGrid>
-    </DealDetailContainer>
+    <div className="deal-detail-page">
+      <h1>Deal Details</h1>
+      {error && <p className="error-message">{error}</p>}
+
+      {isEditing ? (
+        <form onSubmit={handleSaveClick} className="deal-edit-form">
+          <div className="form-group">
+            <label htmlFor="name">Deal Name:</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={editFormData.name || ''}
+              onChange={handleEditFormChange}
+              required
+              aria-required="true"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="description">Description:</label>
+            <textarea
+              id="description"
+              name="description"
+              value={editFormData.description || ''}
+              onChange={handleEditFormChange}
+              rows={4}
+            ></textarea>
+          </div>
+          <div className="form-group">
+            <label htmlFor="value">Value:</label>
+            <input
+              type="number"
+              id="value"
+              name="value"
+              value={editFormData.value !== undefined ? editFormData.value : 0}
+              onChange={handleEditFormChange}
+              required
+              min="0"
+              step="0.01"
+              aria-required="true"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="stage">Sales Stage:</label>
+            <select
+              id="stage"
+              name="stage"
+              value={editFormData.stage || ''}
+              onChange={handleEditFormChange}
+              required
+              aria-required="true"
+            >
+              {salesStages.map(stage => (
+                <option key={stage} value={stage}>{stage}</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-actions">
+            <button type="submit">Save</button>
+            <button type="button" onClick={handleCancelClick}>Cancel</button>
+          </div>
+        </form>
+      ) : (
+        <div className="deal-info">
+          <p><strong>Deal Name:</strong> {deal.name}</p>
+          <p><strong>Description:</strong> {deal.description || 'N/A'}</p>
+          <p><strong>Value:</strong> ${deal.value.toFixed(2)}</p>
+          <p><strong>Sales Stage:</strong> {deal.stage}</p>
+          <p><strong>Created At:</strong> {new Date(deal.createdAt).toLocaleDateString()}</p>
+          <p><strong>Updated At:</strong> {new Date(deal.updatedAt).toLocaleDateString()}</p>
+
+          <div className="deal-actions">
+            <button onClick={handleEditClick}>Edit</button>
+            <button onClick={handleDeleteClick} className="delete-button">Delete</button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

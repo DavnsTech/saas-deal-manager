@@ -1,78 +1,112 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import styled from 'styled-components';
-
-const RegisterContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background: #f4f7fc;
-`;
-
-const RegisterForm = styled.form`
-  background: white;
-  padding: 40px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  width: 400px;
-`;
-
-const Title = styled.h2`
-  text-align: center;
-  margin-bottom: 20px;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-`;
-
-const Button = styled.button`
-  width: 100%;
-  padding: 10px;
-  background: #4361ee;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  &:hover {
-    background: #3a56d4;
-  }
-`;
-
-const LinkText = styled.p`
-  text-align: center;
-  margin-top: 10px;
-`;
+import React, { useState, FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
+import './Register.css'; // Assuming you have a Register.css file
 
 const Register: React.FC = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [name, setName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
-    // Mock register
-    localStorage.setItem('token', 'mock-token');
-    navigate('/login');
+    setError(''); // Clear previous errors
+    setIsLoading(true);
+
+    // Basic validation
+    if (!name || !email || !password || !confirmPassword) {
+      setError('Please fill in all fields.');
+      setIsLoading(false);
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Registration failed. Please try again.');
+      }
+
+      // On successful registration, redirect to the login page.
+      navigate('/login');
+
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <RegisterContainer>
-      <RegisterForm onSubmit={handleSubmit}>
-        <Title>Register</Title>
-        <Input type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
-        <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <Button type="submit">Register</Button>
-        <LinkText><Link to="/login">Already have an account? Login</Link></LinkText>
-      </RegisterForm>
-    </RegisterContainer>
+    <div className="register-page">
+      <h1>Register</h1>
+      {error && <p className="error-message">{error}</p>}
+      <form onSubmit={handleSubmit} className="register-form">
+        <div className="form-group">
+          <label htmlFor="name">Name:</label>
+          <input
+            type="text"
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            aria-required="true"
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="email">Email:</label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            aria-required="true"
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="password">Password:</label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            aria-required="true"
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="confirmPassword">Confirm Password:</label>
+          <input
+            type="password"
+            id="confirmPassword"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            aria-required="true"
+          />
+        </div>
+        <button type="submit" className="submit-button" disabled={isLoading}>
+          {isLoading ? 'Registering...' : 'Register'}
+        </button>
+      </form>
+      <p>Already have an account? <a href="/login">Login here</a></p>
+    </div>
   );
 };
 
