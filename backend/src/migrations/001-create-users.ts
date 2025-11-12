@@ -1,43 +1,41 @@
-import { QueryInterface, DataTypes } from 'sequelize';
+import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
-export default {
-  up: async (queryInterface: QueryInterface) => {
-    await queryInterface.createTable('users', {
-      id: {
-        type: DataTypes.UUID,
-        primaryKey: true,
-        defaultValue: DataTypes.UUIDV4,
-        allowNull: false,
-      },
-      name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      email: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-      },
-      password: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      role: {
-        type: DataTypes.STRING,
-        defaultValue: 'user',
-      },
-      createdAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-      updatedAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-    });
-  },
+export class CreateUsers1678886400000 implements MigrationInterface {
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.createTable(
+      new Table({
+        name: 'user',
+        columns: [
+          {
+            name: 'id',
+            type: 'int',
+            isPrimary: true,
+            isGenerated: true,
+            generationStrategy: 'increment',
+          },
+          {
+            name: 'username',
+            type: 'varchar',
+            isUnique: true,
+            length: '100',
+          },
+          {
+            name: 'password',
+            type: 'varchar',
+            length: '255',
+          },
+          {
+            name: 'isActive',
+            type: 'boolean',
+            default: true,
+          },
+        ],
+      }),
+      true
+    );
+  }
 
-  down: async (queryInterface: QueryInterface) => {
-    await queryInterface.dropTable('users');
-  },
-};
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.dropTable('user');
+  }
+}

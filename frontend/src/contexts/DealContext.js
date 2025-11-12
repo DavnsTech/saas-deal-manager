@@ -1,90 +1,23 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { fetchDeals, createDeal, updateDeal, deleteDeal, fetchDealById } from '../api/dealsApi';
+// This is a placeholder for DealContext.js.
+// If you are using TS, you'll want to create DealContext.tsx.
+// For now, it will be a basic JS context setup.
+
+import React, { createContext, useState, useContext } from 'react';
 
 const DealContext = createContext();
 
-export const useDeals = () => {
-  const context = useContext(DealContext);
-  if (!context) {
-    throw new Error('useDeals must be used within a DealContextProvider');
-  }
-  return context;
-};
-
-function DealContextProvider({ children }) {
+export const DealProvider = ({ children }) => {
   const [deals, setDeals] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const loadDeals = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchDeals();
-      setDeals(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getDealById = async (id) => {
-    try {
-      return await fetchDealById(id);
-    } catch (err) {
-      setError(err.message);
-      return null;
-    }
-  };
-
-  const addDeal = async (dealData) => {
-    try {
-      const newDeal = await createDeal(dealData);
-      setDeals([...deals, newDeal]);
-      return newDeal;
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    }
-  };
-
-  const editDeal = async (id, dealData) => {
-    try {
-      const updatedDeal = await updateDeal(id, dealData);
-      setDeals(deals.map(deal => deal.id === id ? updatedDeal : deal));
-      return updatedDeal;
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    }
-  };
-
-  const removeDeal = async (id) => {
-    try {
-      await deleteDeal(id);
-      setDeals(deals.filter(deal => deal.id !== id));
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    }
-  };
-
-  useEffect(() => {
-    if (localStorage.getItem('token')) {
-      loadDeals();
-    }
-  }, []);
 
   const value = {
     deals,
+    setDeals,
     loading,
+    setLoading,
     error,
-    loadDeals,
-    getDealById,
-    addDeal,
-    editDeal,
-    removeDeal,
+    setError,
   };
 
   return (
@@ -92,6 +25,12 @@ function DealContextProvider({ children }) {
       {children}
     </DealContext.Provider>
   );
-}
+};
 
-export default DealContextProvider;
+export const useDeals = () => {
+  const context = useContext(DealContext);
+  if (!context) {
+    throw new Error('useDeals must be used within a DealProvider');
+  }
+  return context;
+};

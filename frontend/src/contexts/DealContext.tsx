@@ -1,97 +1,102 @@
-import React, { createContext, useState, useContext, ReactNode, useMemo, useCallback } from 'react';
-import { Deal } from '../types';
-import { getDeals, createDeal, updateDeal as apiUpdateDeal, deleteDeal as apiDeleteDeal } from '../api/dealsApi';
+// TypeScript version of DealContext.tsx
 
-interface DealContextType {
-  deals: Deal[];
-  loading: boolean;
-  error: string | null;
-  fetchDeals: () => Promise<void>;
-  addDeal: (dealData: Omit<Deal, 'id'>) => Promise<void>;
-  updateDeal: (deal: Deal) => Promise<void>;
-  deleteDeal: (dealId: string) => Promise<void>;
+import React, { createContext, useState, useContext, ReactNode } from 'react';
+
+// Define the structure of a Deal object
+interface Deal {
+  id: number;
+  name: string;
+  stage: string;
+  company?: string;
+  contactPerson?: string;
+  value?: number;
+  expectedCloseDate?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-const DealContext = createContext<DealContextType | undefined>(undefined);
+// Define the shape of the context value
+interface DealContextValue {
+  deals: Deal[];
+  setDeals: React.Dispatch<React.SetStateAction<Deal[]>>;
+  loading: boolean;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  error: string | null;
+  setError: React.Dispatch<React.SetStateAction<string | null>>;
+  fetchDeals: () => Promise<void>; // Add fetchDeals to context
+  addDeal: (newDeal: Deal) => void; // Add addDeal to context
+  updateDealInContext: (updatedDeal: Deal) => void; // Add updateDealInContext
+  deleteDealFromContext: (dealId: number) => void; // Add deleteDealFromContext
+}
+
+// Create the context with a default value that matches the interface
+const DealContext = createContext<DealContextValue | undefined>(undefined);
 
 interface DealProviderProps {
   children: ReactNode;
 }
 
-export const DealProvider: React.FC<DealProviderProps> = ({ children }) => {
+export const DealProvider = ({ children }: DealProviderProps) => {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDeals = useCallback(async () => {
+  // Placeholder for API fetch function (you'd import from api/dealsApi.ts)
+  const fetchDeals = async () => {
     setLoading(true);
     setError(null);
     try {
-      const fetchedDeals = await getDeals();
-      setDeals(fetchedDeals);
-    } catch (err) {
-      console.error("Failed to fetch deals:", err);
-      setError("Failed to load deals.");
+      // Assuming you have an import like: import { fetchDeals as apiFetchDeals } from '../api/dealsApi';
+      // For this example, we'll simulate it:
+      const mockDeals: Deal[] = [
+        { id: 1, name: 'Tech Solutions Inc.', stage: 'Proposal', value: 15000, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+        { id: 2, name: 'Global Corp.', stage: 'Qualification', company: 'Global Corp.', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      ];
+      // const fetchedDeals = await apiFetchDeals();
+      // setDeals(fetchedDeals);
+      setDeals(mockDeals); // Using mock data for now
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch deals');
     } finally {
       setLoading(false);
     }
-  }, []); // No dependencies, this function itself doesn't change
+  };
 
-  const addDeal = useCallback(async (dealData: Omit<Deal, 'id'>) => {
-    setError(null); // Clear previous errors for this specific operation
-    try {
-      const newDeal = await createDeal(dealData);
-      setDeals(prevDeals => [...prevDeals, newDeal]);
-    } catch (err) {
-      console.error("Failed to add deal:", err);
-      setError("Failed to add deal.");
-      throw err; // Re-throw to allow component to potentially show a specific error
-    }
-  }, []);
+  const addDeal = (newDeal: Deal) => {
+    setDeals(prevDeals => [...prevDeals, newDeal]);
+  };
 
-  const updateDeal = useCallback(async (deal: Deal) => {
-    setError(null);
-    try {
-      await apiUpdateDeal(deal); // Assuming apiUpdateDeal returns the updated deal or void
-      setDeals(prevDeals => prevDeals.map(d => (d.id === deal.id ? deal : d)));
-    } catch (err) {
-      console.error("Failed to update deal:", err);
-      setError("Failed to update deal.");
-      throw err;
-    }
-  }, []);
+  const updateDealInContext = (updatedDeal: Deal) => {
+    setDeals(prevDeals =>
+      prevDeals.map(deal => (deal.id === updatedDeal.id ? updatedDeal : deal))
+    );
+  };
 
-  const deleteDeal = useCallback(async (dealId: string) => {
-    setError(null);
-    try {
-      await apiDeleteDeal(dealId);
-      setDeals(prevDeals => prevDeals.filter(d => d.id !== dealId));
-    } catch (err) {
-      console.error("Failed to delete deal:", err);
-      setError("Failed to delete deal.");
-      throw err;
-    }
-  }, []);
+  const deleteDealFromContext = (dealId: number) => {
+    setDeals(prevDeals => prevDeals.filter(deal => deal.id !== dealId));
+  };
 
-  // Memoize the context value to prevent unnecessary re-renders of consumers
-  const contextValue = useMemo(() => ({
+  const value: DealContextValue = {
     deals,
+    setDeals,
     loading,
+    setLoading,
     error,
+    setError,
     fetchDeals,
     addDeal,
-    updateDeal,
-    deleteDeal,
-  }), [deals, loading, error, fetchDeals, addDeal, updateDeal, deleteDeal]);
+    updateDealInContext,
+    deleteDealFromContext,
+  };
 
   return (
-    <DealContext.Provider value={contextValue}>
+    <DealContext.Provider value={value}>
       {children}
     </DealContext.Provider>
   );
 };
 
-export const useDeals = (): DealContextType => {
+export const useDeals = (): DealContextValue => {
   const context = useContext(DealContext);
   if (context === undefined) {
     throw new Error('useDeals must be used within a DealProvider');
