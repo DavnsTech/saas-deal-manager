@@ -1,66 +1,74 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import Header from './components/Header';
-import Sidebar from './components/Sidebar';
-import Dashboard from './pages/Dashboard';
-import Deals from './pages/Deals';
-import DealDetail from './pages/DealDetail';
-import CreateDeal from './pages/CreateDeal';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import DealContextProvider from './contexts/DealContext';
-import './App.css'; // Global styles
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './pages/Login';
+import RegisterPage from './pages/Register'; // Assuming Register.js exists
+import DashboardPage from './pages/Dashboard';
+import DealsPage from './pages/Deals';
+import CreateDealPage from './pages/CreateDeal';
+import DealDetailPage from './pages/DealDetail'; // Assuming DealDetail.js exists
+import { DealProvider } from './contexts/DealContext'; // Using JS context for now
+import './App.css';
+
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    // If no token, redirect to login page
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
 
 function App() {
-  // Basic authentication check using localStorage
-  const isAuthenticated = localStorage.getItem('token') !== null;
-
   return (
-    <DealContextProvider>
-      <div className="app">
-        <Header />
-        <div className="main-container">
-          {isAuthenticated && <Sidebar />}
-          <main className="content">
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
-              <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <Register />} />
+    <Router>
+      <DealProvider> {/* Wrap routes that need deal context */}
+        <div className="App">
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
 
-              {/* Protected Routes */}
-              <Route
-                path="/"
-                element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />}
-              />
-              <Route
-                path="/deals"
-                element={isAuthenticated ? <Deals /> : <Navigate to="/login" replace />}
-              />
-              <Route
-                path="/deals/:id"
-                element={isAuthenticated ? <DealDetail /> : <Navigate to="/login" replace />}
-              />
-              <Route
-                path="/deals/create"
-                element={isAuthenticated ? <CreateDeal /> : <Navigate to="/login" replace />}
-              />
-              {/* Example of an edit route - requires implementation */}
-              <Route
-                path="/deals/:id/edit"
-                element={isAuthenticated ? <div>Edit Deal Page (Not Implemented)</div> : <Navigate to="/login" replace />}
-              />
+            {/* Protected Routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/deals"
+              element={
+                <ProtectedRoute>
+                  <DealsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/deals/new"
+              element={
+                <ProtectedRoute>
+                  <CreateDealPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/deals/:id"
+              element={
+                <ProtectedRoute>
+                  <DealDetailPage />
+                </ProtectedRoute>
+              }
+            />
 
-
-              {/* Fallback Route */}
-              <Route
-                path="*"
-                element={isAuthenticated ? <Navigate to="/" replace /> : <Navigate to="/login" replace />}
-              />
-            </Routes>
-          </main>
+            {/* Default Redirect */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
         </div>
-      </div>
-    </DealContextProvider>
+      </DealProvider>
+    </Router>
   );
 }
 

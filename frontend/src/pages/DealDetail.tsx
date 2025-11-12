@@ -1,182 +1,181 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useDealContext } from '../contexts/DealContext';
-import './DealDetail.css'; // Assuming CSS is imported
-import { Deal } from '../types'; // Assuming 'Deal' type is defined
+import Header from '../components/Header';
+import Sidebar from '../components/Sidebar';
+import { getDealById, updateDeal, deleteDeal, Deal as DealType, UpdateDealData } from '../api/dealsApi';
+import './DealDetail.css';
 
-const DealDetail: React.FC = () => {
+const DealDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const {
-    selectedDeal,
-    fetchDeal,
-    editDeal,
-    removeDeal,
-    loading: contextLoading,
-    error: contextError,
-    setSelectedDeal, // To clear selected deal when navigating away
-  } = useDealContext();
-
+  const [deal, setDeal] = useState<DealType | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editFormState, setEditFormState] = useState<Partial<Deal> | null>(null); // Use Partial for editable fields
-  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<UpdateDealData>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadDeal = async () => {
-      if (!selectedDeal || (selectedDeal && selectedDeal.id !== id)) {
-        const deal = await fetchDeal(id!); // Fetch if not available or different
-        if (!deal) {
-          // Handle case where deal is not found
-          navigate('/404'); // Or redirect to deals list with an error
-        }
+    const fetchDealData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const fetchedDeal = await getDealById(Number(id!));
+        setDeal(fetchedDeal);
+        // Initialize form data with fetched deal data
+        setFormData({
+          name: fetchedDeal.name,
+          stage: fetchedDeal.stage,
+          company: fetchedDeal.company,
+          contactPerson: fetchedDeal.contactPerson,
+          value: fetchedDeal.value,
+          expectedCloseDate: fetchedDeal.expectedCloseDate ? fetchedDeal.expectedCloseDate.split('T')[0] : '', // Format date for input
+        });
+      } catch (err: any) {
+        setError(err.message || 'Failed to load deal details.');
+      } finally {
+        setLoading(false);
       }
     };
-    loadDeal();
-
-    // Cleanup function to clear selectedDeal when component unmounts
-    return () => {
-      setSelectedDeal(null);
-    };
-  }, [id, fetchDeal, selectedDeal, navigate, setSelectedDeal]);
-
-  // Initialize edit form state when selectedDeal is available and not editing
-  useEffect(() => {
-    if (selectedDeal && !isEditing) {
-      setEditFormState({ ...selectedDeal });
-    }
-  }, [selectedDeal, isEditing]);
+    fetchDealData();
+  }, [id]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setEditFormState(prevState => ({
-      ...(prevState || {}), // Ensure prevState is not null
-      [name]: value,
-    }));
-    if (updateError) {
-      setUpdateError(null); // Clear error on input change
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSaveClick = async () => {
-    if (!editFormState || !id) return;
-
-    // Basic validation for fields being edited
-    if (!editFormState.name || !editFormState.client || (editFormState.value !== undefined && editFormState.value <= 0) || !editFormState.stage) {
-      setUpdateError('Please fill in all required fields correctly.');
-      return;
-    }
-
+  const handleSave = async () => {
     try {
-      const updatedDeal = await editDeal(id, editFormState);
-      if (updatedDeal) {
-        setIsEditing(false); // Exit editing mode on success
-        setUpdateError(null);
-      } else {
-        setUpdateError('Failed to update deal. Please try again.');
-      }
-    } catch (err) {
-      setUpdateError('An error occurred during update.');
-      console.error("Error during deal update:", err);
+      const updatedDeal = await updateDeal(Number(id!), formData);
+      setDeal(updatedDeal);
+      setIsEditing(false);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to update deal.');
     }
   };
 
-  const handleDeleteClick = async () => {
-    if (!id) return;
+  const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this deal?')) {
-      const success = await removeDeal(id);
-      if (success) {
-        navigate('/deals'); // Redirect to deals list on successful deletion
-      } else {
-        setUpdateError('Failed to delete deal. Please try again.');
+      try {
+        await deleteDeal(Number(id!));
+        navigate('/deals'); // Redirect to deals list
+      } catch (err: any) {
+        setError(err.message || 'Failed to delete deal.');
       }
     }
   };
 
-  const displayError = updateError || contextError;
+  const stages = ["Prospecting", "Qualification", "Proposal", "Negotiation", "Closed Won", "Closed Lost"];
 
-  if (contextLoading && !selectedDeal) {
-    return <div className="loading">Loading Deal...</div>;
-  }
-
-  if (!selectedDeal) {
-    return <div className="error-message">Deal not found or an error occurred.</div>;
-  }
+  if (loading) return <div className="deal-detail-container">Loading deal details...</div>;
+  if (error) return <div className="deal-detail-container error-message">Error: {error}</div>;
+  if (!deal) return <div className="deal-detail-container">Deal not found.</div>;
 
   return (
     <div className="deal-detail-container">
-      {displayError && <p className="error-message">{displayError}</p>}
-      <h1>Deal Details: {selectedDeal.name}</h1>
+      <Header />
+      <div className="main-content">
+        <Sidebar />
+        <main className="deal-detail-main">
+          <div className="deal-header">
+            <h1>{deal.name}</h1>
+            {!isEditing && (
+              <div className="actions">
+                <button onClick={() => setIsEditing(true)}>Edit</button>
+                <button onClick={handleDelete} className="delete-button">Delete</button>
+              </div>
+            )}
+          </div>
 
-      {isEditing ? (
-        <div className="edit-form">
-          <div className="form-group">
-            <label htmlFor="edit-name">Deal Name:</label>
-            <input
-              type="text"
-              id="edit-name"
-              name="name"
-              value={editFormState?.name || ''}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="edit-client">Client Name:</label>
-            <input
-              type="text"
-              id="edit-client"
-              name="client"
-              value={editFormState?.client || ''}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="edit-value">Value ($):</label>
-            <input
-              type="number"
-              id="edit-value"
-              name="value"
-              value={editFormState?.value || 0}
-              onChange={handleInputChange}
-              min="1"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="edit-stage">Sales Stage:</label>
-            <select
-              id="edit-stage"
-              name="stage"
-              value={editFormState?.stage || 'Prospecting'}
-              onChange={handleInputChange}
-              required
-            >
-              <option value="Prospecting">Prospecting</option>
-              <option value="Qualification">Qualification</option>
-              <option value="Proposal">Proposal</option>
-              <option value="Negotiation">Negotiation</option>
-              <option value="Closed Won">Closed Won</option>
-              <option value="Closed Lost">Closed Lost</option>
-            </select>
-          </div>
-          {/* Add other editable fields */}
-          <button onClick={handleSaveClick} disabled={contextLoading}>
-            {contextLoading ? 'Saving...' : 'Save Changes'}
-          </button>
-          <button onClick={() => setIsEditing(false)} disabled={contextLoading}>Cancel</button>
-        </div>
-      ) : (
-        <div className="deal-info">
-          <p><strong>Client:</strong> {selectedDeal.client}</p>
-          <p><strong>Value:</strong> ${selectedDeal.value.toLocaleString()}</p>
-          <p><strong>Stage:</strong> {selectedDeal.stage}</p>
-          {/* Display other deal details */}
-          <button onClick={() => setIsEditing(true)} disabled={contextLoading}>Edit Deal</button>
-          <button onClick={handleDeleteClick} disabled={contextLoading} style={{ marginLeft: '10px', backgroundColor: 'red' }}>Delete Deal</button>
-        </div>
-      )}
-      <button onClick={() => navigate('/deals')} style={{ marginTop: '20px' }}>Back to Deals</button>
+          {isEditing ? (
+            <div className="edit-form">
+              {error && <p className="error-message">{error}</p>}
+              <div className="form-group">
+                <label htmlFor="editName">Deal Name:</label>
+                <input
+                  type="text"
+                  id="editName"
+                  name="name"
+                  value={formData.name || ''}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="editStage">Stage:</label>
+                <select
+                  id="editStage"
+                  name="stage"
+                  value={formData.stage || ''}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Select Stage</option>
+                  {stages.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="editCompany">Company:</label>
+                <input
+                  type="text"
+                  id="editCompany"
+                  name="company"
+                  value={formData.company || ''}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="editContactPerson">Contact Person:</label>
+                <input
+                  type="text"
+                  id="editContactPerson"
+                  name="contactPerson"
+                  value={formData.contactPerson || ''}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="editValue">Value:</label>
+                <input
+                  type="number"
+                  id="editValue"
+                  name="value"
+                  value={formData.value !== undefined ? formData.value : ''}
+                  onChange={handleInputChange}
+                  step="0.01"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="editExpectedCloseDate">Expected Close Date:</label>
+                <input
+                  type="date"
+                  id="editExpectedCloseDate"
+                  name="expectedCloseDate"
+                  value={formData.expectedCloseDate || ''}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="edit-actions">
+                <button onClick={handleSave}>Save</button>
+                <button onClick={() => { setIsEditing(false); setError(null); }}>Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <div className="deal-details">
+              <p><strong>Stage:</strong> {deal.stage}</p>
+              <p><strong>Company:</strong> {deal.company || 'N/A'}</p>
+              <p><strong>Contact Person:</strong> {deal.contactPerson || 'N/A'}</p>
+              <p><strong>Value:</strong> {deal.value !== undefined ? `$${deal.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A'}</p>
+              <p><strong>Expected Close Date:</strong> {deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toLocaleDateString() : 'N/A'}</p>
+              <p><strong>Created At:</strong> {new Date(deal.createdAt).toLocaleString()}</p>
+              <p><strong>Updated At:</strong> {new Date(deal.updatedAt).toLocaleString()}</p>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 };

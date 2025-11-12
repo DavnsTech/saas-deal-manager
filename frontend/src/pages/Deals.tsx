@@ -1,57 +1,71 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { Deal } from '../types'; // Assuming Deal type is defined here
-import { getDeals } from '../api/dealsApi'; // Assuming this function exists and is typed
-import DealListItem from '../components/DealListItem'; // Assuming a component for each deal
-import { DealContext } from '../contexts/DealContext'; // If context is used for state
+// TypeScript version of Deals.tsx
 
-const DealsPage: React.FC = () => {
-  const [deals, setDeals] = useState<Deal[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import Header from '../components/Header';
+import Sidebar from '../components/Sidebar';
+import './Deals.css';
+import { useDeals } from '../contexts/DealContext'; // Import TS version of context
+import { Deal as DealType } from '../api/dealsApi'; // Import Deal type
 
-  // Example: Using context if it provides deal data
-  // const { deals: contextDeals, fetchDeals } = useContext(DealContext);
+const Deals = () => {
+  const { deals, loading, error, fetchDeals } = useDeals();
 
   useEffect(() => {
-    const fetchDealData = async () => {
-      try {
-        setLoading(true);
-        const fetchedDeals = await getDeals(); // Call API
-        setDeals(fetchedDeals);
-        // If using context, maybe: await fetchDeals();
-      } catch (err) {
-        console.error("Failed to fetch deals:", err);
-        setError("Could not load deals. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Fetch deals when the component mounts.
+    // If the context already has deals, you might want to add logic to avoid refetching unnecessarily,
+    // or rely on the context's fetchDeals to handle this.
+    fetchDeals();
+    // The dependency array is empty, so this runs once when the component mounts.
+  }, []);
 
-    fetchDealData();
-  }, []); // Empty dependency array means this runs once on mount
-
-  if (loading) {
-    return <div>Loading deals...</div>;
-  }
-
-  if (error) {
-    return <div style={{ color: 'red' }}>{error}</div>;
-  }
+  if (loading) return <div className="deals-container">Loading deals...</div>;
+  if (error) return <div className="deals-container error-message">Error: {error}</div>;
 
   return (
-    <div>
-      <h1>All Deals</h1>
-      {deals.length > 0 ? (
-        <ul>
-          {deals.map((deal) => (
-            <DealListItem key={deal.id} deal={deal} /> // Pass individual deal as prop
-          ))}
-        </ul>
-      ) : (
-        <p>No deals found. Start creating some!</p>
-      )}
+    <div className="deals-container">
+      <Header />
+      <div className="main-content">
+        <Sidebar />
+        <main className="deals-main">
+          <h1>All Deals</h1>
+          <Link to="/deals/new" className="create-deal-button">Create New Deal</Link>
+
+          {deals.length > 0 ? (
+            <table className="deals-table">
+              <thead>
+                <tr>
+                  <th>Deal Name</th>
+                  <th>Company</th>
+                  <th>Stage</th>
+                  <th>Value</th>
+                  <th>Expected Close Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {deals.map((deal: DealType) => (
+                  <tr key={deal.id}>
+                    <td><Link to={`/deals/${deal.id}`}>{deal.name}</Link></td>
+                    <td>{deal.company || 'N/A'}</td>
+                    <td>{deal.stage}</td>
+                    <td>{deal.value !== undefined ? `$${deal.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A'}</td>
+                    <td>{deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toLocaleDateString() : 'N/A'}</td>
+                    <td>
+                      <Link to={`/deals/${deal.id}`} className="action-link">View</Link>
+                      {/* Add edit/delete buttons here if desired, or manage via DealDetail */}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p>No deals found. <Link to="/deals/new">Create your first deal!</Link></p>
+          )}
+        </main>
+      </div>
     </div>
   );
 };
 
-export default DealsPage;
+export default Deals;

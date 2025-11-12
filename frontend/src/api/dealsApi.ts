@@ -1,76 +1,123 @@
-import { Deal, CreateDealPayload } from '../types';
+// This is the TypeScript version of the deals API client.
+// It's generally preferred to use TypeScript for consistency and type safety.
 
-const API_BASE_URL = '/api'; // Assuming your backend API is served at /api
+import axios from 'axios';
 
-// --- Helper for API requests ---
-async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+const API_URL = 'http://localhost:5000/api/deals'; // Adjust if your backend is on a different port or domain
 
-  if (!response.ok) {
-    let errorMessage = `HTTP error! status: ${response.status}`;
-    try {
-      const errorData = await response.json();
-      errorMessage = errorData.message || errorMessage;
-    } catch (e) {
-      // Ignore if response body is not JSON or empty
-    }
-    throw new Error(errorMessage);
-  }
-
-  // Handle potential empty responses for certain operations (e.g., DELETE)
-  if (response.status === 204) {
-    return {} as T; // Return an empty object or appropriate type for 204
-  }
-
-  return await response.json() as T;
+interface Deal {
+  id: number;
+  name: string;
+  stage: string;
+  company?: string;
+  contactPerson?: string;
+  value?: number;
+  expectedCloseDate?: string; // Date stored as string from API
+  createdAt: string;
+  updatedAt: string;
 }
 
-// --- Deal API Functions ---
+interface CreateDealData {
+  name: string;
+  stage: string;
+  company?: string;
+  contactPerson?: string;
+  value?: number;
+  expectedCloseDate?: string; // Accepts string for date input
+}
+
+interface UpdateDealData {
+  name?: string;
+  stage?: string;
+  company?: string;
+  contactPerson?: string;
+  value?: number;
+  expectedCloseDate?: string;
+}
+
+const getAuthToken = (): string | null => localStorage.getItem('token');
 
 export const fetchDeals = async (): Promise<Deal[]> => {
-  return request<Deal[]>('/deals');
-};
+  const token = getAuthToken();
+  if (!token) throw new Error('Authentication token not found');
 
-export const getDealById = async (id: string): Promise<Deal> => {
-  if (!id) {
-    throw new Error("Deal ID is required.");
+  try {
+    const response = await axios.get<Deal[]>(API_URL, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching deals:', error);
+    throw error.response?.data || error.message || 'Failed to fetch deals';
   }
-  return request<Deal>(`/deals/${id}`);
 };
 
-export const createDeal = async (dealData: CreateDealPayload): Promise<Deal> => {
-  if (!dealData.name || !dealData.stage) {
-    throw new Error("Deal name and stage are required.");
+export const createDeal = async (dealData: CreateDealData): Promise<Deal> => {
+  const token = getAuthToken();
+  if (!token) throw new Error('Authentication token not found');
+
+  try {
+    const response = await axios.post<Deal>(API_URL, dealData, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error creating deal:', error);
+    throw error.response?.data || error.message || 'Failed to create deal';
   }
-  return request<Deal>('/deals', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(dealData),
-  });
 };
 
-export const updateDeal = async (id: string, dealData: Partial<Deal>): Promise<Deal> => {
-  if (!id) {
-    throw new Error("Deal ID is required for update.");
+export const getDealById = async (id: number): Promise<Deal> => {
+  const token = getAuthToken();
+  if (!token) throw new Error('Authentication token not found');
+
+  try {
+    const response = await axios.get<Deal>(`${API_URL}/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error(`Error fetching deal with id ${id}:`, error);
+    throw error.response?.data || error.message || `Failed to fetch deal ${id}`;
   }
-  return request<Deal>(`/deals/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(dealData),
-  });
 };
 
-export const deleteDeal = async (id: string): Promise<void> => {
-  if (!id) {
-    throw new Error("Deal ID is required for deletion.");
+export const updateDeal = async (id: number, dealData: UpdateDealData): Promise<Deal> => {
+  const token = getAuthToken();
+  if (!token) throw new Error('Authentication token not found');
+
+  try {
+    const response = await axios.put<Deal>(`${API_URL}/${id}`, dealData, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error(`Error updating deal with id ${id}:`, error);
+    throw error.response?.data || error.message || `Failed to update deal ${id}`;
   }
-  await request<void>(`/deals/${id}`, {
-    method: 'DELETE',
-  });
 };
 
-// Add other API functions as needed (e.g., for users, authentication)
+export const deleteDeal = async (id: number): Promise<any> => { // Response type can be more specific if backend returns a structure
+  const token = getAuthToken();
+  if (!token) throw new Error('Authentication token not found');
+
+  try {
+    const response = await axios.delete<any>(`${API_URL}/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error(`Error deleting deal with id ${id}:`, error);
+    throw error.response?.data || error.message || `Failed to delete deal ${id}`;
+  }
+};
