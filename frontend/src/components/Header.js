@@ -1,26 +1,20 @@
 import React from 'react';
 import './Header.css';
 
-const Header = () => {
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    // Redirect to login page or update auth state
-    window.location.href = '/login';
-  };
-
+function Header() {
   return (
     <header className="app-header">
       <div className="logo">Deal Manager</div>
       <nav>
         <ul>
-          <li><a href="/dashboard">Dashboard</a></li>
-          <li><a href="/deals">Deals</a></li>
-          {/* Add more navigation links as needed */}
+          <li><a href="#dashboard">Dashboard</a></li>
+          <li><a href="#deals">Deals</a></li>
+          <li><a href="#create-deal">Create Deal</a></li>
+          <li><a href="#logout">Logout</a></li>
         </ul>
       </nav>
-      <button onClick={handleLogout} className="logout-button">Logout</button>
     </header>
   );
-};
+}
 
 export default Header;

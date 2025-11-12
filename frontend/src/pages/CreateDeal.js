@@ -1,112 +1,104 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createDeal } from '../api/dealsApi'; // Assuming dealsApi.js is used
+import { useDeals } from '../contexts/DealContext';
 import './CreateDeal.css';
 
-const CreateDeal = () => {
-  const [dealName, setDealName] = useState('');
-  const [stage, setStage] = useState('');
-  const [company, setCompany] = useState('');
-  const [contactPerson, setContactPerson] = useState('');
-  const [value, setValue] = useState('');
-  const [expectedCloseDate, setExpectedCloseDate] = useState('');
-  const [error, setError] = useState('');
+function CreateDeal() {
   const navigate = useNavigate();
+  const { addDeal } = useDeals();
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    value: 0,
+    stage: 'Prospecting', // Default stage
+  });
+  const [error, setError] = useState('');
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prevState => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError(''); // Clear previous errors
 
-    const dealData = {
-      name: dealName,
-      stage: stage,
-      company: company,
-      contactPerson: contactPerson,
-      value: parseFloat(value) || undefined, // Convert to number, handle empty string
-      expectedCloseDate: expectedCloseDate || undefined,
-    };
+    // Basic validation
+    if (!formData.name || !formData.value || !formData.stage) {
+      setError('Please fill in all required fields.');
+      return;
+    }
 
     try {
-      await createDeal(dealData);
-      navigate('/deals'); // Redirect to deals list on success
+      await addDeal(formData);
+      navigate('/deals'); // Redirect to deals page after successful creation
     } catch (err) {
       setError(err.message || 'Failed to create deal. Please try again.');
-      console.error('Create Deal Error:', err);
     }
   };
 
-  const stages = ["Prospecting", "Qualification", "Proposal", "Negotiation", "Closed Won", "Closed Lost"];
-
   return (
-    <div className="create-deal-container">
-      <h2>Create New Deal</h2>
+    <div className="create-deal-page">
+      <h1>Create New Deal</h1>
       {error && <p className="error-message">{error}</p>}
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="deal-form">
         <div className="form-group">
-          <label htmlFor="dealName">Deal Name:</label>
+          <label htmlFor="name">Deal Name:</label>
           <input
             type="text"
-            id="dealName"
-            value={dealName}
-            onChange={(e) => setDealName(e.target.value)}
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
             required
           />
         </div>
         <div className="form-group">
-          <label htmlFor="stage">Stage:</label>
-          <select
-            id="stage"
-            value={stage}
-            onChange={(e) => setStage(e.target.value)}
-            required
-          >
-            <option value="">Select Stage</option>
-            {stages.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </div>
-        <div className="form-group">
-          <label htmlFor="company">Company:</label>
-          <input
-            type="text"
-            id="company"
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="contactPerson">Contact Person:</label>
-          <input
-            type="text"
-            id="contactPerson"
-            value={contactPerson}
-            onChange={(e) => setContactPerson(e.target.value)}
-          />
+          <label htmlFor="description">Description:</label>
+          <textarea
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+          ></textarea>
         </div>
         <div className="form-group">
           <label htmlFor="value">Value:</label>
           <input
             type="number"
             id="value"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
+            name="value"
+            value={formData.value}
+            onChange={handleChange}
+            required
+            min="0"
             step="0.01"
           />
         </div>
         <div className="form-group">
-          <label htmlFor="expectedCloseDate">Expected Close Date:</label>
-          <input
-            type="date"
-            id="expectedCloseDate"
-            value={expectedCloseDate}
-            onChange={(e) => setExpectedCloseDate(e.target.value)}
-          />
+          <label htmlFor="stage">Sales Stage:</label>
+          <select
+            id="stage"
+            name="stage"
+            value={formData.stage}
+            onChange={handleChange}
+            required
+          >
+            <option value="Prospecting">Prospecting</option>
+            <option value="Qualification">Qualification</option>
+            <option value="Proposal">Proposal</option>
+            <option value="Negotiation">Negotiation</option>
+            <option value="Closed Won">Closed Won</option>
+            <option value="Closed Lost">Closed Lost</option>
+          </select>
         </div>
         <button type="submit" className="submit-button">Create Deal</button>
       </form>
     </div>
   );
-};
+}
 
 export default CreateDeal;

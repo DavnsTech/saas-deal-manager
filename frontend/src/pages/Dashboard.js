@@ -1,65 +1,64 @@
 import React, { useEffect } from 'react';
-import Header from '../components/Header';
-import Sidebar from '../components/Sidebar';
+import { useDeals } from '../contexts/DealContext';
 import './Dashboard.css';
-// Assuming you have a DealContext to manage deals data
-import { useDeals } from '../contexts/DealContext'; // Using JS context for now
 
-const Dashboard = () => {
+function Dashboard() {
   const { deals, loading, error, fetchDeals } = useDeals();
 
   useEffect(() => {
     fetchDeals();
-  }, []); // Fetch deals when the component mounts
+  }, [fetchDeals]);
 
-  if (loading) return <div className="dashboard-container">Loading dashboard...</div>;
-  if (error) return <div className="dashboard-container error-message">Error: {error}</div>;
-
-  // Simple dashboard metrics
+  // Calculate summary statistics
   const totalDeals = deals.length;
-  const openDeals = deals.filter(deal => deal.stage !== 'Closed Won' && deal.stage !== 'Closed Lost').length;
-  const totalValue = deals.reduce((sum, deal) => sum + (deal.value || 0), 0);
+  const totalValue = deals.reduce((sum, deal) => sum + deal.value, 0);
+  const dealsByStage = deals.reduce((acc, deal) => {
+    acc[deal.stage] = (acc[deal.stage] || 0) + 1;
+    return acc;
+  }, {});
+
+  if (loading) {
+    return <div className="dashboard-page">Loading dashboard...</div>;
+  }
+
+  if (error) {
+    return <div className="dashboard-page error-message">Error loading dashboard: {error}</div>;
+  }
 
   return (
-    <div className="dashboard-container">
-      <Header />
-      <div className="main-content">
-        <Sidebar />
-        <main className="dashboard-main">
-          <h1>Dashboard</h1>
-          <div className="dashboard-metrics">
-            <div className="metric-card">
-              <h3>Total Deals</h3>
-              <p>{totalDeals}</p>
-            </div>
-            <div className="metric-card">
-              <h3>Open Deals</h3>
-              <p>{openDeals}</p>
-            </div>
-            <div className="metric-card">
-              <h3>Total Pipeline Value</h3>
-              <p>${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-            </div>
-          </div>
-          {/* You can add charts or more detailed deal summaries here */}
-          <div className="recent-deals">
-            <h2>Recent Deals</h2>
-            {deals.length > 0 ? (
-              <ul>
-                {deals.slice(0, 5).map(deal => (
-                  <li key={deal.id}>
-                    <a href={`/deals/${deal.id}`}>{deal.name}</a> - {deal.stage} (${deal.value?.toLocaleString() || 'N/A'})
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No deals found yet.</p>
-            )}
-          </div>
-        </main>
+    <div className="dashboard-page">
+      <h1>Dashboard</h1>
+      <div className="dashboard-summary">
+        <div className="summary-card">
+          <h2>Total Deals</h2>
+          <p>{totalDeals}</p>
+        </div>
+        <div className="summary-card">
+          <h2>Total Deal Value</h2>
+          <p>${totalValue.toFixed(2)}</p>
+        </div>
+      </div>
+
+      <div className="dashboard-sections">
+        <div className="deals-by-stage">
+          <h2>Deals by Stage</h2>
+          {Object.keys(dealsByStage).length > 0 ? (
+            <ul>
+              {Object.entries(dealsByStage).map(([stage, count]) => (
+                <li key={stage}>
+                  {stage}: {count}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No deals found.</p>
+          )}
+        </div>
+
+        {/* Add more dashboard sections here, e.g., recent deals, sales performance charts */}
       </div>
     </div>
   );
-};
+}
 
 export default Dashboard;

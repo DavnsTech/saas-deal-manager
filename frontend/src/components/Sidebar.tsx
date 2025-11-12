@@ -1,15 +1,15 @@
 import React from 'react';
-import './Sidebar.css'; // Assuming Sidebar.css is used for styling
+import './Sidebar.css';
 
 const Sidebar: React.FC = () => {
   return (
     <aside className="app-sidebar">
-      <h2>Navigation</h2>
+      <h3>Navigation</h3>
       <ul>
-        <li><a href="/">Dashboard</a></li>
-        <li><a href="/deals">All Deals</a></li>
-        <li><a href="/deals/create">Create New Deal</a></li>
-        {/* Add other navigation items as needed */}
+        <li><a href="#dashboard">Dashboard</a></li>
+        <li><a href="#deals">All Deals</a></li>
+        <li><a href="#create-deal">Add New Deal</a></li>
+        {/* Add more sidebar links as needed */}
       </ul>
     </aside>
   );
