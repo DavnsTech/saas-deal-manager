@@ -1,14 +1,15 @@
 import React from 'react';
-import './Sidebar.css';
+import { NavLink } from 'react-router-dom';
+import './Sidebar.css'; // Assuming Sidebar.css is still relevant
 
 const Sidebar: React.FC = () => {
   return (
-    <aside className="app-sidebar">
+    <aside className="sidebar">
       <h3>Navigation</h3>
       <ul>
-        <li><a href="#dashboard">Dashboard</a></li>
-        <li><a href="#deals">All Deals</a></li>
-        <li><a href="#create-deal">Add New Deal</a></li>
+        <li><NavLink to="/dashboard" className={({ isActive }) => isActive ? "active" : ""}>Dashboard</NavLink></li>
+        <li><NavLink to="/deals" className={({ isActive }) => isActive ? "active" : ""}>All Deals</NavLink></li>
+        <li><NavLink to="/create-deal" className={({ isActive }) => isActive ? "active" : ""}>Add New Deal</NavLink></li>
         {/* Add more sidebar links as needed */}
       </ul>
     </aside>

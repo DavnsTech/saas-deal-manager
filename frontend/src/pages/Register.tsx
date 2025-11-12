@@ -1,35 +1,20 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Register.css'; // Assuming you have a Register.css file
+import './Register.css'; // Assuming Register.css exists
 
 const Register: React.FC = () => {
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [error, setError] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: FormEvent): Promise<void> => {
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError(''); // Clear previous errors
-    setIsLoading(true);
-
-    // Basic validation
-    if (!name || !email || !password || !confirmPassword) {
-      setError('Please fill in all fields.');
-      setIsLoading(false);
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
-      setIsLoading(false);
-      return;
-    }
 
     try {
-      const response = await fetch('http://localhost:3000/api/auth/register', {
+      const response = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -37,35 +22,33 @@ const Register: React.FC = () => {
         body: JSON.stringify({ name, email, password }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Registration failed. Please try again.');
+        throw new Error(data.message || 'Registration failed');
       }
 
-      // On successful registration, redirect to the login page.
+      // On successful registration, redirect to login page
       navigate('/login');
-
     } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
+      console.error('Registration error:', err);
+      setError(err.message || 'An unexpected error occurred.');
     }
   };
 
   return (
-    <div className="register-page">
-      <h1>Register</h1>
+    <div className="register-container">
+      <h2>Register</h2>
       {error && <p className="error-message">{error}</p>}
-      <form onSubmit={handleSubmit} className="register-form">
+      <form onSubmit={handleRegister}>
         <div className="form-group">
-          <label htmlFor="name">Name:</label>
+          <label htmlFor="name">Full Name:</label>
           <input
             type="text"
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            aria-required="true"
           />
         </div>
         <div className="form-group">
@@ -76,7 +59,6 @@ const Register: React.FC = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            aria-required="true"
           />
         </div>
         <div className="form-group">
@@ -87,25 +69,13 @@ const Register: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            aria-required="true"
           />
         </div>
-        <div className="form-group">
-          <label htmlFor="confirmPassword">Confirm Password:</label>
-          <input
-            type="password"
-            id="confirmPassword"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            aria-required="true"
-          />
-        </div>
-        <button type="submit" className="submit-button" disabled={isLoading}>
-          {isLoading ? 'Registering...' : 'Register'}
-        </button>
+        <button type="submit" className="register-button">Register</button>
       </form>
-      <p>Already have an account? <a href="/login">Login here</a></p>
+      <p>
+        Already have an account? <a href="/login">Login</a>
+      </p>
     </div>
   );
 };

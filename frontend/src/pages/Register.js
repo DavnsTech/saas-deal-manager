@@ -1,32 +1,20 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Register.css'; // Assuming you have a Register.css file
+import './Register.css'; // Assuming Register.css exists
 
-function Register() {
+const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError(''); // Clear previous errors
 
-    // Basic validation
-    if (!name || !email || !password || !confirmPassword) {
-      setError('Please fill in all fields.');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
-
     try {
-      // Replace with your actual register API call
-      const response = await fetch('http://localhost:3000/api/auth/register', {
+      const response = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -34,27 +22,27 @@ function Register() {
         body: JSON.stringify({ name, email, password }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Registration failed. Please try again.');
+        throw new Error(data.message || 'Registration failed');
       }
 
-      // On successful registration, you might want to automatically log the user in
-      // or redirect them to the login page. Here, we redirect to login.
+      // On successful registration, redirect to login page
       navigate('/login');
-
     } catch (err) {
-      setError(err.message);
+      console.error('Registration error:', err);
+      setError(err.message || 'An unexpected error occurred.');
     }
   };
 
   return (
-    <div className="register-page">
-      <h1>Register</h1>
+    <div className="register-container">
+      <h2>Register</h2>
       {error && <p className="error-message">{error}</p>}
-      <form onSubmit={handleSubmit} className="register-form">
+      <form onSubmit={handleRegister}>
         <div className="form-group">
-          <label htmlFor="name">Name:</label>
+          <label htmlFor="name">Full Name:</label>
           <input
             type="text"
             id="name"
@@ -83,21 +71,13 @@ function Register() {
             required
           />
         </div>
-        <div className="form-group">
-          <label htmlFor="confirmPassword">Confirm Password:</label>
-          <input
-            type="password"
-            id="confirmPassword"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit" className="submit-button">Register</button>
+        <button type="submit" className="register-button">Register</button>
       </form>
-      <p>Already have an account? <a href="/login">Login here</a></p>
+      <p>
+        Already have an account? <a href="/login">Login</a>
+      </p>
     </div>
   );
-}
+};
 
 export default Register;

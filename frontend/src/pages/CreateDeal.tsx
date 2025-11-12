@@ -1,58 +1,55 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDeals } from '../contexts/DealContext';
-import './CreateDeal.css';
-
-// Define the accepted stages
-const salesStages = ['Prospecting', 'Qualification', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'];
+import * as dealsApi from '../api/dealsApi';
+import './CreateDeal.css'; // Assuming CreateDeal.css is still relevant
+import { Deal } from '../types';
 
 const CreateDeal: React.FC = () => {
-  const navigate = useNavigate();
-  const { addDeal } = useDeals();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Omit<Deal, 'id'>>({
     name: '',
-    description: '',
+    company: '',
     value: 0,
-    stage: salesStages[0], // Default to the first stage
+    stage: 'Prospecting',
+    description: '',
   });
   const [error, setError] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): void => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
-      ...prevState,
+    setFormData({
+      ...formData,
       [name]: value,
-    }));
+    });
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError(''); // Clear previous errors
-    setIsLoading(true);
-
-    // Basic validation
-    if (!formData.name || formData.value <= 0 || !formData.stage) {
-      setError('Please fill in all required fields with valid data.');
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      await addDeal(formData);
-      navigate('/deals'); // Redirect to deals page after successful creation
+      // Basic validation
+      if (!formData.name || !formData.company || formData.value === undefined || formData.value === null) {
+        setError('Please fill in all required fields.');
+        return;
+      }
+      if (isNaN(formData.value) || formData.value < 0) {
+        setError('Value must be a non-negative number.');
+        return;
+      }
+
+      await dealsApi.createDeal(formData);
+      navigate('/deals');
     } catch (err: any) {
-      setError(err.message || 'Failed to create deal. Please try again.');
-    } finally {
-      setIsLoading(false);
+      console.error('Error creating deal:', err);
+      setError(err.response?.data?.message || 'Failed to create deal. Please try again.');
     }
   };
 
   return (
-    <div className="create-deal-page">
-      <h1>Create New Deal</h1>
+    <div className="create-deal-container">
+      <h2>Create New Deal</h2>
       {error && <p className="error-message">{error}</p>}
-      <form onSubmit={handleSubmit} className="deal-form">
+      <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="name">Deal Name:</label>
           <input
@@ -62,8 +59,48 @@ const CreateDeal: React.FC = () => {
             value={formData.name}
             onChange={handleChange}
             required
-            aria-required="true"
           />
+        </div>
+        <div className="form-group">
+          <label htmlFor="company">Company:</label>
+          <input
+            type="text"
+            id="company"
+            name="company"
+            value={formData.company}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="value">Value ($):</label>
+          <input
+            type="number"
+            id="value"
+            name="value"
+            value={formData.value}
+            onChange={handleChange}
+            min="0"
+            step="0.01"
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="stage">Sales Stage:</label>
+          <select
+            id="stage"
+            name="stage"
+            value={formData.stage}
+            onChange={handleChange}
+            required
+          >
+            <option value="Prospecting">Prospecting</option>
+            <option value="Qualification">Qualification</option>
+            <option value="Proposal">Proposal</option>
+            <option value="Negotiation">Negotiation</option>
+            <option value="Closed Won">Closed Won</option>
+            <option value="Closed Lost">Closed Lost</option>
+          </select>
         </div>
         <div className="form-group">
           <label htmlFor="description">Description:</label>
@@ -75,38 +112,7 @@ const CreateDeal: React.FC = () => {
             rows={4}
           ></textarea>
         </div>
-        <div className="form-group">
-          <label htmlFor="value">Value:</label>
-          <input
-            type="number"
-            id="value"
-            name="value"
-            value={formData.value}
-            onChange={handleChange}
-            required
-            min="0"
-            step="0.01"
-            aria-required="true"
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="stage">Sales Stage:</label>
-          <select
-            id="stage"
-            name="stage"
-            value={formData.stage}
-            onChange={handleChange}
-            required
-            aria-required="true"
-          >
-            {salesStages.map(stage => (
-              <option key={stage} value={stage}>{stage}</option>
-            ))}
-          </select>
-        </div>
-        <button type="submit" className="submit-button" disabled={isLoading}>
-          {isLoading ? 'Creating...' : 'Create Deal'}
-        </button>
+        <button type="submit" className="submit-button">Create Deal</button>
       </form>
     </div>
   );

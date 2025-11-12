@@ -1,103 +1,73 @@
 import axios from 'axios';
+import { Deal } from '../types'; // Assuming you have a Deal type defined in types/index.ts
 
-// Define an interface for the Deal object for better type safety
-interface Deal {
-  id?: number;
-  name: string;
-  description?: string;
-  value: number;
-  stage: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-const API_URL = 'http://localhost:3000/api/deals'; // Assuming your backend is running on port 3000
+const API_URL = 'http://localhost:5000/api/deals'; // Assuming your backend is running on port 5000
 
 export const getDeals = async (): Promise<Deal[]> => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('Authentication token not found.');
-    }
     const response = await axios.get<Deal[]>(API_URL, {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
     });
     return response.data;
   } catch (error) {
-    console.error('Error fetching deals:', error instanceof Error ? error.message : 'An unknown error occurred');
+    console.error('Error fetching deals:', error);
     throw error;
   }
 };
 
-export const getDealById = async (id: number): Promise<Deal> => {
+export const getDealById = async (id: string): Promise<Deal> => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('Authentication token not found.');
-    }
     const response = await axios.get<Deal>(`${API_URL}/${id}`, {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
     });
     return response.data;
   } catch (error) {
-    console.error(`Error fetching deal with id ${id}:`, error instanceof Error ? error.message : 'An unknown error occurred');
+    console.error(`Error fetching deal with id ${id}:`, error);
     throw error;
   }
 };
 
-export const createDeal = async (dealData: Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>): Promise<Deal> => {
+export const createDeal = async (dealData: Omit<Deal, 'id'>): Promise<Deal> => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('Authentication token not found.');
-    }
     const response = await axios.post<Deal>(API_URL, dealData, {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
     });
     return response.data;
   } catch (error) {
-    console.error('Error creating deal:', error instanceof Error ? error.message : 'An unknown error occurred');
+    console.error('Error creating deal:', error);
     throw error;
   }
 };
 
-export const updateDeal = async (id: number, dealData: Partial<Deal>): Promise<Deal> => {
+export const updateDeal = async (id: string, dealData: Partial<Deal>): Promise<Deal> => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('Authentication token not found.');
-    }
     const response = await axios.put<Deal>(`${API_URL}/${id}`, dealData, {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
     });
     return response.data;
   } catch (error) {
-    console.error(`Error updating deal with id ${id}:`, error instanceof Error ? error.message : 'An unknown error occurred');
+    console.error(`Error updating deal with id ${id}:`, error);
     throw error;
   }
 };
 
-export const deleteDeal = async (id: number): Promise<void> => {
+export const deleteDeal = async (id: string): Promise<void> => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('Authentication token not found.');
-    }
     await axios.delete(`${API_URL}/${id}`, {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
     });
   } catch (error) {
-    console.error(`Error deleting deal with id ${id}:`, error instanceof Error ? error.message : 'An unknown error occurred');
+    console.error(`Error deleting deal with id ${id}:`, error);
     throw error;
   }
 };

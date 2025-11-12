@@ -1,28 +1,19 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Login.css'; // Assuming you have a Login.css file
+import './Login.css'; // Assuming Login.css exists
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: FormEvent): Promise<void> => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError(''); // Clear previous errors
-    setIsLoading(true);
-
-    // Basic validation
-    if (!email || !password) {
-      setError('Please enter both email and password.');
-      setIsLoading(false);
-      return;
-    }
 
     try {
-      const response = await fetch('http://localhost:3000/api/auth/login', {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -30,30 +21,27 @@ const Login: React.FC = () => {
         body: JSON.stringify({ email, password }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed. Please check your credentials.');
+        throw new Error(data.message || 'Login failed');
       }
 
-      const data = await response.json();
       localStorage.setItem('token', data.token);
-      // Optionally store user info
+      // Optionally store user info if returned by the API
       // localStorage.setItem('user', JSON.stringify(data.user));
-
-      navigate('/dashboard'); // Redirect to dashboard on successful login
-
+      navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
+      console.error('Login error:', err);
+      setError(err.message || 'An unexpected error occurred.');
     }
   };
 
   return (
-    <div className="login-page">
-      <h1>Login</h1>
+    <div className="login-container">
+      <h2>Login</h2>
       {error && <p className="error-message">{error}</p>}
-      <form onSubmit={handleSubmit} className="login-form">
+      <form onSubmit={handleLogin}>
         <div className="form-group">
           <label htmlFor="email">Email:</label>
           <input
@@ -62,7 +50,6 @@ const Login: React.FC = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            aria-required="true"
           />
         </div>
         <div className="form-group">
@@ -73,14 +60,13 @@ const Login: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            aria-required="true"
           />
         </div>
-        <button type="submit" className="submit-button" disabled={isLoading}>
-          {isLoading ? 'Logging in...' : 'Login'}
-        </button>
+        <button type="submit" className="login-button">Login</button>
       </form>
-      <p>Don't have an account? <a href="/register">Register here</a></p>
+      <p>
+        Don't have an account? <a href="/register">Register</a>
+      </p>
     </div>
   );
 };
