@@ -1,71 +1,101 @@
-// TypeScript version of Deals.tsx
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
-import Header from '../components/Header';
-import Sidebar from '../components/Sidebar';
-import './Deals.css';
-import { useDeals } from '../contexts/DealContext'; // Import TS version of context
-import { Deal as DealType } from '../api/dealsApi'; // Import Deal type
+import './Deals.css'; // Assuming CSS is imported
+import { Deal } from '../types'; // Assuming a shared types file
+import { getDeals, deleteDeal as apiDeleteDeal } from '../api/dealsApi'; // Assuming API functions
+import { DealContext } from '../contexts/DealContext'; // Assuming context for state management
 
-const Deals = () => {
-  const { deals, loading, error, fetchDeals } = useDeals();
+// Define component props if any
+interface DealsPageProps {
+    // e.g., userId?: string;
+}
 
-  useEffect(() => {
-    // Fetch deals when the component mounts.
-    // If the context already has deals, you might want to add logic to avoid refetching unnecessarily,
-    // or rely on the context's fetchDeals to handle this.
-    fetchDeals();
-    // The dependency array is empty, so this runs once when the component mounts.
-  }, []);
+export const DealsPage: React.FC<DealsPageProps> = () => {
+    const [deals, setDeals] = useState<Deal[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
-  if (loading) return <div className="deals-container">Loading deals...</div>;
-  if (error) return <div className="deals-container error-message">Error: {error}</div>;
+    // Using context to potentially update deals list after an action elsewhere
+    const { refreshDeals } = useContext(DealContext);
 
-  return (
-    <div className="deals-container">
-      <Header />
-      <div className="main-content">
-        <Sidebar />
-        <main className="deals-main">
-          <h1>All Deals</h1>
-          <Link to="/deals/new" className="create-deal-button">Create New Deal</Link>
+    useEffect(() => {
+        const fetchDeals = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const data = await getDeals();
+                setDeals(data);
+            } catch (err: any) {
+                console.error("Failed to fetch deals:", err);
+                setError('Could not load deals. Please try again later.');
+            } finally {
+                setLoading(false);
+            }
+        };
 
-          {deals.length > 0 ? (
-            <table className="deals-table">
-              <thead>
-                <tr>
-                  <th>Deal Name</th>
-                  <th>Company</th>
-                  <th>Stage</th>
-                  <th>Value</th>
-                  <th>Expected Close Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {deals.map((deal: DealType) => (
-                  <tr key={deal.id}>
-                    <td><Link to={`/deals/${deal.id}`}>{deal.name}</Link></td>
-                    <td>{deal.company || 'N/A'}</td>
-                    <td>{deal.stage}</td>
-                    <td>{deal.value !== undefined ? `$${deal.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A'}</td>
-                    <td>{deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toLocaleDateString() : 'N/A'}</td>
-                    <td>
-                      <Link to={`/deals/${deal.id}`} className="action-link">View</Link>
-                      {/* Add edit/delete buttons here if desired, or manage via DealDetail */}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p>No deals found. <Link to="/deals/new">Create your first deal!</Link></p>
-          )}
-        </main>
-      </div>
-    </div>
-  );
+        fetchDeals();
+    }, [refreshDeals]); // Re-fetch if refreshDeals context value changes
+
+    const handleDeleteDeal = async (id: number) => {
+        if (window.confirm('Are you sure you want to delete this deal?')) {
+            try {
+                await apiDeleteDeal(id);
+                // Optimistically update UI or re-fetch
+                setDeals(deals.filter(deal => deal.id !== id));
+                // Optionally use context to signal other components
+                // if (refreshDeals) refreshDeals();
+            } catch (err: any) {
+                console.error(`Failed to delete deal ${id}:`, err);
+                setError('Failed to delete deal. Please try again.');
+            }
+        }
+    };
+
+    if (loading) {
+        return <div className="deals-container">Loading deals...</div>;
+    }
+
+    if (error) {
+        return <div className="deals-container error">{error}</div>;
+    }
+
+    return (
+        <div className="deals-container">
+            <h1>All Deals</h1>
+            <Link to="/deals/new" className="btn-create-deal">Create New Deal</Link>
+
+            {deals.length === 0 ? (
+                <p>No deals found. Start by creating one!</p>
+            ) : (
+                <table className="deals-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Stage</th>
+                            <th>Value</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {deals.map((deal) => (
+                            <tr key={deal.id}>
+                                <td>
+                                    <Link to={`/deals/${deal.id}`}>{deal.name}</Link>
+                                </td>
+                                <td>{deal.stage}</td>
+                                <td>${deal.value.toLocaleString()}</td>
+                                <td>
+                                    <Link to={`/deals/edit/${deal.id}`} className="btn-edit">Edit</Link>
+                                    <button onClick={() => handleDeleteDeal(deal.id)} className="btn-delete">Delete</button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
+        </div>
+    );
 };
 
-export default Deals;
+// Exporting as default for typical React app structure if this is the main component
+// export default DealsPage;
