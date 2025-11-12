@@ -1,22 +1,15 @@
 import { Request, Response } from 'express';
-import User from '../models/User';
+import { AppDataSource } from '../config/database';
+import { User } from '../models/User';
 
-export const getUsers = async (req: Request, res: Response) => {
-  try {
-    const users = await User.findAll({ attributes: ['id', 'email', 'name', 'role'] });
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch users' });
-  }
-};
+const userRepository = AppDataSource.getRepository(User);
 
-export const getUser = async (req: Request, res: Response) => {
+export const getProfile = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const user = await User.findByPk(id, { attributes: ['id', 'email', 'name', 'role'] });
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json(user);
+    const user = await userRepository.findOneBy({ id: (req as any).user.id });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json({ id: user.id, email: user.email, name: user.name });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch user' });
+    res.status(500).json({ message: 'Server error' });
   }
 };

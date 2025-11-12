@@ -1,16 +1,70 @@
-import sequelize from '../config/database';
-import Deal from '../models/Deal';
+import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
-const createDealsTable = async () => {
-  try {
-    await sequelize.authenticate();
-    await Deal.sync({ force: true }); // Use force: true to recreate table in development
-    console.log('Deals table created successfully.');
-  } catch (error) {
-    console.error('Unable to create deals table:', error);
-  } finally {
-    await sequelize.close();
+export class CreateDeals002 implements MigrationInterface {
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.createTable(
+      new Table({
+        name: 'deal',
+        columns: [
+          {
+            name: 'id',
+            type: 'int',
+            isPrimary: true,
+            isGenerated: true,
+            generationStrategy: 'increment',
+          },
+          {
+            name: 'name',
+            type: 'varchar',
+          },
+          {
+            name: 'amount',
+            type: 'decimal',
+            isNullable: true,
+          },
+          {
+            name: 'currency',
+            type: 'varchar',
+            isNullable: true,
+          },
+          {
+            name: 'status',
+            type: 'varchar',
+            isNullable: true,
+          },
+          {
+            name: 'stage',
+            type: 'varchar',
+          },
+          {
+            name: 'userId',
+            type: 'int',
+          },
+          // Add more columns for custom fields
+          {
+            name: 'createdAt',
+            type: 'timestamp',
+            default: 'now()',
+          },
+          {
+            name: 'updatedAt',
+            type: 'timestamp',
+            default: 'now()',
+          },
+        ],
+        foreignKeys: [
+          {
+            columnNames: ['userId'],
+            referencedTableName: 'user',
+            referencedColumnNames: ['id'],
+            onDelete: 'CASCADE',
+          },
+        ],
+      }),
+    );
   }
-};
 
-createDealsTable();
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.dropTable('deal');
+  }
+}
