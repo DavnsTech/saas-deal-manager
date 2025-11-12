@@ -1,5 +1,5 @@
 export interface Deal {
-  id: string;
+  id: number;
   name: string;
   amount: number;
   currency: string;
@@ -8,10 +8,10 @@ export interface Deal {
   source: string;
   priority: string;
   probability: number;
-  createdAt: string;
-  closeDate: string;
+  creationDate: string;
+  expectedCloseDate: string;
   responsible: string;
-  client: string;
+  company: string;
   contact: string;
   email: string;
   phone: string;
@@ -23,18 +23,17 @@ export interface Deal {
   contractType: string;
   contractDuration: string;
   paymentMode: string;
-  lastInteraction: string;
+  lastInteractionDate: string;
   internalComments: string;
-  attachedDocuments: string;
-  followUpReminder: string;
+  attachedDocuments: string[];
+  followUpSchedule: string;
   leadScore: number;
   lifetimeValue: number;
   region: string;
 }
 
 export interface User {
-  id: string;
-  name: string;
+  id: number;
+  username: string;
   email: string;
-  role: string;
 }
